@@ -1,0 +1,18 @@
+# What is new {-}
+
+**09.09.2016**
+
+A new version (0.8.0) brings a lot of new features, therefore it was decided to rewrite this tutorial completely and start this log from the scratch. Most of the things available in the previous version of the package will work without any changes. But if you have been using functions `mdaplot()` and `mdaplotg()` it makes sense to read how the new implementation works and rewrite your code. The use of plotting tools became much simpler and more efficient. The main changes in the package are:
+
+* added a possibility to assign some specific attributes to datasets, which makes plotting and some other operations easier
+* added a possibility to exclude (hide) specific rows and columns from calculations without removing them physically via methods `mda.exclrows()`, `mda.exclcols()`
+* if a data frame has factor columns they will be automatically converted to a set of dummy variables
+* added several functions to make the operations with datasets containing specific attributes easier (`mda.rbind()`, `mda.cbind()`, `mda.t()`, `mda.subset()`, `mda.show()`)
+* plotting tools (`mdaplot()`, `mdaplotg()`) were rewritten to make the use of them easier and more efficient
+* most of the model and result specific plots now have additional options, e.g. you can use wavelength or wavenumbers when show plots for loadings, regression coefficients, etc.
+* scores and loadings plots now show a percent of explained variance
+* added support for images, see a [specific chapter]() for details
+* cross-validation procedure were optimized for most of the methods and now takes less time
+* several bug fixes and small improvements
+
+

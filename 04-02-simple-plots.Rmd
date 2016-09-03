@@ -1,0 +1,13 @@
+## Simple plots {-}
+
+```{r, echo = FALSE}
+library(mdatools)
+```
+
+In this section we will look at how to make simple plots from your data objects. As it was already mentioned, *mdatools* has its own function for plotting with several extra options not available in R basic plot tools. If you are going to make all plots manually (e.g. using *ggplot2*) you can skip this and the next sections.
+
+Simple plots are scatter (`type = 'p'`), line (`type = 'l'`), line-scatter (`type = 'b'`), bar (`type = 'h'`) or errorbar (`type = 'e'`) plots made for a one set of objects. All plots are made using the same method `mdaplot()` by providing a whole dataset as a main argument. In the next sections we will describe most of the details. Dataset object (data frame, matrix or a vector) is the main attribute for the `mdaplot` method. Depending on the plot type, the method "treats" the data values differently:
+
+### Scatter plots {-}
+
+For the scatter plot it takes first two columns of the dataset as x and y vectors. If only one column is available (or data object is a vector) it uses it for y-values and generate x-values as an index for each value.

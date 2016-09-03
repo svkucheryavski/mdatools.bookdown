@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html >
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Getting started with mdatools for R</title>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+  <meta name="description" content="This is a user guide for mdatools — R package for preprocessing, exploring and analysis of multivariate data. The package provides methods mostly common for Chemometrics. The general idea of the package is to collect most of the common chemometric methods and give a similar user interface for using them. So if a user knows how to make a model and visualise results for one method, he or she can easily do this for the others.">
+  <meta name="generator" content="bookdown 0.1.4 and GitBook 2.6.7">
+
+  <meta property="og:title" content="Getting started with mdatools for R" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="This is a user guide for mdatools — R package for preprocessing, exploring and analysis of multivariate data. The package provides methods mostly common for Chemometrics. The general idea of the package is to collect most of the common chemometric methods and give a similar user interface for using them. So if a user knows how to make a model and visualise results for one method, he or she can easily do this for the others." />
+  <meta name="github-repo" content="svkucheryavski/mdatools.bookdown" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Getting started with mdatools for R" />
+  
+  <meta name="twitter:description" content="This is a user guide for mdatools — R package for preprocessing, exploring and analysis of multivariate data. The package provides methods mostly common for Chemometrics. The general idea of the package is to collect most of the common chemometric methods and give a similar user interface for using them. So if a user knows how to make a model and visualise results for one method, he or she can easily do this for the others." />
+  
+
+<meta name="author" content="Sergey Kucheryavskiy">
+
+<meta name="date" content="2016-08-16">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  
+  
+<link rel="prev" href="overview.html">
+<link rel="next" href="datasets-and-plots.html">
+
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+</head>
+
+<body>
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i>Introduction</a></li>
+<li class="chapter" data-level="" data-path="what-is-new.html"><a href="what-is-new.html"><i class="fa fa-check"></i>What is new</a></li>
+<li class="chapter" data-level="" data-path="overview.html"><a href="overview.html"><i class="fa fa-check"></i>Overview</a></li>
+<li class="chapter" data-level="1" data-path="a-brief-overview-of-the-package.html"><a href="a-brief-overview-of-the-package.html"><i class="fa fa-check"></i><b>1</b> A brief overview of the package</a><ul>
+<li class="chapter" data-level="1.1" data-path="a-brief-overview-of-the-package.html"><a href="a-brief-overview-of-the-package.html#what-mdatools-can-do"><i class="fa fa-check"></i><b>1.1</b> What mdatools can do?</a></li>
+<li class="chapter" data-level="1.2" data-path="a-brief-overview-of-the-package.html"><a href="a-brief-overview-of-the-package.html#how-to-install"><i class="fa fa-check"></i><b>1.2</b> How to install</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="datasets-and-plots.html"><a href="datasets-and-plots.html"><i class="fa fa-check"></i><b>2</b> Datasets and plots</a><ul>
+<li class="chapter" data-level="2.1" data-path="datasets-and-plots.html"><a href="datasets-and-plots.html#attributes-and-factors"><i class="fa fa-check"></i><b>2.1</b> Attributes and factors</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Getting started with mdatools for R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="a-brief-overview-of-the-package" class="section level1">
+<h1><span class="header-section-number">1</span> A brief overview of the package</h1>
+<p>This package was created for an introductory PhD course on Chemometrics given at Department of Chemistry and Bioscience, Aalborg University. Quickly I found out that using R for this course <span class="math inline">\(with all advantages it gives\)</span> needs a lot of routine work from students, since most of them were also beginners in R. Of course it is very good for understanding when students get to know e.g. how to calculate explained variance or residuals in PCA manually or make corresponding plots and so on, but for the introductory course these things <span class="math inline">\(as well as numerous typos and small mistakes in a code\)</span> take too much time, which can be spent for explaining methods and proper interpretation of results.</p>
+<p>This is actually also true for everyday using of these methods, most of the routines can be written ones and simply reused with various options. So it was decided to write a package where most widely used chemometric methods for multivariate data analysis are implemented and which gives also a quick and easy-to-use access to results, produced by these methods. First of all numerous plots.</p>
+<p>Here how it works. Say, we need to make a PCA model for data matrix <code>x</code> with autoscaling. Then make an overview of most important plots and investigate scores and loadings for first three components. The <code>mdatools</code> solution will be:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># make a model with maximum possible number of components </span>
+m =<span class="st"> </span><span class="kw">pca</span>(x, <span class="dt">scale =</span> <span class="ot">TRUE</span>)
+
+<span class="co"># show explained variance plot</span>
+<span class="kw">plotVariance</span>(m)
+
+<span class="co"># select optimal number of components (say, 4) for correct calculation of residuals</span>
+m =<span class="st"> </span><span class="kw">selectCompNum</span>(m, <span class="dv">4</span>)
+
+<span class="co"># show plots for model overview</span>
+<span class="kw">plot</span>(m)
+
+<span class="co"># show scores plot for PC1 and PC3</span>
+<span class="kw">plotScores</span>(m, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))
+
+<span class="co"># show loadings plot for the same components</span>
+<span class="kw">plotLoadings</span>(m, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))
+
+<span class="co"># show the loadings as a set of bar plots</span>
+<span class="kw">plotLoadings</span>(m, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), <span class="dt">type =</span> <span class="st">&#39;h&#39;</span>)</code></pre></div>
+<p>Fairly simple, is not it? The other “routine”, which have been taken into account is validation — any model can be cross-validated or validated with a test set. The model object will contain the validation results, which will also appear on all model plots, etc. See the next chapters for details.</p>
+<div id="what-mdatools-can-do" class="section level2">
+<h2><span class="header-section-number">1.1</span> What mdatools can do?</h2>
+<p>The package includes classes and functions for analysis, preprocessing and plotting data and results. So far the following methods for analysis are implemented:</p>
+<ul>
+<li>Principal Component Analysis <span class="math inline">\(PCA\)</span></li>
+<li>Soft Independent Modelling of Class Analogy <span class="math inline">\(SIMCA\)</span></li>
+<li>Partial Least Squares regression <span class="math inline">\(PLS\)</span> with calculation of VIP scores and Selectivity ratio</li>
+<li>Partial Least Squares Discriminant Analysis <span class="math inline">\(PLS-DA\)</span></li>
+<li>Randomization test for PLS regression models</li>
+<li>Interval PLS for variable selection</li>
+<li>Purity based method for spectral unmixing</li>
+<li>MCR-ALS in a very trivial form (so far)</li>
+</ul>
+<p>Preprocessing methods include:</p>
+<ul>
+<li>Mean centering, standardization and autoscaling</li>
+<li>Savitzky-Golay filter for smoothing and derivatives</li>
+<li>Standard Normal Variate for removing scatter effect from spectral data</li>
+<li>Mutliplicative Scatter Correction for the same issue</li>
+<li>Normalization of spectra to unit area or unit length</li>
+</ul>
+<p>More methods both for analysis and preprocessing are coming. Besides that, some extensions for the basic R plotting functionality have been also implemented and allow to do the following:</p>
+<ul>
+<li>Color grouping of objects with automatic color legend bar.</li>
+<li>Plot for several groups of objects with automatically calculated axes limits and plot legend.</li>
+<li>Two built-in color schemes — one is based on <a href="http://colorbrewer2.org/">Colorbrewer</a> and the other one is a grayscale scheme.</li>
+<li>Very easy-to-use possibility to apply any user defined color scheme.<br />
+</li>
+<li>Possibility to show horizontal and vertical lines on the plot with automatically adjusted axes limits.</li>
+<li>Possibility to extend plotting functionality by using some attributes for datasets.</li>
+</ul>
+<p>See <code>?mdatools</code> and next chapters for more details.</p>
+</div>
+<div id="how-to-install" class="section level2">
+<h2><span class="header-section-number">1.2</span> How to install</h2>
+<p>The package is available from CRAN by usual installing procedure. However due to restrictions in CRAN politics regarding number of submissions <span class="math inline">\(once in 3-4 month\)</span> only major releases will be published there. To get the latest release plase use GitHub sources. You can either <a href="https://github.com/svkucheryavski/mdatools/releases">download</a> a zip-file with the source package and install it using the <code>install.packages</code> command, e.g. if the downloaded file is <code>mdatools_0.8.0.tar.gz</code> and it is located in a current working directory, just run the following:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">install.packages</span>(<span class="st">&#39;mdatools_0.8.0.tar.gz&#39;</span>)</code></pre></div>
+<p>If you have <code>devtools</code> package installed, the following command will install the latest release from the GitHub <span class="math inline">\(do not forget to load the `devtools` package first\)</span>:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">install_github</span>(<span class="st">&#39;svkucheryavski/mdatools&#39;</span>)</code></pre></div>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="overview.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="datasets-and-plots.html" class="navigation navigation-next " aria-label="Next page""><i class="fa fa-angle-right"></i></a>
+
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script>
+require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"facebook": true,
+"twitter": true,
+"google": false,
+"weibo": false,
+"instapper": false,
+"vk": false,
+"all": ["facebook", "google", "twitter", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    if (location.protocol !== "file:" && /^https?:/.test(script.src))
+      script.src  = script.src.replace(/^https?:/, '');
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
