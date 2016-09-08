@@ -11,7 +11,7 @@ A new version (0.8.0) brings a lot of new features, therefore it was decided to 
 * plotting tools (`mdaplot()`, `mdaplotg()`) were rewritten to make the use of them easier and more efficient
 * most of the model and result specific plots now have additional options, e.g. you can use wavelength or wavenumbers when show plots for loadings, regression coefficients, etc.
 * scores and loadings plots now show a percent of explained variance
-* added support for images, see a [specific chapter]() for details
+* added support for images, see a [specific chapter][Working with images] for details
 * cross-validation procedure were optimized for most of the methods and now takes less time
 * several bug fixes and small improvements
 

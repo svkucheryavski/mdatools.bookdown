@@ -1,4 +1,4 @@
-# Datasets and plots 
+# Datasets and plots {-}
 
 The package uses standard representation of the data in R: data frames, matrices and vectors. However, there are several additional methods and attributes, which make the use of the datasets a bit more more efficient. There is also a support for images. But if you are used to simple datasets and standard procedures and do not want any complications, you can simply skip this chapter. 
 

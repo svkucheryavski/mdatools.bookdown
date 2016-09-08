@@ -1,0 +1,13 @@
+## Working with images {-}
+
+As it was already mentioned, *mdatools* has its own functions for plotting with several extra options not available 
+in basic plot tools. These functions are used to make all plots in the models and results (e.g. scores, loadings, predictions, etc.) therefore it can be useful to spend some time and learn the new features (e.g. coloring data points 
+with a vector of values or using manual ticks for axes). But if you are going to make all plots manually (e.g. using 
+*ggplot2*) you can skip this and the next sections.
+
+In this section we will look at how to make simple plots from your data objects. Simple plots are scatter 
+(`type = 'p'`), line (`type = 'l'`), line-scatter (`type = 'b'`), bar (`type = 'h'`) 
+or errorbar (`type = 'e'`) plots made for a one set of objects. All plots can be created using the same 
+method `mdaplot()` by providing a whole dataset as a main argument. Depending on a plot type, the method 
+"treats" the data values differently.
+

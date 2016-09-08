@@ -41,8 +41,6 @@ The package includes classes and functions for analysis, preprocessing and plott
 * Partial Least Squares Discriminant Analysis (PLS-DA)
 * Randomization test for PLS regression models
 * Interval PLS for variable selection
-* Purity based method for spectral unmixing
-* MCR-ALS in a very trivial form (so far)
 
 Preprocessing methods include:
 

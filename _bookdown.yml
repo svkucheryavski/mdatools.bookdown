@@ -1,1 +1,8 @@
-book_filename: "mdatools.Rmd"
+bookdown::gtibook:
+   config:
+      toc:
+         collapse: section
+      fontsettings:
+         theme: white
+         family: sans
+         size: 4
