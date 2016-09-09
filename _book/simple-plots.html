@@ -125,7 +125,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li class="chapter" data-level="" data-path="plots-for-groups-of-objects.html"><a href="plots-for-groups-of-objects.html#use-factors-to-split-a-dataset-into-groups"><i class="fa fa-check"></i>Use factors to split a dataset into groups</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="working-with-images.html"><a href="working-with-images.html"><i class="fa fa-check"></i>Working with images</a></li>
-<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html"><i class="fa fa-check"></i>Preprocessing</a></li>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html"><i class="fa fa-check"></i>Preprocessing</a><ul>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html#autoscaling"><i class="fa fa-check"></i>Autoscaling</a></li>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html#correction-of-spectral-baseline"><i class="fa fa-check"></i>Correction of spectral baseline</a></li>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html#smoothing-and-derivatives"><i class="fa fa-check"></i>Smoothing and derivatives</a></li>
+</ul></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="principal-component-analysis.html"><a href="principal-component-analysis.html"><i class="fa fa-check"></i>Principal component analysis</a></li>
 <li class="chapter" data-level="" data-path="partial-least-squares.html"><a href="partial-least-squares.html"><i class="fa fa-check"></i>Partial least squares</a></li>
@@ -247,28 +251,28 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="kw">mdaplot</span>(people[, <span class="kw">c</span>(<span class="dv">6</span>, <span class="dv">7</span>)], <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>)
 <span class="kw">mdaplot</span>(people[, <span class="dv">1</span>], <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">ylab =</span> <span class="st">&#39;Height&#39;</span>)
 <span class="kw">mdaplot</span>(people[<span class="dv">1</span>, ], <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">ylab =</span> <span class="st">&#39;&#39;</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-13-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-14-1.png" width="864" /></p>
 <p>All parameters, available for the standard <code>points()</code> method will work with <code>mdaplot()</code> as well. Besides that, you can colorize points according to some values using a color gradient. By default, the gradient is generated using one of the diverging color schemes from <a href="http://colorbrewer2.org">colorbrewer2.org</a>, but this can be changed using parameter <code>colmap</code> as it is shown below.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">cgroup =</span> people[, <span class="st">&#39;Beer&#39;</span>])
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">cgroup =</span> people[, <span class="st">&#39;Beer&#39;</span>], <span class="dt">show.colorbar =</span> F)
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">cgroup =</span> people[, <span class="st">&#39;Beer&#39;</span>], <span class="dt">colmap =</span> <span class="st">&#39;gray&#39;</span>)
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">cgroup =</span> people[, <span class="st">&#39;Beer&#39;</span>], <span class="dt">colmap =</span> <span class="kw">c</span>(<span class="st">&#39;red&#39;</span>, <span class="st">&#39;yellow&#39;</span>, <span class="st">&#39;green&#39;</span>))</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-14-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-15-1.png" width="864" /></p>
 <p>If the vector with values for color grouping is a factor, level labels will be shown on a colorbar legend.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">g =<span class="st"> </span><span class="kw">factor</span>(people[, <span class="st">&#39;Sex&#39;</span>], <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&#39;Male&#39;</span>, <span class="st">&#39;Female&#39;</span>))
 
 <span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">cgroup =</span> g)
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">cgroup =</span> g, <span class="dt">colmap =</span> <span class="st">&#39;gray&#39;</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-15-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-16-1.png" width="864" /></p>
 <p>Another useful option is adding labels to the data points. By default row names will be taken for the labels but you can specify a parameter <code>'labels'</code>, which can be either a text (<code>'names'</code> or <code>'indices'</code>) or a vector with values to show as labels. Color and size of the labels can be adjusted.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">show.labels =</span> T)
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">show.labels =</span> T, <span class="dt">labels =</span> <span class="st">&#39;indices&#39;</span>)
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">show.labels =</span> T, <span class="dt">labels =</span> <span class="st">&#39;names&#39;</span>, <span class="dt">lab.col =</span> <span class="st">&#39;black&#39;</span>, <span class="dt">lab.cex =</span> <span class="dv">1</span>)
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">show.labels =</span> T, <span class="dt">labels =</span> <span class="kw">paste</span>(<span class="st">&#39;obj&#39;</span>, <span class="dv">1</span>:<span class="kw">nrow</span>(people)))</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-16-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-17-1.png" width="864" /></p>
 <p>The plots work well with the data attributes (names, axis names, etc.). Excluded rows are not shown until you specify an option <code>show.excluded = TRUE</code>. By the way, if you show labels as indices and some of the rows are hidden, the method takes this into account and shows indices correctly</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">attr</span>(people, <span class="st">&#39;name&#39;</span>) =<span class="st"> &#39;People&#39;</span>
 <span class="kw">attr</span>(people, <span class="st">&#39;xaxis.name&#39;</span>) =<span class="st"> &#39;Parameters&#39;</span>
@@ -279,7 +283,7 @@ people =<span class="st"> </span><span class="kw">mda.exclrows</span>(people, <s
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">show.labels =</span> T, <span class="dt">labels =</span> <span class="st">&#39;indices&#39;</span>)
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">show.labels =</span> T, <span class="dt">show.excluded =</span> T)
 <span class="kw">mdaplot</span>(people, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>, <span class="dt">show.labels =</span> T, <span class="dt">show.excluded =</span> T, <span class="dt">labels =</span> <span class="st">&#39;indices&#39;</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-17-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-18-1.png" width="864" /></p>
 <p>To avoid any problems with arguments when you make a subset, use <code>mda.subset()</code> instead of the traditional ways. As you can see in the example below, if we take first 16 rows, information about excluded objects (as well as all other uder defined arguments, e.g. <code>'name'</code>) disappear and they are show in the plot as normal. But if we use <code>mda.subset()</code> it will take the subset without excluded rows as it is shown below. The subset can be created using logical expressions as well as indices or names of the rows.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">weight =<span class="st"> </span>people[, <span class="st">&#39;Weight&#39;</span>]
 <span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))
@@ -287,14 +291,14 @@ people =<span class="st"> </span><span class="kw">mda.exclrows</span>(people, <s
 <span class="kw">mdaplot</span>(<span class="kw">mda.subset</span>(people, <span class="dt">subset =</span> <span class="dv">1</span>:<span class="dv">16</span>), <span class="dt">show.labels =</span> T, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>)
 <span class="kw">mdaplot</span>(<span class="kw">mda.subset</span>(people, <span class="dt">subset =</span> <span class="kw">c</span>(<span class="st">&#39;Lisa&#39;</span>, <span class="st">&#39;Benito&#39;</span>, <span class="st">&#39;Federico&#39;</span>)), <span class="dt">show.labels =</span> T, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>)
 <span class="kw">mdaplot</span>(<span class="kw">mda.subset</span>(people, <span class="dt">subset =</span> weight &gt;<span class="st"> </span><span class="dv">70</span>), <span class="dt">show.labels =</span> T, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-18-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-19-1.png" width="864" /></p>
 <p>You can also manually specify axis ticks and tick labels. The labels can be rotated using parameters <code>xlas</code> and <code>ylas</code>, see the examples below.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))
 <span class="kw">mdaplot</span>(people, <span class="dt">xticks =</span> <span class="kw">c</span>(<span class="dv">165</span>, <span class="dv">175</span>, <span class="dv">185</span>), <span class="dt">xticklabels =</span> <span class="kw">c</span>(<span class="st">&#39;Small&#39;</span>, <span class="st">&#39;Medium&#39;</span>, <span class="st">&#39;Hight&#39;</span>))
 <span class="kw">mdaplot</span>(people, <span class="dt">yticks =</span> <span class="kw">c</span>(<span class="dv">55</span>, <span class="dv">70</span>, <span class="dv">85</span>), <span class="dt">yticklabels =</span> <span class="kw">c</span>(<span class="st">&#39;Light&#39;</span>, <span class="st">&#39;Medium&#39;</span>, <span class="st">&#39;Heavy&#39;</span>))
 <span class="kw">mdaplot</span>(people, <span class="dt">xticks =</span> <span class="kw">c</span>(<span class="dv">165</span>, <span class="dv">175</span>, <span class="dv">185</span>), <span class="dt">xticklabels =</span> <span class="kw">c</span>(<span class="st">&#39;Small&#39;</span>, <span class="st">&#39;Medium&#39;</span>, <span class="st">&#39;Hight&#39;</span>), <span class="dt">xlas =</span> <span class="dv">2</span>, <span class="dt">xlab =</span> <span class="st">&#39;&#39;</span>)
 <span class="kw">mdaplot</span>(people, <span class="dt">yticks =</span> <span class="kw">c</span>(<span class="dv">55</span>, <span class="dv">70</span>, <span class="dv">85</span>), <span class="dt">yticklabels =</span> <span class="kw">c</span>(<span class="st">&#39;Light&#39;</span>, <span class="st">&#39;Medium&#39;</span>, <span class="st">&#39;Heavy&#39;</span>), <span class="dt">ylas =</span> <span class="dv">2</span>, <span class="dt">ylab =</span> <span class="st">&#39;&#39;</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-19-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-20-1.png" width="864" /></p>
 <p>If both axis labels and rotated axis ticks have to be shown, you can adjust plot margins and position of the label using <code>par()</code> function and <code>mtext()</code> for positioning axis label manually.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))
 
@@ -307,12 +311,12 @@ people =<span class="st"> </span><span class="kw">mda.exclrows</span>(people, <s
 <span class="kw">par</span>(<span class="dt">mar =</span> <span class="kw">c</span>(<span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">1</span>) +<span class="st"> </span><span class="fl">0.1</span>)
 <span class="kw">mdaplot</span>(people, <span class="dt">yticks =</span> <span class="kw">c</span>(<span class="dv">55</span>, <span class="dv">70</span>, <span class="dv">85</span>), <span class="dt">yticklabels =</span> <span class="kw">c</span>(<span class="st">&#39;Light&#39;</span>, <span class="st">&#39;Medium&#39;</span>, <span class="st">&#39;Heavy&#39;</span>), <span class="dt">ylas =</span> <span class="dv">2</span>, <span class="dt">ylab =</span> <span class="st">&#39;&#39;</span>)
 <span class="kw">mtext</span>(<span class="st">&#39;Weight&#39;</span>, <span class="dt">side =</span> <span class="dv">2</span>, <span class="dt">line =</span> <span class="dv">5</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-20-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-21-1.png" width="864" /></p>
 <p>There are also a couple of other parameters, allowing to show/hide grid as well as show horizontal and vertical lines on the plot (axes limits will be adjusted correspondingly).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))
 <span class="kw">mdaplot</span>(people, <span class="dt">show.grid =</span> F, <span class="dt">show.lines =</span> <span class="kw">c</span>(<span class="dv">170</span>, <span class="dv">65</span>))
 <span class="kw">mdaplot</span>(people, <span class="dt">show.lines =</span> <span class="kw">c</span>(<span class="dv">200</span>, <span class="ot">NA</span>))</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-22-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-23-1.png" width="864" /></p>
 </div>
 <div id="line-plots" class="section level3 unnumbered">
 <h3>Line plots</h3>
@@ -328,11 +332,11 @@ wavelength =<span class="st"> </span>simdata$wavelength
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))
 <span class="kw">mdaplot</span>(spectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>)
 <span class="kw">mdaplot</span>(spectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">col =</span> <span class="st">&#39;darkgray&#39;</span>, <span class="dt">lty =</span> <span class="dv">2</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-24-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-25-1.png" width="864" /></p>
 <p>Most of the parameters described for scatter plots will work for the line plots as well. For example, you can colorise the lines by using a vector with some values (in the example below I use concentration of one of the chemical components).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))
 <span class="kw">mdaplot</span>(spectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">cgroup =</span> conc)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-25-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-26-1.png" width="864" /></p>
 <p>One of the new features, appeared first in version 0.8.0, is a special attribute, allowing to provide manual x-values — <code>'xaxis.values'</code> (similar parameter for y-values is <code>'yaxis.values'</code>). In the example below we show the spectra using wavelength in nm and wavenumbers in inverse cm.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))
 
@@ -343,7 +347,7 @@ wavelength =<span class="st"> </span>simdata$wavelength
 <span class="kw">attr</span>(spectra, <span class="st">&#39;xaxis.name&#39;</span>) =<span class="st"> &#39;Wavelength, nm&#39;</span>
 <span class="kw">attr</span>(spectra, <span class="st">&#39;xaxis.values&#39;</span>) =<span class="st"> </span>wavelength
 <span class="kw">mdaplot</span>(spectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-26-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-27-1.png" width="864" /></p>
 <p>When you provide such data to any model methods (e.g. PCA, PLS, etc), then all variable related results (loadings, regression coefficients, etc.) will inherit this attribute and use it for making line plots.</p>
 <p>Like in scatter plots, the excluded rows will be hidden but you can show them using <code>show.excluded = T</code> parameter.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">spectra =<span class="st"> </span><span class="kw">mda.exclrows</span>(spectra, conc &lt;<span class="st"> </span><span class="fl">0.25</span>)
@@ -351,14 +355,14 @@ wavelength =<span class="st"> </span>simdata$wavelength
 <span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))
 <span class="kw">mdaplot</span>(spectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>)
 <span class="kw">mdaplot</span>(spectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">show.excluded =</span> T)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-27-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-28-1.png" width="864" /></p>
 <p>You can exclude columns as well, however the excluded columns will simply not be shown. If you use manual values for x-axis, the corresponding (hidden) part will be shown just as straight lines so far. I plan to make a more smart processing of hidden columns in next versions.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">spectra =<span class="st"> </span><span class="kw">mda.exclcols</span>(spectra, wavelength &gt;<span class="st"> </span><span class="dv">280</span> &amp;<span class="st"> </span>wavelength &lt;<span class="st"> </span><span class="dv">300</span>)
 
 <span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))
 <span class="kw">mdaplot</span>(spectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>)
 <span class="kw">mdaplot</span>(spectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">show.excluded =</span> T)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-28-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-29-1.png" width="864" /></p>
 </div>
 <div id="bar-and-errorbar-plots" class="section level3 unnumbered">
 <h3>Bar and errorbar plots</h3>
@@ -370,7 +374,7 @@ m =<span class="st"> </span><span class="kw">mda.exclcols</span>(m, <span class=
 <span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))
 <span class="kw">mdaplot</span>(m, <span class="dt">type =</span> <span class="st">&#39;h&#39;</span>)
 <span class="kw">mdaplot</span>(m, <span class="dt">type =</span> <span class="st">&#39;h&#39;</span>, <span class="dt">xticklabels =</span> <span class="kw">colnames</span>(people), <span class="dt">col =</span> <span class="st">&#39;red&#39;</span>, <span class="dt">show.labels =</span> T, <span class="dt">labels =</span> <span class="st">&#39;values&#39;</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-29-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-30-1.png" width="864" /></p>
 <p>Errorbar plot always expect data to have two or three rows. The first row is a origin points of the error bars, secod row is the size of the bottom part and the third row is the size of the top part. If data has only two rows the both parts will be symmetric related to the origin. In the example below we show mean and standard deviation of the people data as an error bar.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d =<span class="st"> </span><span class="kw">rbind</span>(<span class="kw">apply</span>(people, <span class="dv">2</span>, mean), <span class="kw">apply</span>(people, <span class="dv">2</span>, sd))
 <span class="kw">rownames</span>(d) =<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;Mean&#39;</span>, <span class="st">&#39;Std&#39;</span>)
@@ -381,7 +385,7 @@ d =<span class="st"> </span><span class="kw">mda.exclcols</span>(d, <span class=
 <span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))
 <span class="kw">mdaplot</span>(d, <span class="dt">type =</span> <span class="st">&#39;e&#39;</span>)
 <span class="kw">mdaplot</span>(d, <span class="dt">type =</span> <span class="st">&#39;e&#39;</span>, <span class="dt">xticklabels =</span> <span class="kw">colnames</span>(people), <span class="dt">col =</span> <span class="st">&#39;red&#39;</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-30-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-31-1.png" width="864" /></p>
 <p>All simple plots can be combined together on the same axes. In this case, first plot is created as usual and all other plots have to be created with option <code>show.axes = F</code> as it is shown below. It must be noted that in this case axes limits have to be set manually when creating the first plot.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))
 
@@ -390,7 +394,7 @@ d =<span class="st"> </span><span class="kw">mda.exclcols</span>(d, <span class=
 
 <span class="kw">mdaplot</span>(m, <span class="dt">type =</span> <span class="st">&#39;b&#39;</span>, <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">400</span>))
 <span class="kw">mdaplot</span>(d, <span class="dt">type =</span> <span class="st">&#39;e&#39;</span>, <span class="dt">show.axes =</span> F)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-31-1.png" width="864" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-32-1.png" width="864" /></p>
 <p>In the next section we will discuss plots for several groups of objects (rows).</p>
 
 </div>
@@ -425,7 +429,7 @@ gitbook.start({
 "fontsettings": {
 "theme": "white",
 "family": "sans",
-"size": 2
+"size": 1
 },
 "edit": {
 "link": null,

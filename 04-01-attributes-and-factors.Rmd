@@ -49,7 +49,6 @@ attr(d, 'yaxis.name') = 'Persons'
 par(mfrow = c(1, 2))
 mdaplot(d, type = 'p')
 mdaplot(d, type = 'l')
-par(mfrow = c(1, 1))
 ```
 
 See more details in the [section]() about plots.

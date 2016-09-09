@@ -125,7 +125,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li class="chapter" data-level="" data-path="plots-for-groups-of-objects.html"><a href="plots-for-groups-of-objects.html#use-factors-to-split-a-dataset-into-groups"><i class="fa fa-check"></i>Use factors to split a dataset into groups</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="working-with-images.html"><a href="working-with-images.html"><i class="fa fa-check"></i>Working with images</a></li>
-<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html"><i class="fa fa-check"></i>Preprocessing</a></li>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html"><i class="fa fa-check"></i>Preprocessing</a><ul>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html#autoscaling"><i class="fa fa-check"></i>Autoscaling</a></li>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html#correction-of-spectral-baseline"><i class="fa fa-check"></i>Correction of spectral baseline</a></li>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html#smoothing-and-derivatives"><i class="fa fa-check"></i>Smoothing and derivatives</a></li>
+</ul></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="principal-component-analysis.html"><a href="principal-component-analysis.html"><i class="fa fa-check"></i>Principal component analysis</a></li>
 <li class="chapter" data-level="" data-path="partial-least-squares.html"><a href="partial-least-squares.html"><i class="fa fa-check"></i>Partial least squares</a></li>
@@ -213,8 +217,7 @@ d =<span class="st"> </span><span class="kw">as.data.frame</span>(d)
 <span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))
 <span class="kw">mdaplot</span>(d, <span class="dt">type =</span> <span class="st">&#39;p&#39;</span>)
 <span class="kw">mdaplot</span>(d, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-3-1.png" width="576" /></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-4-1.png" width="576" /></p>
 <p>See more details in the <a href="">section</a> about plots.</p>
 </div>
 <div id="excludinghiding-rows-and-columns" class="section level3 unnumbered">
@@ -387,7 +390,7 @@ gitbook.start({
 "fontsettings": {
 "theme": "white",
 "family": "sans",
-"size": 2
+"size": 1
 },
 "edit": {
 "link": null,

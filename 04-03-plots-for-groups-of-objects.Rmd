@@ -41,7 +41,8 @@ par(mfrow = c(2, 2))
 mdaplotg(p, type = 'l')
 mdaplotg(p, type = 'b')
 mdaplotg(p, type = 'h', xticks = 1:4)
-mdaplotg(p, type = 'b', lty = c(1, 2, 1), col = c('red', 'green', 'blue'), pch = 1, xticklabels = colnames(p))
+mdaplotg(p, type = 'b', lty = c(1, 2, 1), col = c('red', 'green', 'blue'), pch = 1, 
+         xticklabels = colnames(p))
 ```
 
 As you can see, `mdaplotg()` automatically created the legend and set colors, line parameters, etc. correctly.
@@ -106,7 +107,8 @@ par(mfrow = c(2, 2))
 mdaplotg(d, type = 'p', legend.position = 'topleft', show.labels = T)
 mdaplotg(d, type = 'p', legend.position = 'topleft', show.labels = T, show.excluded = T)
 mdaplotg(d, type = 'p', legend.position = 'topleft', show.labels = T, labels = 'indices')
-mdaplotg(d, type = 'p', legend.position = 'topleft', show.labels = T, labels = 'indices', show.excluded = T)
+mdaplotg(d, type = 'p', legend.position = 'topleft', show.labels = T, labels = 'indices', 
+         show.excluded = T)
 ```
 
 Working with excluding columns is a bit more difficult in case of the group plots, as, in practice, different
@@ -142,10 +144,10 @@ reg = factor(people[, 'Region'], labels = c('S', 'M'))
 groups = data.frame(sex, reg)
 
 par(mfrow = c(2, 2))
-mdaplotg(people, type = 'p',groupby = groups)
-mdaplotg(people, type = 'l',groupby = groups)
-mdaplotg(people, type = 'b',groupby = groups)
-mdaplotg(people, type = 'h',groupby = groups)
+mdaplotg(people, type = 'p', groupby = groups)
+mdaplotg(people, type = 'l', groupby = groups)
+mdaplotg(people, type = 'b', groupby = groups)
+mdaplotg(people, type = 'h', groupby = groups)
 ```
 
 All parameters, described before, will work the same way in this case. 

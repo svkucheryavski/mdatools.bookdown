@@ -125,7 +125,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li class="chapter" data-level="" data-path="plots-for-groups-of-objects.html"><a href="plots-for-groups-of-objects.html#use-factors-to-split-a-dataset-into-groups"><i class="fa fa-check"></i>Use factors to split a dataset into groups</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="working-with-images.html"><a href="working-with-images.html"><i class="fa fa-check"></i>Working with images</a></li>
-<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html"><i class="fa fa-check"></i>Preprocessing</a></li>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html"><i class="fa fa-check"></i>Preprocessing</a><ul>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html#autoscaling"><i class="fa fa-check"></i>Autoscaling</a></li>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html#correction-of-spectral-baseline"><i class="fa fa-check"></i>Correction of spectral baseline</a></li>
+<li class="chapter" data-level="" data-path="preprocessing.html"><a href="preprocessing.html#smoothing-and-derivatives"><i class="fa fa-check"></i>Smoothing and derivatives</a></li>
+</ul></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="principal-component-analysis.html"><a href="principal-component-analysis.html"><i class="fa fa-check"></i>Principal component analysis</a></li>
 <li class="chapter" data-level="" data-path="partial-least-squares.html"><a href="partial-least-squares.html"><i class="fa fa-check"></i>Partial least squares</a></li>
@@ -152,7 +156,86 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
             <section class="normal" id="section-">
 <div id="preprocessing" class="section level2 unnumbered">
 <h2>Preprocessing</h2>
+<p>The package has several preprocessing methods implemented, mostly for different kinds of spectral data. All functions for preprocessing starts from prefix <code>prep.</code> which makes them easier to find by using code completion. If dataset has excluded rows, the preprocessing methods will process them and keep them excluded in the results. However if a method needs to calculate some parameters (e.g. mean values for centering, slope and intercept for MSC) the excluded rows will not be used for these calculations. The methods work similarly with the excluded columns. In this chapter a brief description of the methods with several examples will be shown.</p>
+<div id="autoscaling" class="section level3 unnumbered">
+<h3>Autoscaling</h3>
+<p><em>Autoscaling</em> consists of two steps. First step is <em>centering</em> (or, more precise, <em>mean centering</em>) when center of a data cloud in variable space is moved to an origin. Mathematically it is done by subtracting mean from the data values separately for every column/variable. Second step is <em>scaling</em> og <em>standardization</em> when data values are divided to standard deviation so the variables have unit variance. This autoscaling procedure (both steps) is known in statistics simply as *standardization’. You can also use arbitrary values to center or/and scale the data, in this case use sequence or vector with these values should be provided as an argument for <code>center</code> or <code>scale</code>.</p>
+<p>R has a built-in function for centering and scaling, <code>scale()</code>. The method <code>prep.autoscale()</code> is actually a wrapper for this function, which is mostly needed to set all user defined attributes to the result (all preprocessing methods will keep the attributes). Here are some examples how to use it:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(mdatools)
+<span class="co"># get data and exclude column Income</span>
+<span class="kw">data</span>(people)
 
+<span class="co"># centering</span>
+data1 =<span class="st"> </span>people
+data1 =<span class="st"> </span><span class="kw">prep.autoscale</span>(data1, <span class="dt">center =</span> T, <span class="dt">scale =</span> F)
+
+<span class="co"># standardization</span>
+data2 =<span class="st"> </span>people
+data2 =<span class="st"> </span><span class="kw">prep.autoscale</span>(data2, <span class="dt">center =</span> F, <span class="dt">scale =</span> T)
+
+<span class="co"># autoscaling</span>
+data3 =<span class="st"> </span>people
+data3 =<span class="st"> </span><span class="kw">prep.autoscale</span>(data3, <span class="dt">center =</span> T, <span class="dt">scale =</span> T)
+
+<span class="co"># centering with median values and standardization</span>
+data4 =<span class="st"> </span>people
+data4 =<span class="st"> </span><span class="kw">prep.autoscale</span>(data4, <span class="dt">center =</span> <span class="kw">apply</span>(data4, <span class="dv">2</span>, median), <span class="dt">scale =</span> T)
+
+<span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))
+<span class="kw">boxplot</span>(data1, <span class="dt">main =</span> <span class="st">&#39;Mean centered&#39;</span>)
+<span class="kw">boxplot</span>(data2, <span class="dt">main =</span> <span class="st">&#39;Standardized&#39;</span>)
+<span class="kw">boxplot</span>(data3, <span class="dt">main =</span> <span class="st">&#39;Mean centered and standardized&#39;</span>)
+<span class="kw">boxplot</span>(data4, <span class="dt">main =</span> <span class="st">&#39;Median centered and standardized&#39;</span>)</code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-48-1.png" width="864" /></p>
+</div>
+<div id="correction-of-spectral-baseline" class="section level3 unnumbered">
+<h3>Correction of spectral baseline</h3>
+<p>Baseline correction methods so far include Standard Normal Variate (SNV) and Multiplicative Scatter Correction (MSC). You can find more methods in the package <a href="">baseline</a>. SNV is a very simple procedure aiming first of all at remove additive and multiplicative scatter effects from Vis/NIR spectra. It is applied to every individual spectrum by subtracting its average and dividing its standard deviation from all spectral values. Here is an example:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># load UV/Vis spectra from Simdata</span>
+<span class="kw">data</span>(simdata)
+ospectra =<span class="st"> </span>simdata$spectra.c
+<span class="kw">attr</span>(ospectra, <span class="st">&#39;xaxis.values&#39;</span>) =<span class="st"> </span>simdata$wavelength
+<span class="kw">attr</span>(ospectra, <span class="st">&#39;xaxis.name&#39;</span>) =<span class="st"> &#39;Wavelength, nm&#39;</span>
+
+<span class="co"># apply SNV and show the spectra</span>
+pspectra =<span class="st"> </span><span class="kw">prep.snv</span>(ospectra)
+
+<span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))
+<span class="kw">mdaplot</span>(ospectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;Original&#39;</span>)
+<span class="kw">mdaplot</span>(pspectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;after SNV&#39;</span>)</code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-49-1.png" width="864" /></p>
+<p>Multiplicative Scatter Correction does the same as SNV but in a different way. First it calculates a mean spectrum for the whole set (mean spectrum can be also provided as an extra argument). Then, for each individual spectrum, it makes a line fit for the spectral values and the mean spectrum. The coefficients of the line, intercept and slope, are used to correct the additive and multiplicative effects correspondingly.</p>
+<p>The <code>prep.msc()</code> function adds the mean spectrum calculated for the original spectral data, to the attributes of the results, so it can be reused later.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># apply MSC and and get the preprocessed spectra</span>
+pspectra =<span class="st"> </span><span class="kw">prep.msc</span>(ospectra)
+
+<span class="co"># show the result</span>
+<span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))
+<span class="kw">mdaplot</span>(ospectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;Original&#39;</span>)
+<span class="kw">mdaplot</span>(pspectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;after MSC&#39;</span>)</code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-50-1.png" width="864" /></p>
+</div>
+<div id="smoothing-and-derivatives" class="section level3 unnumbered">
+<h3>Smoothing and derivatives</h3>
+<p>Savitzky-Golay filter is used to smooth signals and calculate derivatives. The filter has three arguments: a width of the filter (<code>width</code>), a polynomial order (<code>porder</code>) and the derivative order (<code>dorder</code>). If the derivative order is zero (default value) only smoothing will be performed.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># add random noise to the spectra</span>
+nspectra =<span class="st"> </span>ospectra +<span class="st"> </span><span class="fl">0.025</span> *<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(<span class="kw">length</span>(ospectra)), <span class="kw">dim</span>(ospectra))
+
+<span class="co"># apply SG filter for smoothing</span>
+pspectra =<span class="st"> </span><span class="kw">prep.savgol</span>(nspectra, <span class="dt">width =</span> <span class="dv">15</span>, <span class="dt">porder =</span> <span class="dv">1</span>)
+
+<span class="co"># apply SG filter for smoothing and take a first derivative</span>
+dpspectra =<span class="st"> </span><span class="kw">prep.savgol</span>(nspectra, <span class="dt">width =</span> <span class="dv">15</span>, <span class="dt">porder =</span> <span class="dv">1</span>, <span class="dt">dorder =</span> <span class="dv">1</span>)
+
+<span class="co"># show results</span>
+<span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))
+<span class="kw">mdaplot</span>(ospectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;Original&#39;</span>)
+<span class="kw">mdaplot</span>(nspectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;Noise added&#39;</span>)
+<span class="kw">mdaplot</span>(pspectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;Smoothing&#39;</span>)
+<span class="kw">mdaplot</span>(dpspectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>,<span class="dt">main =</span> <span class="st">&#39;First derivative&#39;</span>)</code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-51-1.png" width="864" /></p>
+
+</div>
 </div>
 <!-- </div> -->
             </section>
@@ -185,7 +268,7 @@ gitbook.start({
 "fontsettings": {
 "theme": "white",
 "family": "sans",
-"size": 2
+"size": 1
 },
 "edit": {
 "link": null,
