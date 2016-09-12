@@ -33,6 +33,17 @@ imshow(d, 3)
 imshow(d, 1:3)
 ```
 
+By default image for one channels is shown using jet color palette for intensities, but you can also use
+gray colors, palette from colorbrewer2 as well as your own.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+imshow(d, 1)
+imshow(d, 1, colmap = 'gray')
+imshow(d, 1, colmap = heat.colors(256))
+imshow(d, 1, colmap = colorRampPalette(c('red', 'green'))(256))
+```
+
 You can work with the image values as normal dataset and show scatter, line plots, calculate statistics, etc.
 
 ```{r, fig.width = 9, fig.height = 5}
@@ -73,17 +84,17 @@ imshow(d, 1:3)
 ```
 
 You can also exclude pixels as rows in the image dataset. By default the excluded pixels are not shown with 
-`imshow()` function, however providing argument `show.excluded = TRUE` you can make them visible as gray
-pixels. If you want to see the excluded pixels with original color use `show.excluded = NULL`. Note that once
-you exclude any pixels you can not use method `mda.setimbg()`, so define the background pixels first.
+`imshow()` function (or actually they are shown as dark gray pixels), however providing argument 
+`show.excluded = TRUE` you can make them visible. Note that once you exclude any pixels you can not use 
+method `mda.setimbg()`, so define the background pixels first.
 
 ```{r, fig.width = 9, fig.height = 9}
 d = mda.exclrows(d, d[, 'Green'] > 100)
 par(mfrow = c(2, 2))
+imshow(d, 2)
 imshow(d, 1:3)
 imshow(d, 2, show.excluded = T)
 imshow(d, 1:3, show.excluded = T)
-imshow(d, 1:3, show.excluded = NULL)
 ```
 
 All image related attributes are inherited by all object/rows related results, e.g. scores, residuals, predicted 

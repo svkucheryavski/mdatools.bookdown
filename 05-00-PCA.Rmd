@@ -1,2 +1,276 @@
 # Principal component analysis {-}
 
+In this chapter we will discuss how to use PCA method implemented in the *mdatools*. Besides that, we will use 
+PCA examples to introduce some principles, which are common for most of the other methods (e.g. PLS, SIMCA, 
+PLS-DA, etc.) available in this package. This includes such things as model and result objects, showing performance 
+statistics for models and results, validation, different kinds of plots, and so on.
+
+Principal component analysis is one of the methods that decompose a data matrix X into a combination of three 
+matrices: $X = TP' + E$. Here $P$ is a matrix with unit vectors, defined in the original variables space. 
+The unit vectors form a new basis, which is used to project all data points into. Matrix $T$ contains coordinates 
+of the projections in the new basis and product of the two matrices, $TP'$ represent the coordinates of projections 
+in original variable space. Matrix $E$ contains residuals — difference between position of projected data 
+points and their original locations.
+
+In terms of PCA, the unit-vectors defining the new coordinate space are called loadings and the coordinate axes 
+oriented alongside the loadings are Principal Components (PC). The coordinates of data points projected to the 
+principal components are called scores.
+
+There are several other methods, such as Projection Pursuit (PP), Independent Component Analysis (ICA) and some 
+others, that work in a similar way and resulting in the data decomposition shown above. The principal difference 
+among the methods is the way they find the orientation of the unit-vectors. Thus, PCA finds them as directions 
+of maximum variance of data points. In addition to that, all PCA loadings are orthogonal to each other. The PP 
+and ICA use other criteria for the orientation of the basis vectors and e.g. for ICA the vectors are not orthogonal.
+
+It was decided to put several methods, including ICA (and in future PP) under the PCA umbrella. First of all 
+it was done to reduce amount of code, as the interpretation and analysis of the results, the methods return, 
+is very similar. In order to select which method (algorithm) to use for the decomposition there is a parameter 
+`method` which can be defined by a user as it will be shown in the examples below.
+
+## Models and results {-}
+
+In *mdatools*, any method for data analysis, such as PCA, PLS regression, SIMCA classification and so on, can 
+create two types of objects — a model and a result. Every time you build a model you get a *model object*. Every 
+time you apply the model to a dataset you get a *result object*. Thus for PCA, the objects have classes 
+`pca` and `pcares` correspondingly.
+
+Each object includes a list with variables (e.g. loadings for model, scores and explained variance for result) 
+and provides a number of methods for investigation.
+
+### Model calibration {-}
+
+Let's see how this works using a simple example — *People* data. We used this data when was playing with plots, 
+it consists of 32 objects (persons from Scandinavian and Mediterranean countries, 16 male and 16 female) and 
+12 variables (height, weight, shoesize, annual income, beer and wine consumption and so on.). More information 
+about the data can be found using `?people`. We will first load the data matrix and split it into two subsets 
+as following:
+
+```{r}
+
+library(mdatools)
+data(people)
+
+idx = seq(4, 32, 4)
+X.c = people[-idx, ]
+X.t = people[idx, ]
+```
+
+So `X.c` is our calibration subset we are going to use for creating a PCA model and `X.t` is a subset we will 
+apply the calibrated model to. Now let's calibrate the model and show an information about the model object:
+
+```{r}
+
+m = pca(X.c, 7, scale = T, info = "People PCA model")
+m = selectCompNum(m, 5)
+```
+
+
+Here `pca` is a function that builds (calibrates) a PCA model and returns the model object. 
+
+Function `selectCompNum` allows to select an “optimal” number of components for the model. In our case we 
+calibrate model with 7 principal components (second argument for the function `pca()`) however, e.g. after 
+investigation of explained variance we found out that 5 components is optimal. In this case we have two choices. 
+Either recalibrate the model using 5 components or use the model that is calibrated already but “tell” the model 
+that 5 components is the optimal number. In this case the model will keep all results calculated for 10 components 
+but will use optimal number of components when necessary. For example when showing residuals plot for the model. 
+Or when PCA model is used in SIMCA classification.
+
+Finally, function `print` prints the model object info:
+
+```{r}
+print(m)
+```
+
+As you can see there are no scores, explained variance values, residuals and so on. Because they actually are 
+not part of a PCA model, they are results of applying the model to a calibration set. But loadings, eigenvalues, 
+number of calculated and selected principal components, vectors for centering and scaling the data, number of 
+segments for cross-validation (if used) and significance levels are the model fields:
+
+```{r}
+m$loadings[1:4, 1:4]  
+```
+
+One can also notice that the model object has a particular field — `calres`, which is in fact a 
+PCA *result object* containing results of applying the model to the calibration set. If we look at the object 
+description we will get the following:
+
+```{r}
+print(m$calres)
+```
+
+
+And if we want to look at scores, here is the way:
+
+```{r}
+m$calres$scores[1:4, 1:4]
+```
+
+Both model and result objects also have related functions (methods), first of all for visualizing various values 
+(e.g. scores plot, loadings plot, etc.). Some of the functions will be discussed later in this chapter, a full 
+list can be found in help for a proper method.
+
+The *result object* is also created every time you apply a model to a new data. Like in many built-in R methods, 
+method `predict()` is used in this case. The first argument of the method is always a model object. Here is a 
+PCA example (assuming we have already built the model):
+
+```{r}
+res = predict(m, X.t)
+print(res)
+```
+
+
+### Model validation {-}
+
+Any model can be validated with cross-validation or/and test set validation. The validation results are, of course, 
+represented by *result objects*, which are fields of a *model object* similar to `calres`, but with 
+names `cvres` and `testres` correspondingly.
+
+Here is how to build a PCA model with full cross-validation and test set validation (we will use `X.t` as test 
+data) at the same time:
+
+```{r}
+m = pca(X.c, 7, scale = T, cv = 1, x.test = X.t, info = "PCA model")
+m = selectCompNum(m, 5)
+```
+
+Parameter `cv` specifies options for cross-validation. If a numeric value is provided then it will be used as 
+number of segments for random cross-validation, e.g. if `cv = 2` cross-validation with two segments will be used. 
+For full cross-validation use `cv = 1` like we did in the example above (this is perhaps a bit misleading, but
+I  keep this option for compatability). For more advanced option you can provide a list with name of cross-validation method, 
+number of segments and number of iterations, e.g. `cv = list('rand', 4, 4)` for running random cross-validation 
+with four segments and four repetitions.
+
+And here is the model object info:
+
+```{r}
+print(m)
+```
+
+As you can see we have all three types of results now — calibration (`calres`), cross-validation (`cvres`) and 
+test set validation (`testres`). Let us compare, for example, the explained variance values for the results:
+
+```{r}
+var = data.frame(cal = m$calres$expvar, cv = m$cvres$expvar, test = m$testres$expvar)
+show(round(var, 1))
+```
+
+Every model and every result has a method `summary()`, which shows some statistics for evaluation of a model 
+performance. Here are some examples.
+
+```{r}
+summary(m)
+summary(m$calres)
+```
+
+The same methodology is used for any other method, e.g. PLS or SIMCA. In the next section we will look at how to 
+use plotting functions for models and results.
+
+## Plotting methods {-}
+
+First of all you can use the methods `mdaplot()` and `mdaplotg()` (or any others, e.g. `ggplot2`) for easy 
+visualisation the results as they all available as matrices with proper names, attributes, etc. In the example
+below we create several scores and loadings plots. Here I assume that the last model you have created was the
+one with test set and cross-validation.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(m$calres$scores, type = 'p', show.labels = T, show.lines = c(0, 0))
+mdaplot(m$loadings, type = 'p', show.labels = T, show.lines = c(0, 0))
+```
+
+To simplify this routine, every model and result class also has a number of functions for visualization. 
+Thus for PCA the function list includes scores and loadings plots, explained variance and cumulative explained 
+variance plots, T<sup>2</sup> vs. Q residuals and many others.
+
+A function that does the same for different models and results has always the same name. For example `plotPredictions` 
+will show predicted vs. measured plot for PLS model and PLS result, MLR model and MLR result, PCR model and PCR 
+result and so on. The first argument must always be either a model or a result object.
+
+The major difference between plots for model and plots for result is following. A plot for  result always shows 
+one set of data objects — one set of points, lines or bars. For example predicted vs. measured values for calibration 
+set or scores values for test set and so on. For such plots method `mdaplot()` is used and you can provide any
+arguments, available for this method (e.g. color group scores for calibration results).
+
+And a plot for a model in most cases shows several sets of data objects, e.g. predicted values for calibration 
+and validation. In this case, a corresponding method uses `mdaplotg()` and therefore you can adjust the plot
+using arguments described for this method.
+
+Here are some examples for results:
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+plotScores(m$calres, show.labels = T)
+plotScores(m$calres, c(1, 3), pch = 18, cgroup = X.c[, 'Income'], show.labels = T, labels = 'indices')
+plotResiduals(m$calres, show.labels = T, cgroup = X.c[, 'Weight'])
+plotVariance(m$calres, type = 'h', show.labels = T, labels = 'values')
+```
+
+The color grouping option is not available for the group (model) plots as colors are used there to underline 
+the groups.
+
+Now let's look at similar plots (plus loadings) for a model.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+plotScores(m, c(1, 3), show.labels = T)
+plotLoadings(m, c(1, 3), show.labels = T)
+plotResiduals(m, col = c('red', 'green', 'blue'))
+plotVariance(m, type = 'h', show.labels = T, labels = 'values')
+```
+
+Method `plot()` shows the main four PCA plots as a model (or results) overview.
+
+```{r, fig.width = 9, fig.height = 9}
+plot(m, show.labels = T)
+```
+
+You do not have to care about labels, names, legend and so on, however if necessary you can always change
+almost anything. See full list of methods available for PCA by `?pca` and `?pcares`.
+
+## Support for images {-}
+
+As it was described before, images can be used as a source of data for any methods. In this case the results, 
+related to objects/pixels will inherit all necessary attributes and can be show as images as well. In the example
+below we make a PCA model for the image data from the package and show scores and residuals.
+
+```{r, fig.width = 9, fig.height = 9}
+data(image)
+X = mda.im2data(img)
+m = pca(X)
+
+par(mfrow = c(2, 2))
+imshow(m$calres$scores)
+imshow(m$calres$Q)
+imshow(m$calres$scores, 2)
+imshow(m$calres$Q, 2)
+```
+
+## Excluded rows and columns {-}
+
+PCA implementation as well as any other method in `mdatools` can work with excluded rows and columns. The
+excluded rows are not used for creating a model and calculaiton of model's and results' performance (e.g.
+explained variance). However main results (for PCA scores and residuals) are calculated for these rows as
+well and set hidden. You can always e.g. show scores for excluded objects by using `show.excluded = FALSE`.
+
+The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings or
+regression coefficients) will have zero values for such columns and be hidden. Here is a simple example.
+
+```{r, fig.width = 9, fig.height = 9}
+data(people)
+people = mda.exclrows(people, c('Lars', 'Federico'))
+people = mda.exclcols(people, c('Income'))
+
+m = pca(people, 5, scale = T)
+
+par(mfrow = c(2, 2))
+plotScores(m, show.labels = T)
+plotScores(m, show.excluded = T, show.labels = T)
+plotResiduals(m, show.excluded = T, show.labels = T)
+plotLoadings(m, show.labels = T)
+
+# show matrix with loadings (look at row Income and attribute "exclrows")
+show(m$loadings)
+```
+
+Such behavior will help to exclude and include rows and columns interactively, when GUI add-in for
+`mdatools()` is available.
