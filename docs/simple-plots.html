@@ -344,7 +344,7 @@ wavelength =<span class="st"> </span>simdata$wavelength
 <p>Most of the parameters described for scatter plots will work for the line plots as well. For example, you can colorise the lines by using a vector with some values (in the example below I use concentration of one of the chemical components).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))
 <span class="kw">mdaplot</span>(spectra, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">cgroup =</span> conc)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-26-1.png" width="864" /></p>
+<p><img src="/_main_files/figure-html/unnamed-chunk-26-1.png" width="864" /></p>
 <p>One of the new features, appeared first in version 0.8.0, is a special attribute, allowing to provide manual x-values — <code>'xaxis.values'</code> (similar parameter for y-values is <code>'yaxis.values'</code>). In the example below we show the spectra using wavelength in nm and wavenumbers in inverse cm.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))
 
