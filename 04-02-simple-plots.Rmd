@@ -149,8 +149,10 @@ You can also manually specify axis ticks and tick labels. The labels can be rota
 par(mfrow = c(2, 2))
 mdaplot(people, xticks = c(165, 175, 185), xticklabels = c('Small', 'Medium', 'Hight'))
 mdaplot(people, yticks = c(55, 70, 85), yticklabels = c('Light', 'Medium', 'Heavy'))
-mdaplot(people, xticks = c(165, 175, 185), xticklabels = c('Small', 'Medium', 'Hight'), xlas = 2, xlab = '')
-mdaplot(people, yticks = c(55, 70, 85), yticklabels = c('Light', 'Medium', 'Heavy'), ylas = 2, ylab = '')
+mdaplot(people, xticks = c(165, 175, 185), xticklabels = c('Small', 'Medium', 'Hight'), 
+        xlas = 2, xlab = '')
+mdaplot(people, yticks = c(55, 70, 85), yticklabels = c('Light', 'Medium', 'Heavy'), 
+        ylas = 2, ylab = '')
 ```
 
 If both axis labels and rotated axis ticks have to be shown, you can adjust plot margins and position of the 
@@ -161,12 +163,14 @@ par(mfrow = c(1, 2))
 
 # change margin for bottom part
 par(mar = c(6, 4, 4, 2) + 0.1)
-mdaplot(people, xticks = c(165, 175, 185), xticklabels = c('Small', 'Medium', 'Hight'), xlas = 2, xlab = '')
+mdaplot(people, xticks = c(165, 175, 185), xticklabels = c('Small', 'Medium', 'Hight'), 
+        xlas = 2, xlab = '')
 mtext('Height', side = 1, line = 5)
 
 # change margin for left part
 par(mar = c(5, 6, 4, 1) + 0.1)
-mdaplot(people, yticks = c(55, 70, 85), yticklabels = c('Light', 'Medium', 'Heavy'), ylas = 2, ylab = '')
+mdaplot(people, yticks = c(55, 70, 85), yticklabels = c('Light', 'Medium', 'Heavy'), 
+        ylas = 2, ylab = '')
 mtext('Weight', side = 2, line = 5)
 ```
 
@@ -274,7 +278,8 @@ m = mda.exclcols(m, 'Income')
 
 par(mfrow = c(2, 1))
 mdaplot(m, type = 'h')
-mdaplot(m, type = 'h', xticklabels = colnames(people), col = 'red', show.labels = T, labels = 'values')
+mdaplot(m, type = 'h', xticklabels = colnames(people), col = 'red', show.labels = T, 
+        labels = 'values')
 ```
 
 Errorbar plot always expect data to have two or three rows. The first row is a origin points of the error bars,

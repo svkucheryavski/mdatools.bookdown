@@ -227,7 +227,7 @@ plot(m, show.labels = T)
 You do not have to care about labels, names, legend and so on, however if necessary you can always change
 almost anything. See full list of methods available for PCA by `?pca` and `?pcares`.
 
-## Support for images {-}
+### Support for images {-}
 
 As it was described before, images can be used as a source of data for any methods. In this case the results, 
 related to objects/pixels will inherit all necessary attributes and can be show as images as well. In the example
@@ -245,7 +245,25 @@ imshow(m$calres$scores, 2)
 imshow(m$calres$Q, 2)
 ```
 
-## Excluded rows and columns {-}
+### Manual x-values for loading line plot {-}
+
+As it was discussed in the previous chapter, you can specify a special attribute, `'xaxis.values'` to
+a dataset, which will be used as manual x-values in bar and line plots. When we create any model and/or
+results the most important attributes, including this one, are inherited. For example when you make a 
+loading line plot it will be shown using the attribute values.
+
+```{r, fig.width = 9, fig.height = 5}
+data(simdata)
+
+X = simdata$spectra.c
+attr(X, 'xaxis.name') = 'Wavelength, nm'
+attr(X, 'xaxis.values') = simdata$wavelength
+
+m = pca(X, 3)
+plotLoadings(m, 1:3, type = 'l')
+```
+
+### Excluded rows and columns {-}
 
 PCA implementation as well as any other method in `mdatools` can work with excluded rows and columns. The
 excluded rows are not used for creating a model and calculaiton of model's and results' performance (e.g.

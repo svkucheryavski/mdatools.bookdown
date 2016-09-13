@@ -54,7 +54,7 @@ More methods both for analysis and preprocessing are coming. Besides that, some 
 
 * Color grouping of objects with automatic color legend bar.
 * Plot for several groups of objects with automatically calculated axes limits and plot legend.
-* Two built-in color schemes — one is based on [Colorbrewer](http://colorbrewer2.org/) and the other one is a grayscale scheme.
+* Three built-in color schemes — one is based on [Colorbrewer](http://colorbrewer2.org/) and the other two are jet and grayscale.
 * Very easy-to-use possibility to apply any user defined color scheme.  
 * Possibility to show horizontal and vertical lines on the plot with automatically adjusted axes limits.
 * Possibility to extend plotting functionality by using some attributes for datasets.
