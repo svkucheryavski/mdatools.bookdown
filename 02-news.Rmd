@@ -1,21 +1,42 @@
 # What is new {-}
 
-**20.09.2016**
+### What to expect from future releases {-}
 
-A new version (0.8.0) brings a lot of new features, therefore it was decided to rewrite this tutorial completely and start this log from the scratch. Most of the things available in the previous version of the package will work without any changes. But if you have been using functions `mdaplot()` and `mdaplotg()` it makes sense to read how the new implementation works and rewrite your code. The use of plotting tools became much simpler and more efficient. The main changes in the package are:
+**Book**
+
+* Chapters about classification (SIMCA, SIMCA for multiple classes, PLS-DA)
+* Chapter about interval PLS (iPLS)
+* Chapter about randomization test (randtest)
+
+**Package**
+
+* Implementation of MCR-ALS and purity based method for curve resolution
+* Possibility to combine preprocessing methods into an object and provide it to a model
+* Randomized algorithms to work with big data faster
+* GUI for interactive modelling
+
+### Last changes and improvements to book and package {-}
+
+**14.10.2016**
+
+The new version (0.8.0) brings a lot of new features, therefore it was decided to rewrite this tutorial 
+completely and start this log from the scratch. Most of the things available in the previous version 
+of the package will work without any changes. But if you have been using functions `mdaplot()` 
+and `mdaplotg()` it makes sense to read how the new implementation works and rewrite your code. 
+The use of plotting tools became much simpler and more efficient. The main changes in the package are:
 
 * added a possibility to assign specific attributes to datasets, which makes plotting easier.
-* added a possibility to exclude (hide) selected rows and columns without removing them physically.
+* added a possibility to exclude (hide) selected rows and columns when create a model.
 * if a data frame has factor columns they will be automatically converted to a set of dummy variables.
 * added several functions to make the operations with datasets containing specific attributes easier.
 * plotting tools (`mdaplot()`, `mdaplotg()`) were rewritten to make the use of them easier and more efficient
 * scores and loadings plots now show a percent of explained variance
 * biplot is now available for PCA models (`plotBiplot`)
 * added support for images, see a [specific chapter][Working with images] for details
-* cross-validation procedure were optimized for most of the methods and now takes less time
+* cross-validation procedures were optimized for most of the methods and now takes less time
 * several bug fixes and small improvements
 
 Besides that, the tutorial is now available in `docs` folder of the package repository in GitHub. The tutorial
 is a static HTML site, which can be used locally without internet connection (start with `index.html`). 
-However it is not available from CRAN repository due to CRAN limitations. You can also access the tutorial via 
+However, it is not available from CRAN repository due to CRAN limitations. You can also access the tutorial via 
 [GitHub Pages](https://svkucheryavski.github.io/mdatools)

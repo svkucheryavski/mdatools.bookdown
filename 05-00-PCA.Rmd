@@ -6,11 +6,9 @@ PLS-DA, etc.) available in this package. This includes such things as model and 
 statistics for models and results, validation, different kinds of plots, and so on.
 
 Principal component analysis is one of the methods that decompose a data matrix X into a combination of three 
-matrices: $X = TP' + E$. Here $P$ is a matrix with unit vectors, defined in the original variables space. 
+matrices: $X = TP^T + E$. Here $P$ is a matrix with unit vectors, defined in the original variables space. 
 The unit vectors form a new basis, which is used to project all data points into. Matrix $T$ contains coordinates 
-of the projections in the new basis and product of the two matrices, $TP'$ represent the coordinates of projections 
-in original variable space. Matrix $E$ contains residuals — difference between position of projected data 
-points and their original locations.
+of the projections in the new basis and product of the two matrices, $TP^T$ represent the coordinates of projections in original variable space. Matrix $E$ contains residuals — difference between position of projected data points and their original locations.
 
 In terms of PCA, the unit-vectors defining the new coordinate space are called loadings and the coordinate axes 
 oriented alongside the loadings are Principal Components (PC). The coordinates of data points projected to the 
@@ -234,8 +232,8 @@ related to objects/pixels will inherit all necessary attributes and can be show 
 below we make a PCA model for the image data from the package and show scores and residuals.
 
 ```{r, fig.width = 9, fig.height = 9}
-data(image)
-X = mda.im2data(img)
+data(pellets)
+X = mda.im2data(pellets)
 m = pca(X)
 
 par(mfrow = c(2, 2))
@@ -263,28 +261,34 @@ m = pca(X, 3)
 plotLoadings(m, 1:3, type = 'l')
 ```
 
-### Excluded rows and columns {-}
+### Excluding rows and columns {-}
 
-PCA implementation as well as any other method in `mdatools` can work with excluded rows and columns. The
-excluded rows are not used for creating a model and calculaiton of model's and results' performance (e.g.
-explained variance). However main results (for PCA scores and residuals) are calculated for these rows as
-well and set hidden. You can always e.g. show scores for excluded objects by using `show.excluded = FALSE`.
+From v. 0.8.0 PCA implementation as well as any other method in `mdatools` can exclude rows and columns from
+calculations. For example it can be useful if you have some candidates for outliers or do variable selection
+and do not want to remove rows and columns physically from the data matrix. In this case you can just specify
+two additional parameters, `exclcols` and `exclrows`, using either numbers or names of rows/columns to be 
+excluded. You can also specify a vector with logical values (all `TRUE`s will be excluded).
+
+The excluded rows are not used for creating a model and calculaiton of model's and results' performance (e.g.
+explained variance). However main results (for PCA — scores and residuals) are calculated for these rows as
+well and set hidden, so you will not see them on plots. You can always e.g. show scores for excluded objects 
+by using `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* 
+so if you use e.g. *ggplot2* you will see all points.
 
 The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings or
-regression coefficients) will have zero values for such columns and be hidden. Here is a simple example.
+regression coefficients) will have zero values for such columns and be also hidden on plots. Here is a simple 
+example.
 
 ```{r, fig.width = 9, fig.height = 9}
 data(people)
-people = mda.exclrows(people, c('Lars', 'Federico'))
-people = mda.exclcols(people, c('Income'))
 
-m = pca(people, 5, scale = T)
+m = pca(people, 5, scale = T, exclrows = c('Lars', 'Federico'), exclcols = 'Income')
 
 par(mfrow = c(2, 2))
 plotScores(m, show.labels = T)
 plotScores(m, show.excluded = T, show.labels = T)
 plotResiduals(m, show.excluded = T, show.labels = T)
-plotLoadings(m, show.labels = T)
+plotLoadings(m, show.excluded = T, show.labels = T)
 
 # show matrix with loadings (look at row Income and attribute "exclrows")
 show(m$loadings)

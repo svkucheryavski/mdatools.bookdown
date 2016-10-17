@@ -4,7 +4,8 @@
 library(mdatools)
 ```
 
-This section tells how to extend the functionality of the package by using attributes assigned to datasets and how the implemented methods deal with factors.
+This section tells how to extend the functionality of the package by using attributes assigned to datasets 
+and how the implemented methods deal with factors.
 
 ### Package specific attributes  {-}
 
@@ -51,60 +52,7 @@ mdaplot(d, type = 'p')
 mdaplot(d, type = 'l')
 ```
 
-See more details in the [section]() about plots.
-
-### Excluding/hiding rows and columns {-}
-
-When we are working with models, one of the most common procedures is hiding outliers and irrelevant or not important variables. It can be done simply by removing corresponding rows and columns. However the more flexible way will be just to mark them as excluded, therefore it was decided to create some tools to make this part of data analysis a bit easier.
-
-The main idea is very simple. Any dataset (matrix or a data frame) may have two attributes: `exclrows` for rows that should not be used when model is created and `exclcols` — similar parameter for columns. The simplest way to excluded rows or columns is to provide number, names or a vector with logical values as a value of the attributes. However, especially when removing items is a sequential procedure and there are no names for rows or/and variables, it will be much easier to use the specific methods: `mda.exclrows()` and `mda.exclcols()`. Both functions take row or column numbers, names or a vector with logical values and convert them to indices taking into account the previously excluded objects.
-
-Here is an example of two step procedure for hiding/excluding objects using these methods. We will use another package specific method, `mda.show()`, which hides the excluded elements. 
-
-Let's start with showing the original dataset again.
-```{r}
-mda.show(d)
-```
-
-Now we will hide all rows with Height above 180 cm (actually this is only one row).
-
-```{r}
-d = mda.exclrows(d, d$Height > 180)
-mda.show(d)
-```
-
-Then we exclude the second row from the available data.
-
-```{r}
-d = mda.exclrows(d, 2)
-mda.show(d)
-```
-
-Show indices of the excluded rows. Note that the second row we excluded in the last step, was third in the original data and this index is kept in the attributes.
-
-```{r}
-attr(d, 'exclrows')
-```
-
-We can also unhide the rows using the indices.
-
-```{r}
-d = mda.inclcols(d, c(1, 3))
-mda.show(d)
-```
-
-Working with columns is similar, but in this case you need to use method `mda.exclcols()`.
-
-What happen to the excluded items when one calibrates or apply a model, e.g. PCA? In this case the outcome, e.g. scores and loadings will correspond to the original size of the data, but:
-
-1. Loadings will be computed without hidden objects and variables
-
-2. Matrix with loadings will have zero values for the hidden variables and the corresponding columns will be also marked as excluded.
-
-3. Matrix with scores will have score values calculated for the hidden objects but the rows will be excluded.
-
-So you can always see the scores and e.g. residuals for the excluded objects if necessary. More details will be shown in the [PCA](pca/text.md) chapter.
-
+See more details in the [section][Simple plots] about plots.
 
 ### Special methods for data transformations {-}
 
@@ -114,14 +62,6 @@ Since data objects in R lose all user specified attributes when e.g. we transpos
 Method                                 Description
 ----------------                       --------------------------------------------------------------
 `mda.show(data)`                       Show data object without excluded elements
-
-`mda.exclrows(data, ind)`              Exclude (hide) rows from a data object
-
-`mda.exclcols(data, ind)`              Exclude (hide) columns from a data object
-
-`mda.inclrows(data, ind)`              Include (make visible) rows in a data object
-
-`mda.inclcols(data, ind)`              Include (make visible) columns in a data object
 
 `mda.t(data)`                          Transpose data object
 
@@ -157,6 +97,12 @@ d.mat = mda.df2mat(d)
 show(d.mat)
 ```
 
-The number of dummy variables is always the number of levels minus one. It is important to have level labels in all factor columns of the same data frame unique, as they are used for names of the dummy variables. If a factor is hidden it will be just converted to numeric values and remain excluded from modelling.
+The number of dummy variables by default is the number of levels minus one. You can change this by using argument `full = TRUE` is it is shown in the example below.
 
+```{r}
+d.mat = mda.df2mat(d, full = TRUE)
+show(d.mat)
+```
+
+It is important to have level labels in all factor columns of the same data frame unique, as they are used for names of the dummy variables (e.g. you should not have two factors with the same level name). If a factor is hidden it will be just converted to numeric values and remain excluded from modelling.
 

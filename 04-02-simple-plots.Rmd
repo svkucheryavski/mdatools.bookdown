@@ -110,21 +110,16 @@ mdaplot(people, type = 'p', show.labels = T, labels = 'names', lab.col = 'black'
 mdaplot(people, type = 'p', show.labels = T, labels = paste('obj', 1:nrow(people)))
 ```
 
-The plots work well with the data attributes (names, axis names, etc.). Excluded rows are not shown until you
-specify an option `show.excluded = TRUE`. By the way, if you show labels as indices and some of the rows are
-hidden, the method takes this into account and shows indices correctly
+The plots work well with the data attributes (names, axis names, etc.). 
 
-```{r, fig.width = 9, fig.height = 9}
+```{r, fig.width = 9, fig.height = 5}
 
 attr(people, 'name') = 'People'
 attr(people, 'xaxis.name') = 'Parameters'
-people = mda.exclrows(people, c('Lars', 'Mette', 'Gitte'))
 
-par(mfrow = c(2, 2))
+par(mfrow = c(1, 2))
 mdaplot(people, type = 'p', show.labels = T)
 mdaplot(people, type = 'p', show.labels = T, labels = 'indices')
-mdaplot(people, type = 'p', show.labels = T, show.excluded = T)
-mdaplot(people, type = 'p', show.labels = T, show.excluded = T, labels = 'indices')
 ```
 
 To avoid any problems with arguments when you make a subset, use `mda.subset()` instead of the traditional
@@ -184,7 +179,7 @@ lines on the plot (axes limits will be adjusted correspondingly).
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
 mdaplot(people, show.grid = F, show.lines = c(170, 65))
-mdaplot(people, show.lines = c(200, NA))
+mdaplot(people, show.lines = c(220, NA))
 ```
 
 ### Line plots {-}
@@ -239,30 +234,6 @@ mdaplot(spectra, type = 'l')
 
 When you provide such data to any model methods (e.g. PCA, PLS, etc), then all variable related results 
 (loadings, regression coefficients, etc.) will inherit this attribute and use it for making line plots.
-
-Like in scatter plots, the excluded rows will be hidden but you can show them using `show.excluded = T`
-parameter.
-
-
-```{r, fig.width = 9, fig.height = 9}
-spectra = mda.exclrows(spectra, conc < 0.25)
-
-par(mfrow = c(2, 1))
-mdaplot(spectra, type = 'l')
-mdaplot(spectra, type = 'l', show.excluded = T)
-```
-
-You can exclude columns as well, however the excluded columns will simply not be shown. If you use manual values
-for x-axis, the corresponding (hidden) part will be shown just as straight lines so far. I plan to make a more
-smart processing of hidden columns in next versions.
-
-```{r, fig.width = 9, fig.height = 9}
-spectra = mda.exclcols(spectra, wavelength > 280 & wavelength < 300)
-
-par(mfrow = c(2, 1))
-mdaplot(spectra, type = 'l')
-mdaplot(spectra, type = 'l', show.excluded = T)
-```
 
 ### Bar and errorbar plots {-}
 

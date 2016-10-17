@@ -2,10 +2,7 @@
 
 The package has several preprocessing methods implemented, mostly for different kinds of spectral data. All 
 functions for preprocessing starts from prefix `prep.` which makes them easier to find by using code completion.
-If dataset has excluded rows, the preprocessing methods will process them and keep them excluded in the results.
-However if a method needs to calculate some parameters (e.g. mean values for centering, slope and intercept for
-MSC) the excluded rows will not be used for these calculations. The methods work similarly with the excluded
-columns. In this chapter a brief description of the methods with several examples will be shown.
+In this chapter a brief description of the methods with several examples will be shown.
 
 ### Autoscaling {-}
 

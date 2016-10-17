@@ -1,8 +1,13 @@
 # Datasets and plots {-}
 
-The package uses standard representation of the data in R: data frames, matrices and vectors. However, there are several additional methods and attributes, which make the use of the datasets a bit more more efficient. There is also a support for images. But if you are used to simple datasets and standard procedures and do not want any complications, you can simply skip this chapter. 
+The package uses standard representation of the data in R: data frames, matrices and vectors. However, 
+there are several additional methods and attributes, which make the use of the datasets a bit more more 
+efficient. There is also a support for images. But if you are used to simple datasets and standard procedures 
+and do not want any complications, you can simply skip this chapter. 
 
-The package also uses its own set of plotting tools, which is a sort of an add-on for the R basic plotting system, extending its possibilities. From this point of view, learning how these tools work will simplify understanding of model plots a lot. The main improvements comparing to the basic plotting system are:
+The package also uses its own set of plotting tools, which is a sort of an add-on for the R basic plotting 
+system, extending its possibilities. From this point of view, learning how these tools work will simplify 
+understanding of model plots a lot. The main improvements comparing to the basic plotting system are:
 
 1. Much easier way to make plots with groups of objects (points, lines, bars, etc.)
 2. Much easier way of adding legend to the group plots.
