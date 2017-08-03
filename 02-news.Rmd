@@ -1,21 +1,35 @@
 # What is new {-}
 
-### What to expect from future releases {-}
+### What expect from future releases {-}
 
 **Book**
 
-* Chapters about classification (SIMCA, SIMCA for multiple classes, PLS-DA)
+* Chapters about PLS-DA classification
 * Chapter about interval PLS (iPLS)
 * Chapter about randomization test (randtest)
 
 **Package**
 
+* Randomized algorithms to work with big data faster (in 0.9.0)
+* Data driven SIMCA method (in 0.9.0)
 * Implementation of MCR-ALS and purity based method for curve resolution
 * Possibility to combine preprocessing methods into an object and provide it to a model
-* Randomized algorithms to work with big data faster
 * GUI for interactive modelling
 
 ### Last changes and improvements to book and package {-}
+
+**03.08.2017**
+
+* several minor versions has been released since the last book update (0.8.1-0.8.4)
+* new text describes how to use `summary()` for regression coefficients
+* text about `getRegcoeffs().pls` has been updated
+* some updates in plans (see section above)
+
+**30.10.2016**
+
+* fixed a bug in PCA when explained variance was calculated incorrectly for data with excluded rows
+* fixed several issues with SIMCA (cross-validation) and SIMCAM (Cooman's plot)
+* added a chapter about SIMCA to the tutorial
 
 **14.10.2016**
 

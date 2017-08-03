@@ -1,0 +1,217 @@
+# SIMCA classification {-}
+
+SIMCA (Soft Independent Modelling of Class Analogy) is a simple one-class classification method mainly based on PCA.
+The general idea is to create a PCA model using data for samples/objects belonging to a class and classify
+new objects based on how good the model can fit them. The decision is made using two residual distances —
+$Q$ (squared residual distance from an object to its projection to PCA space) and $T^2$ - distance between 
+the projection of the object and origin of PC space. The $T^2$ distance is calculated for normalized scores.
+
+The first distance (also known as "orthogonal distance") shows how good the new object following the same trend as
+the other objects from the class used to create the model, while the second (also known as "score distance") tells 
+how extreme is it. Both distances may have certain statistical limits, which can be used to cut-off the strangers and 
+accept class members with a pre-define expected ratio of false negatives ($\alpha$). There are several ways to calculate 
+the limits, for example, see [this paper](http://onlinelibrary.wiley.com/doi/10.1002/cem.1147/abstract). In *mdatools* so far we
+use a simplest way, suggested by Svante Wold, where the limit for orthogonal distance is calculated using F-distribution
+and the score distance is computed using Hotelling T^2^ distribution. More methods will be available in future releases.
+
+The classification performance is assessed using true/false positives and negatives and statistics, showing the ability
+of a classification model to recognize class members (*sensitivity* or true positive rate) and how good the model is 
+for identifying strangers (*specificity* or true negative rate). In addition to that, model also calculates a percent
+of misclassified objects. All statistics are calculated for calibration and validation (if any) results, but one must be 
+aware that specificity can not be computed without objects not belonging to the class and, therefore, calibration
+and cross-validation results in SIMCA do not have specificity values. 
+
+It must be also noted that any SIMCA model or result is also a PCA object and all plots, methods, statistics, 
+available for PCA, can be used for SIMCA objects as well. 
+
+## Calibration and validation {-}
+
+The model calibration is similar to PCA, but there are several additional arguments, which are important for classification.
+First of all it is a class name. Class name is a string, which can be used later e.g. for identifying class members for 
+testing. The second important argument is a level of significance, `alpha`. This parameter is used for calculation of
+statistical limits and can be considered as probability for false negatives. The default value is 0.05.
+
+In this chapter as well as for describing other classification methods we will use a famous Iris dataset, available
+in R. The dataset includes 150 measurements of three Iris species: *Setosa*, *Virginica* and *Versicola*. The measurements
+are length and width of petals and sepals in cm. Use `?iris` for more details. 
+
+Let's get the data and split it to calibration and test sets.
+
+```{r}
+
+data(iris)
+head(iris)
+
+# generate indices for calibration set
+idx = seq(1, nrow(iris), by = 2)
+
+# split the values
+X.c = iris[idx, 1:4]
+c.c = iris[idx, 5, drop = F]
+
+X.t = iris[-idx, 1:4]
+c.t = iris[-idx, 5, drop = F]
+```
+
+Now, because for calibration we need only objects belonging to a class, we will split the `X.c` into three matrices —
+one for each species. The data is ordered by the species, so it can be done relatively easy by taking every 25 rows.
+
+```{r}
+X.set = X.c[1:25, ]
+X.ver = X.c[26:50, ]
+X.vir = X.c[51:75, ]
+```
+
+Let's start with creating a model for class *Versicolor* and exploring available statistics and plots. We will use
+full cross-validation to validate the results.
+
+```{r}
+library(mdatools)
+m = simca(X.ver, 'versicolor', ncomp = 3, cv = 1)
+summary(m)
+```
+
+Let's look at plots and start with summary plot.
+
+```{r, fig.width = 9, fig.height = 8}
+plot(m)
+```
+
+The plot is very similar to what we seen for PCA model, the only difference is that it shows *modelling power* instead
+of loadings. Modelling power is a measure of contribution of each variable to the model and varies from 0 to 1. Usually
+variables with modelling power below 0.1 are considered as irrelevant.
+
+Let's give a closer look at the residuals plot with different values for alpha (we will keep number of components 
+equal to three in all cases).
+
+```{r, fig.width = 9, fig.height = 8}
+m1 = simca(X.ver, 'versicolor', ncomp = 3, cv = 1, alpha = 0.01)
+m2 = simca(X.ver, 'versicolor', ncomp = 3, cv = 1, alpha = 0.05)
+m3 = simca(X.ver, 'versicolor', ncomp = 3, cv = 1, alpha = 0.10)
+m4 = simca(X.ver, 'versicolor', ncomp = 3, cv = 1, alpha = 0.15)
+
+par(mfrow = c(2, 2))
+plotResiduals(m1)
+plotResiduals(m2)
+plotResiduals(m3)
+plotResiduals(m4)
+
+```
+
+As you can see, using alpha = 0.01 reduced number of false negatives to zero, as the acceptance limits became
+larger, while alpha = 0.15 gives a lot of incorrectly rejected class members. It must be noted, that decreasing
+alpha will also lead to a larger number of false positives, which we can not see in this case.
+
+### Predictions and validation with a test set {-}
+
+When model is ready one can test it using a new test set with know classes. In this case we will use objects from
+all three species and be able to see how good the model performs on strangers (and calculate the specificity).
+In order to do that we will provide both the matrix with predictors, `X.t`, and a vector with names of the classes
+for corresponding objects/rows (`c.t`). The values with known classes in this case can be:
+
+* a vector with text values (names)
+* a factor using the names as labels
+* a vector with logical values (`TRUE` for class members and `FALSE` for strangers)
+
+In our case we have a factor. Instead of creating a new model and providing the values as test set we will 
+make predictions instead.
+
+```{r}
+res = predict(m, X.t, c.t)
+summary(res)
+```
+
+In this case we see a more detailed statistics with true/false positives and negatives, specificity and sensitivity.
+The performance statistics can be also shown as plots.
+
+```{r, fig.width = 9, fig.height = 8}
+par(mfrow = c(2, 2))
+plotSpecificity(res)
+plotSensitivity(res)
+plotMisclassified(res)
+plotPerformance(res)
+```
+
+The classification results can be shown both graphically and numerically. Here is a prediction plot for the results.
+
+```{r, fig.width = 9, fig.height = 8}
+par(mfrow = c(2, 1))
+plotPredictions(res)
+plotPredictions(res, ncomp = 2)
+```
+
+So we can see that for the model with three components we have no false positives (specificity = 1) and one false 
+negative (sensitivity = 24/25 = 0.96). You can also show the predictions as a matrix with -1 and +1 using method
+`showPredictions()` or get the array with predicted class values directly as it is shown in the example below 
+(for first 10 rows, different number of components and the first classification variable). 
+
+```{r}
+show(res$c.pred[31:40, 1:3, 1])
+```
+
+## Multiclass classification {-}
+
+Several SIMCA models can be combined to a special object `simcam`, which is used to make a multiclass classification.
+Besides this, it also allows calculating distance between individual models and a discrimination power — importance of
+variables to discriminate between any two classes. Let's see how it works.
+
+First we create three single-class SIMCA models with individual settings, such as number of 
+optimal components and alpha.
+
+```{r}
+m.set = simca(X.set, 'setosa', 3, alpha = 0.01)
+m.set = selectCompNum(m.set, 1)
+
+m.vir = simca(X.vir, 'virginica', 3)
+m.vir = selectCompNum(m.vir, 2)
+
+m.ver = simca(X.ver, 'versicola', 3)
+m.ver = selectCompNum(m.ver, 1)
+```
+
+Then we combine the models into a SIMCAM model object. Summary will show the performance on
+calibration set, which is a combination of calibration sets for each of the individual models
+
+```{r]}
+m = simcam(list(m.set, m.vir, m.ver))
+summary(m)
+```
+
+Now we apply the combined model to the test set and look at the predictions.
+
+```{r, fig.width = 9, fig.height = 5}
+res = predict(m, X.t, c.t)
+plotPredictions(res)
+```
+
+In this case the predictions are shown only for the number of components each model found optimal. The names of classes along y-axis are the individual models. Similarly we can show the predicted values.
+
+```{r}
+show(res$c.pred[20:30, 1, 1:3])
+```
+
+There are three additional plots available for multiclass SIMCA model. First of all it is a distance between a selected model and the others.
+
+```{r, fig.width  =9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotModelDistance(m, 1)
+plotModelDistance(m, 2)
+```
+
+
+The second plot is a discrimination power, mentioned in the beginning of the section.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotDiscriminationPower(m, c(1, 3), show.labels = T)
+plotDiscriminationPower(m, c(2, 3), show.labels = T)
+```
+
+And, finally, a Cooman's plot showing an orthogonal distance from objects to two selected classes/models.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotCooman(m, c(1, 3), show.labels = T)
+plotCooman(m, c(2, 3), show.labels = T)
+```
+

@@ -54,11 +54,10 @@ print(m)
 ```
 
 As expected, we see loadings for predictors and responses, matrix with weights, and a special object (`regcoeffs`) for
-regression coefficients. The values for regression coefficients are available in `m.regcoeffs.values`, it is an array
+regression coefficients. The values for regression coefficients are available in `m.coeffs.values`, it is an array
 with dimension *nVariables x nComponents x nPredictors*. The reason to use the object instead of just an array is mainly
 for being able to get and plot regression coefficients for different methods. Besides that, it is possible to calculate
-confidence intervals and other statistics for the coefficients using Jack-Knife method (will be shown later), which produces
-extra entities.
+confidence intervals and other statistics for the coefficients using Jack-Knife method (will be shown later), which produces extra entities.
 
 The regression coefficients can be shown as plot using either function `plotRegcoeffs()` for the PLS model object
 or function `plot()` for the object with regression coefficients. You need to specify for which predictor (if you
@@ -81,12 +80,22 @@ are the values for three PLS components.
 show(m$coeffs$values[, 3, 1])
 ```
 
-You can get the corrected coefficients, which can be applied directly to the raw data, by using
-method `getRegcoeffs()`:
+You can see a summary for the regression coefficients object by calling function `summary()` for the object `m$coeffs` like it is show below. By default it shows only estimated regression coefficients for the selected y-variable and
+number of components. However, if you employ Jack-Knifing (see section *Variable selection* below), the object with
+regression coefficients will also contain some statistics, including standard error, p-value (for test if the coefficient is equal to zero in populatio) and confidence interval. All statistics in this case will be shown automatically with `summary()`.
+
+```{r}
+summary(m$coeffs)
+summary(m$coeffs, ncomp = 3)
+```
+
+You can also get the corrected coefficients, which can be applied directly to the raw data (without centering and standardization), by using method `getRegcoeffs()`:
 
 ```{r}
 show(getRegcoeffs(m, ncomp = 3))
 ```
+
+It also returns all statistics in case if Jack-Knifing was applied.
 
 Similar to PCA, model object may contain three fields for results obtained using calibration set (`calres`), 
 cross-validation (`cvres`) and test set validation (`testres`). All three have class `plsres`, here is
@@ -143,7 +152,8 @@ show(m1$ncomp.selected)
 m2 = pls(X.c, y.c, 7, scale = T, cv = 1, ncomp.selcrit = 'wold')
 show(m2$ncomp.selected)
 ```
-And here is the RMSE plots (they are identical of course):
+
+And here are the RMSE plots (they are identical of course):
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
@@ -165,7 +175,7 @@ for each of the results.
 summary(m1)
 ```
 
-If you want more details run `summury()` for one of the result objects.
+If you want more details run `summary()` for one of the result objects.
 
 ```{r}
 summary(m1$calres)
@@ -317,7 +327,7 @@ If number of segments is not specified as in the example above, full cross-valid
 
 The statistics are calculated for each y-variable and each available number of components. When you
 show a plot for regression coefficients, confidence interval will be shown automatically. You can changes this
-by using parameter `show.ci = FALS`.
+by using parameter `show.ci = FALSE`.
 
 ```{r, fig.width = 9, fig.height = 9}
 par(mfrow = c(2, 2))
@@ -328,14 +338,26 @@ plotRegcoeffs(mjk, ncomp = 2, type = 'h', show.labels = T, show.ci = F)
 
 ```
 
-Function `getRegcoeffs()` in this case may also return a column with p-values, if user specifies a parameter `full`.
+Calling function `summary()` for regression coefficients allows to get all calculated statistics.
+
+```{r}
+summary(mjk$coeffs, ncomp = 2)
+summary(mjk$coeffs, ncomp = 2, alpha = 0.01)
+```
+
+Function `getRegcoeffs()` in this case may also return corresponding t-value, standard error, p-value, and confidence interval for each of the coefficient (except intercept) if user specifies a parameter `full`. The standard error and confidence intervals are also computed for raw, undstandardized, variables (similar to coefficients).
 
 ```{r}
 show(getRegcoeffs(mjk, ncomp = 2, full = T))
 ```
 
-The p-values are stored as a 3-way array similar to regression coefficients. The selection can be made by comparing e.g. 
-p-values with a threshold similar to what we have done with VIP-scores and selectivity ratio. 
+It is also possible to change significance level for confidence intervals.
+
+```{r}
+show(getRegcoeffs(mjk, ncomp = 2, full = T, alpha = 0.01))
+```
+
+The p-values, t-values and standard errors are stored each as a 3-way array similar to regression coefficients. The selection can be made by comparing e.g. p-values with a threshold similar to what we have done with VIP-scores and selectivity ratio. 
 
 ```{r}
 exclcols = mjk$coeffs$p.values[, 2, 1] > 0.05
@@ -355,4 +377,3 @@ the *Shoesize*, which seems to be correct.
 
 Variable selection as well as all described above can be also carried out for PLS discriminant analysis (PLS-DA),
 which can be explained later in one of the next chapters.
-
