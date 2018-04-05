@@ -1,30 +1,16 @@
 # Partial least squares regression {-}
 
-Partial least squares regression is a linear regression method, which uses principles similar to PCA: data
-is decomposed using latent variables. Because in this case we have two datasets, predictors ($X$) and responses
-($Y$) we do decomposition for both, computing scores, loadings and residuals: $X = TP^T + E_x$, $Y = UQ^T + E_y$. 
-In addition to that, orientation of latent variables in PLS is selected to maximize the covariance between the 
-X-scores, $T$, and Y-scores $U$. This approach makes possible to work with datasets where more traditional 
-Multiple Linear Regression fails — when number of variables exceeds number of observations and when X-variables
-are mutually correlated. But at the end PLS-model is a linear model, where response value is a linear combination
-of predictors, so the main outcome is a vector with regression coefficients.
+Partial least squares regression is a linear regression method, which uses principles similar to PCA: data is decomposed using latent variables. Because in this case we have two datasets, predictors ($X$) and responses ($Y$) we do decomposition for both, computing scores, loadings and residuals: $X = TP^T + E_x$, $Y = UQ^T + E_y$. In addition to that, orientation of latent variables in PLS is selected to maximize the covariance between the X-scores, $T$, and Y-scores $U$. This approach makes possible to work with datasets where more traditional Multiple Linear Regression fails — when number of variables exceeds number of observations and when X-variables are mutually correlated. But at the end PLS-model is a linear model, where response value is a linear combination of predictors, so the main outcome is a vector with regression coefficients.
 
-There are two main algorithms for PLS, *NIPALS* and *SIMPLS*, in the *mdatools* only the last one is implemented.
-PLS model and PLS results objects have a lot of components and performance statistics, which can be visualised
-via plots. Besides that the implemented `pls()` method calculates selectivity ratio and VIP scores, which can be
-used for selection of most important variables. We will discuss most of the methods in this chapter and you
-can get the full list using `?pls`.
+There are two main algorithms for PLS, *NIPALS* and *SIMPLS*, in the *mdatools* only the last one is implemented. PLS model and PLS results objects have a lot of components and performance statistics, which can be visualised via plots. Besides that the implemented `pls()` method calculates selectivity ratio and VIP scores, which can be used for selection of most important variables. We will discuss most of the methods in this chapter and you can get the full list using `?pls`.
 
 ## Models and results {-}
 
-Like we discussed in PCA, *matools*  creates two types of objects — a model and a result. Every time you build a 
-PLS model you get a *model object*. Every time you apply the model to a dataset you get a *result object*. For PLS, 
-the objects have classes `pls` and `plsres` correspondingly.
+Like we discussed in PCA, *matools*  creates two types of objects — a model and a result. Every time you build a  PLS model you get a *model object*. Every time you apply the model to a dataset you get a *result object*. For PLS, the objects have classes `pls` and `plsres` correspondingly.
 
 ### Model calibration {-}
 
-Let's use the same *People* data and create a PLS-model for prediction of *Shoesize* (column number four) using other 11 
-variables as predictors. As usual, we start with preparing datasets (we will also split the data into calibration and test subsets):
+Let's use the same *People* data and create a PLS-model for prediction of *Shoesize* (column number four) using other 11 variables as predictors. As usual, we start with preparing datasets (we will also split the data into calibration and test subsets):
 
 ```{r}
 
@@ -38,31 +24,22 @@ X.t = people[idx, -4]
 y.t = people[idx, 4, drop = F]
 ```
 
-So `X.c` and `y.c` are predictors and response values for calibration subset. Now let's calibrate the model and show an 
-information about the model object:
+So `X.c` and `y.c` are predictors and response values for calibration subset. Now let's calibrate the model and show an information about the model object:
 
 ```{r}
 m = pls(X.c, y.c, 7, scale = T, info = "Shoesize prediction model")
 m = selectCompNum(m, 3)
 ```
 
-As you can see, the procedure is very similar to PCA, here we use 7 latent variables and select 3 first as
-an optimal number. Here is an info for the model object:
+As you can see, the procedure is very similar to PCA, here we use 7 latent variables and select 3 first as an optimal number. Here is an info for the model object:
 
 ```{r}
 print(m)
 ```
 
-As expected, we see loadings for predictors and responses, matrix with weights, and a special object (`regcoeffs`) for
-regression coefficients. The values for regression coefficients are available in `m.coeffs.values`, it is an array
-with dimension *nVariables x nComponents x nPredictors*. The reason to use the object instead of just an array is mainly
-for being able to get and plot regression coefficients for different methods. Besides that, it is possible to calculate
-confidence intervals and other statistics for the coefficients using Jack-Knife method (will be shown later), which produces extra entities.
+As expected, we see loadings for predictors and responses, matrix with weights, and a special object (`regcoeffs`) for regression coefficients. The values for regression coefficients are available in `m.coeffs.values`, it is an array with dimension *nVariables x nComponents x nPredictors*. The reason to use the object instead of just an array is mainly for being able to get and plot regression coefficients for different methods. Besides that, it is possible to calculate confidence intervals and other statistics for the coefficients using Jack-Knife method (will be shown later), which produces extra entities.
 
-The regression coefficients can be shown as plot using either function `plotRegcoeffs()` for the PLS model object
-or function `plot()` for the object with regression coefficients. You need to specify for which predictor (if you
-have more than one y-variable) and which number of components you want to see the coefficients for. By default 
-it shows values for the optimal number of components and first y-variable as it is shown on example below.
+The regression coefficients can be shown as plot using either function `plotRegcoeffs()` for the PLS model object or function `plot()` for the object with regression coefficients. You need to specify for which predictor (if you have more than one y-variable) and which number of components you want to see the coefficients for. By default it shows values for the optimal number of components and first y-variable as it is shown on example below.
 
 ```{r, fig.width = 9, fig.height = 9}
 
@@ -73,16 +50,13 @@ plot(m$coeffs, ncomp = 3, type = 'h', show.labels = T)
 plot(m$coeffs, ncomp = 2)
 ```
 
-The model keeps regression coefficients, calculated for centered and standardized data, without intercept, etc. Here
-are the values for three PLS components.
+The model keeps regression coefficients, calculated for centered and standardized data, without intercept, etc. Here are the values for three PLS components.
 
 ```{r}
 show(m$coeffs$values[, 3, 1])
 ```
 
-You can see a summary for the regression coefficients object by calling function `summary()` for the object `m$coeffs` like it is show below. By default it shows only estimated regression coefficients for the selected y-variable and
-number of components. However, if you employ Jack-Knifing (see section *Variable selection* below), the object with
-regression coefficients will also contain some statistics, including standard error, p-value (for test if the coefficient is equal to zero in populatio) and confidence interval. All statistics in this case will be shown automatically with `summary()`.
+You can see a summary for the regression coefficients object by calling function `summary()` for the object `m$coeffs` like it is show below. By default it shows only estimated regression coefficients for the selected y-variable and number of components. However, if you employ Jack-Knifing (see section *Variable selection* below), the object with regression coefficients will also contain some statistics, including standard error, p-value (for test if the coefficient is equal to zero in populatio) and confidence interval. All statistics in this case will be shown automatically with `summary()`.
 
 ```{r}
 summary(m$coeffs)
@@ -97,24 +71,19 @@ show(getRegcoeffs(m, ncomp = 3))
 
 It also returns all statistics in case if Jack-Knifing was applied.
 
-Similar to PCA, model object may contain three fields for results obtained using calibration set (`calres`), 
-cross-validation (`cvres`) and test set validation (`testres`). All three have class `plsres`, here is
-how `calres` looks like:
+Similar to PCA, model object may contain three fields for results obtained using calibration set (`calres`), cross-validation (`cvres`) and test set validation (`testres`). All three have class `plsres`, here is how `calres` looks like:
 
 ```{r}
 print(m$calres)
 ```
 
-The `xdecomp` and `ydecomp` are objects similar to `pcares`, they contain scores, residuals and variances for
-decomposition of X and Y correspondingly. 
+The `xdecomp` and `ydecomp` are objects similar to `pcares`, they contain scores, residuals and variances for decomposition of X and Y correspondingly. 
 
 ```{r}
 print(m$calres$xdecomp)
 ```
 
-Other fields are mostly various performance statistics, including slope, coefficient of determination (R^2^), bias, 
-and root mean squared error (RMSE). Besides that, the results also include reference y-values and array with predicted
-y-values. The array has dimension *nObjects x nComponents x nResponses*.
+Other fields are mostly various performance statistics, including slope, coefficient of determination (R^2^), bias, and root mean squared error (RMSE). Besides that, the results also include reference y-values and array with predicted y-values. The array has dimension *nObjects x nComponents x nResponses*.
 
 PLS predictions for a new set can be obtained using method `predict`:
 
@@ -125,10 +94,7 @@ print(res)
 
 ### Model validation {-}
 
-Validation is implemented similar to PCA, the only difference is that you need to provide two datasets for 
-a test set — one for predictors (`x.test`) and one for response (`y.test`) values. Cross-validation is very 
-important for PLS as it helps to find optimal number of PLS components (so test set performance is more fair as in 
-this case you do not use test set for optimization). Therefore, it is always recommended to use cross-validation.
+Validation is implemented similar to PCA, the only difference is that you need to provide two datasets for a test set — one for predictors (`x.test`) and one for response (`y.test`) values. Cross-validation is very important for PLS as it helps to find optimal number of PLS components (so test set performance is more fair as in this case you do not use test set for optimization). Therefore, it is always recommended to use cross-validation.
 
 You probably have noticed a small warning we got when created the first PLS model in this chapter:
 
@@ -136,14 +102,9 @@ You probably have noticed a small warning we got when created the first PLS mode
 m = pls(X.c, y.c, 7, scale = T, info = "Shoesize prediction model")
 ```
 
-When you create a model, it tries to select optimal number of components automatically (which, of course, you
-can always change later). To do that, the method uses RMSE values, calculated for different number of components
-and cross-validation predictions. So, if we do not use cross-validation, it warns use about this.
+When you create a model, it tries to select optimal number of components automatically (which, of course, you can always change later). To do that, the method uses RMSE values, calculated for different number of components and cross-validation predictions. So, if we do not use cross-validation, it warns use about this.
 
-There are two different ways/criteria for automatic selection. One is using first local minimum on the RMSE plot
-and second is so called Wold criterion, based on a ratio between PRESS values for current and next component.
-You can select which criterion to use by specifying parameter `ncomp.selcrit` (either `'min'` or `'wold'`) as
-it is shown below.
+There are two different ways/criteria for automatic selection. One is using first local minimum on the RMSE plot and second is so called Wold criterion, based on a ratio between PRESS values for current and next component. You can select which criterion to use by specifying parameter `ncomp.selcrit` (either `'min'` or `'wold'`) as it is shown below.
 
 ```{r}
 m1 = pls(X.c, y.c, 7, scale = T, cv = 1, ncomp.selcrit = 'min')
@@ -162,14 +123,9 @@ plotRMSE(m2)
 ```
 
 
-Parameter `cv` has the same format as for PCA. If it is a number, it will be used as number of segments for random cross-validation, e.g. if `cv = 2` cross-validation with two segments will be carried out. For full cross-validation 
-use `cv = 1` like we did in the example above. For more advanced option you can provide a list with name of 
-cross-validation method, number of segments and number of iterations, e.g. `cv = list('rand', 4, 4)` for running 
-random cross-validation with four segments and four repetitions or `cv = list('ven', 8)` for systematic split
-into eight segments (*venetian blinds*).
+Parameter `cv` has the same format as for PCA. If it is a number, it will be used as number of segments for random cross-validation, e.g. if `cv = 2` cross-validation with two segments will be carried out. For full cross-validation use `cv = 1` like we did in the example above. For more advanced option you can provide a list with name of cross-validation method, number of segments and number of iterations, e.g. `cv = list('rand', 4, 4)` for running random cross-validation with four segments and four repetitions or `cv = list('ven', 8)` for systematic split into eight segments (*venetian blinds*).
 
-Method `summary()` for model shows performance statistics calculated using optimal number of components
-for each of the results.
+Method `summary()` for model shows performance statistics calculated using optimal number of components for each of the results.
 
 ```{r}
 summary(m1)
@@ -185,52 +141,47 @@ There is no column for *R^2^* as *Y cumexpvar* values are the same.
 
 ## Plotting methods {-}
 
-Plotting methods, again, work similar to PCA, so in this section we will look more detailed on the
-available methods instead of on how to customize them. PLS has a lot of different results and much 
-more possible plots. Here is a list of methods, which will work both for a model and for a particular
-results.
+Plotting methods, again, work similar to PCA, so in this section we will look more detailed on the available methods instead of on how to customize them. PLS has a lot of different results and much  more possible plots. Here is a list of methods, which will work both for a model and for a particular results.
 
 Methods for summary statistics.
 
----------------------------------------------------------------------------------------------------------------
-Methods                                         Description
-----------------------------------------        ---------------------------------------------------------------
-`plotRMSE(obj, ny = 1, ...)`                    RMSE values vs. number of components in a model
+-------------------------------------------------------------------------------------------------------------
+Methods                                 Description
+------------------------------------    ---------------------------------------------------------------------
+`plotRMSE(obj, ny = 1, ...)`            RMSE values vs. number of components in a model
 
-`plotXVariance(obj)`                            explained variance for X decomposition for each component
+`plotXVariance(obj)`                    explained variance for X decomposition for each component
 
-`plotXCumVariance(obj)`                         same as above but cumulative
+`plotXCumVariance(obj)`                 same as above but cumulative
 
-`plotYVariance(obj)`                            explained variance for Y decomposition for each component
+`plotYVariance(obj)`                    explained variance for Y decomposition for each component
 
-`plotYCumVariance(obj)`                         same as above but cumulative
----------------------------------------------------------------------------------------------------------------
+`plotYCumVariance(obj)`                 same as above but cumulative
+------------------------------------------------------------------------------------------------------------
 
 Here and in some other methods parameter `ny` is used to specify which y-variable you want to 
 see a plot for (if *y* is multivariate).
 
 Methods for objects.
 
----------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
 Methods                                         Description
-----------------------------------------        ---------------------------------------------------------------
-`plotPredictions(obj, ny = 1, ncomp)`           Plot with predicted vs. measured (reference) y-values
+----------------------------------------        -------------------------------------------------------------
+`plotPredictions(obj, ny = 1, ncomp)`           plot with predicted vs. measured (reference) y-values
 
-`plotXScores(obj, comp)`                        Scores for decompositon of X (similar to PCA scores plot)
+`plotXScores(obj, comp)`                        scores for decompositon of X (similar to PCA)
 
-`plotYScores(obj, comp)`                        Scores for decompositon of y (similar to PCA scores plot)
+`plotYScores(obj, comp)`                        scores for decompositon of y (similar to PCA)
 
-`plotXResiduals(obj, ncomp)`                    Residuals for decompositon of X (similar to PCA residuals plot)
+`plotXResiduals(obj, ncomp)`                    residuals for decompositon of X (similar to PCA)
 
-`plotYResiduals(obj, ncomp)`                    Residuals for y vs. real (reference) y-values
+`plotYResiduals(obj, ncomp)`                    residuals for y vs. real (reference) y-values
 
 `plotXScores(obj, ncomp)`                       Y-scores vs. X-scores for a particular PLS component.
----------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
 Parameter `comp` allows to provide a number of selected components (one or several) to show the plot
-for, while parameter `ncomp` assume that only one number is expected (number of components in a model 
-or individual component). So if e.g. you created model for five components and selected three, you can 
-also see, for example, prediction plot if you use only one or four components.
+for, while parameter `ncomp` assume that only one number is expected (number of components in a model or individual component). So if e.g. you created model for five components and selected three, you can also see, for example, prediction plot if you use only one or four components.
 
 Here is an example for `m1` model:
 
@@ -240,24 +191,33 @@ plotPredictions(m1)
 plotPredictions(m1, ncomp = 1)
 ```
 
+By the way, when `plotPredictions()` is made for results object, you can show performance statistics on the plot (implemented in *0.9.0*):
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+plotPredictions(m1$calres)
+plotPredictions(m1$calres, ncomp = 2)
+plotPredictions(m1$calres, show.stat = T)
+plotPredictions(m1$calres, ncomp = 2, show.stat = T)
+```
 
 The plots for variables are available only for a model object and include:
 
----------------------------------------------------------------------------------------------------------------
-Methods                                         Description
-----------------------------------------        ---------------------------------------------------------------
-`plotXLoadings(obj, comp)`                      Loadings for decompositon of X (similar to PCA loadings plot)
-
-`plotYLoadings(obj, comp)`                      Loadings for decompositon of y (similar to PCA loadings plot)
-
-`plotWeights(obj, comp)`                        Weights (*W*) for PLS decomposition
-
-`plotRegcoeffs(obj, ny, ncomp)`                 Plot with regression coefficients
-
-`plotVIPScores(obj, ny)`                        VIP scores for the predictors
-
-`plotSelectivityRation(obj, ny, ncomp)`         Selectivity ratio of the predictors
 --------------------------------------------------------------------------------------------------------------
+Methods                                             Description
+----------------------------------------------      ----------------------------------------------------------
+`plotXLoadings(obj, comp)`                          loadings plot for decompositon of X
+
+`plotYLoadings(obj, comp)`                          loadings plot for decompositon of y
+
+`plotWeights(obj, comp)`                            plot with weights (*W*) for PLS decomposition
+
+`plotRegcoeffs(obj, ny, ncomp)`                     plot with regression coefficients
+
+`plotVIPScores(obj, ny)`                            VIP scores plot
+
+`plotSelectivityRatio(obj, ny, ncomp)`              Selectivity ratio plot 
+---------------------------------------------------------------------------------------------------------------
 
 And, of course, both model and result objects have method `plot()` for giving an overview.
 
@@ -267,31 +227,17 @@ plot(m1)
 
 ### Excluding rows and columns {-}
 
-From v. 0.8.0 PCA implementation as well as any other method in `mdatools` can exclude rows and columns from
-calculations. The implementation works similar to what was described for PCA. For example it can be useful if 
-you have some candidates for outliers or do variable selection and do not want to remove rows and columns physically 
-from the data matrix. In this case you can just specify two additional parameters, `exclcols` and `exclrows`, 
-using either numbers or names of rows/columns to be excluded. You can also specify a vector with logical 
-values (all `TRUE`s will be excluded).
+From v. 0.8.0 PCA implementation as well as any other method in `mdatools` can exclude rows and columns from calculations. The implementation works similar to what was described for PCA. For example it can be useful if you have some candidates for outliers or do variable selection and do not want to remove rows and columns physically from the data matrix. In this case you can just specify two additional parameters, `exclcols` and `exclrows`, using either numbers or names of rows/columns to be excluded. You can also specify a vector with logical values (all `TRUE`s will be excluded).
 
-The excluded rows are not used for creating a model and calculation of model's and results' performance (e.g.
-explained variance). However main results (for PLS — scores, predictions, residuals) are calculated for these rows as
-well and set hidden, so you will not see them on plots. You can always e.g. show scores for excluded objects 
-by using `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* 
-so if you use e.g. *ggplot2* you will see all points.
+The excluded rows are not used for creating a model and calculation of model's and results' performance (e.g. explained variance). However main results (for PLS — scores, predictions, residuals) are calculated for these rows as well and set hidden, so you will not see them on plots. You can always e.g. show scores for excluded objects by using `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* so if you use e.g. *ggplot2* you will see all points.
 
-The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings, weights or
-regression coefficients) will have zero values for such columns and be also hidden on plots. 
+The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings, weights or regression coefficients) will have zero values for such columns and be also hidden on plots. 
 
 ## Variable selection {-}
 
-PLS calculates several statistics, which can be used to select most important (or remove least important) variables
-in order to improve performance and make model simpler. The first two are VIP-scores (variables important for
-projection) and Selectivity ratio. All details and theory can be found e.g. [here](http://onlinelibrary.wiley.com/store/10.1002/cem.1360/asset/1360_ftp.pdf?v=1&t=iu9nq00b&s=4341cd7b9266e064a7deb9f760cd5ab5e7b36f5f).
+PLS calculates several statistics, which can be used to select most important (or remove least important) variables in order to improve performance and make model simpler. The first two are VIP-scores (variables important for projection) and Selectivity ratio. All details and theory can be found e.g. [here](http://onlinelibrary.wiley.com/store/10.1002/cem.1360/).
 
-Both parameters can be shown as plots and as vector of values for a selected y-variable. Selectivity ration is calculated 
-for all possible components in a model, but VIP scores (due to computational time) only for selected number of components
-and are recalculated every time you change number of optimal components using `selectCompNum()` method. Here are some plots.
+Both parameters can be shown as plots and as vector of values for a selected y-variable. Selectivity ration is calculated for all possible components in a model, but VIP scores (due to computational time) only for selected number of components and are recalculated every time you change number of optimal components using `selectCompNum()` method. Here are some plots.
 
 ```{r, fig.width = 9, fig.height = 9}
 par(mfrow = c(2, 2))
@@ -301,8 +247,7 @@ plotSelectivityRatio(m1, ncomp = 1, type = 'h', show.labels = T)
 plotSelectivityRatio(m1, ncomp = 2, type = 'h', show.labels = T)
 ```
 
-In the example below, I create two other PLS models by excluding variables with VIP score or selectivity ratio
-below a threshold (I use 0.5 and 1 correspondingly) and show the performance for both. 
+In the example below, I create two other PLS models by excluding variables with VIP score or selectivity ratio below a threshold (I use 0.5 and 1 correspondingly) and show the performance for both. 
 
 ```{r}
 m3 = pls(X.c, y.c, 5, scale = T, cv = 1, exclcols = getVIPScores(m1, ncomp = 2) < 0.5)
@@ -312,12 +257,7 @@ m4 = pls(X.c, y.c, 5, scale = T, cv = 1, exclcols = getSelectivityRatio(m1, ncom
 summary(m4)
 ```
 
-Another way is make an inference about regression coefficients and calculate confidence intervals and p-values for
-each variable. This can be done usine Jack-Knife approach, when model is cross-validated using efficient number
-of segments (at least ten) and statistics are calculated using the distribution of regression coefficient values
-obtained for each step. There are two parameters, `coeffs.ci` and `coeffs.alpha`, first is to select the method
-(so far only Jack-Knife is available, the value is `'jk'`) and second is a level of significance for computing
-confidence intervals (by default is 0.1). Here is an example.
+Another way is make an inference about regression coefficients and calculate confidence intervals and p-values for each variable. This can be done usine Jack-Knife approach, when model is cross-validated using efficient number of segments (at least ten) and statistics are calculated using the distribution of regression coefficient values obtained for each step. There are two parameters, `coeffs.ci` and `coeffs.alpha`, first is to select the method (so far only Jack-Knife is available, the value is `'jk'`) and second is a level of significance for computing confidence intervals (by default is 0.1). Here is an example.
 
 ```{r, fig.width = 9, fig.height = 9}
 mjk = pls(X.c, y.c, 7, scale = T, coeffs.ci = 'jk', coeffs.alpha = 0.05)
@@ -325,9 +265,7 @@ mjk = pls(X.c, y.c, 7, scale = T, coeffs.ci = 'jk', coeffs.alpha = 0.05)
 
 If number of segments is not specified as in the example above, full cross-validation will be used.
 
-The statistics are calculated for each y-variable and each available number of components. When you
-show a plot for regression coefficients, confidence interval will be shown automatically. You can changes this
-by using parameter `show.ci = FALSE`.
+The statistics are calculated for each y-variable and each available number of components. When you show a plot for regression coefficients, confidence interval will be shown automatically. You can changes this by using parameter `show.ci = FALSE`.
 
 ```{r, fig.width = 9, fig.height = 9}
 par(mfrow = c(2, 2))
@@ -372,8 +310,6 @@ summary(newm)
 show(getRegcoeffs(newm))
 ```
 
-As you can see, the variables *Age*, *Income*, *Region* and *IQ* have been excluded as they are not related to 
-the *Shoesize*, which seems to be correct.
+As you can see, the variables *Age*, *Income*, *Region* and *IQ* have been excluded as they are not related to the *Shoesize*, which seems to be correct.
 
-Variable selection as well as all described above can be also carried out for PLS discriminant analysis (PLS-DA),
-which can be explained later in one of the next chapters.
+Variable selection as well as all described above can be also carried out for PLS discriminant analysis (PLS-DA), which can be explained later in one of the next chapters.

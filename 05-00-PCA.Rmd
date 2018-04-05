@@ -1,47 +1,24 @@
 # Principal component analysis {-}
 
-In this chapter we will discuss how to use PCA method implemented in the *mdatools*. Besides that, we will use 
-PCA examples to introduce some principles, which are common for most of the other methods (e.g. PLS, SIMCA, 
-PLS-DA, etc.) available in this package. This includes such things as model and result objects, showing performance 
-statistics for models and results, validation, different kinds of plots, and so on.
+In this chapter we will discuss how to use PCA method implemented in the *mdatools*. Besides that, we will use PCA examples to introduce some principles, which are common for most of the other methods (e.g. PLS, SIMCA, PLS-DA, etc.) available in this package. This includes such things as model and result objects, showing performance statistics for models and results, validation, different kinds of plots, and so on.
 
-Principal component analysis is one of the methods that decompose a data matrix X into a combination of three 
-matrices: $X = TP^T + E$. Here $P$ is a matrix with unit vectors, defined in the original variables space. 
-The unit vectors form a new basis, which is used to project all data points into. Matrix $T$ contains coordinates 
-of the projections in the new basis and product of the two matrices, $TP^T$ represent the coordinates of projections in original variable space. Matrix $E$ contains residuals — difference between position of projected data points and their original locations.
+Principal component analysis is one of the methods that decompose a data matrix $X$ into a combination of three matrices: $X = TP^T + E$. Here $P$ is a matrix with unit vectors, defined in the original variables space. The unit vectors form a new basis, which is used to project all data points into. Matrix $T$ contains coordinates of the projections in the new basis and product of the two matrices, $TP^T$ represents the coordinates of projections in original variable space. Matrix $E$ contains residuals — difference between position of projected data points and their original locations.
 
-In terms of PCA, the unit-vectors defining the new coordinate space are called loadings and the coordinate axes 
-oriented alongside the loadings are Principal Components (PC). The coordinates of data points projected to the 
-principal components are called scores.
+In terms of PCA, the unit-vectors defining the new coordinate space are called *loadings* and the coordinate axes oriented alongside the loadings are Principal Components (PC). The coordinates of data points projected to the principal components are called *scores*.
 
-There are several other methods, such as Projection Pursuit (PP), Independent Component Analysis (ICA) and some 
-others, that work in a similar way and resulting in the data decomposition shown above. The principal difference 
-among the methods is the way they find the orientation of the unit-vectors. Thus, PCA finds them as directions 
-of maximum variance of data points. In addition to that, all PCA loadings are orthogonal to each other. The PP 
-and ICA use other criteria for the orientation of the basis vectors and e.g. for ICA the vectors are not orthogonal.
+There are several other methods, such as Projection Pursuit (PP), Independent Component Analysis (ICA) and some others, that work in a similar way and resulting in the data decomposition shown above. The principal difference among the methods is the way they find the orientation of the unit-vectors. Thus, PCA finds them as directions of maximum variance of data points. In addition to that, all PCA loadings are orthogonal to each other. The PP and ICA use other criteria for the orientation of the basis vectors and e.g. for ICA the vectors are not orthogonal.
 
-It was decided to put several methods, including ICA (and in future PP) under the PCA umbrella. First of all 
-it was done to reduce amount of code, as the interpretation and analysis of the results, the methods return, 
-is very similar. In order to select which method (algorithm) to use for the decomposition there is a parameter 
-`method` which can be defined by a user as it will be shown in the examples below.
+There are several methods to get loadings for PCA, including Singular Values Decomposition (SVD) and Non-linear Iterative Partial Least Squares (NIPALS). Both methods are implemented in this package and can be selected using `method` argument of main class `pca`. By default SVD is used. In addition, one can use randomized version of the two methods, which can be efficient if data matrix contains large amount of rows. This is explained in the last part of this chapter.
 
 ## Models and results {-}
 
-In *mdatools*, any method for data analysis, such as PCA, PLS regression, SIMCA classification and so on, can 
-create two types of objects — a model and a result. Every time you build a model you get a *model object*. Every 
-time you apply the model to a dataset you get a *result object*. Thus for PCA, the objects have classes 
-`pca` and `pcares` correspondingly.
+In *mdatools*, any method for data analysis, such as PCA, PLS regression, SIMCA classification and so on, can create two types of objects — a model and a result. Every time you build a model you get a *model object*. Every time you apply the model to a dataset you get a *result object*. Thus for PCA, the objects have classes `pca` and `pcares` correspondingly.
 
-Each object includes a list with variables (e.g. loadings for model, scores and explained variance for result) 
-and provides a number of methods for investigation.
+Each object includes a list with variables (e.g. loadings for model, scores and explained variance for result) and provides a number of methods for visualisation and exploration.
 
 ### Model calibration {-}
 
-Let's see how this works using a simple example — *People* data. We used this data when was playing with plots, 
-it consists of 32 objects (persons from Scandinavian and Mediterranean countries, 16 male and 16 female) and 
-12 variables (height, weight, shoesize, annual income, beer and wine consumption and so on.). More information 
-about the data can be found using `?people`. We will first load the data matrix and split it into two subsets 
-as following:
+Let's see how this works using a simple example — *People* data. We already used this data when was playing with plots, it consists of 32 objects (persons from Scandinavian and Mediterranean countries, 16 male and 16 female) and 12 variables (height, weight, shoesize, annual income, beer and wine consumption and so on.). More information about the data can be found using `?people`. We will first load the data matrix and split it into two subsets as following:
 
 ```{r}
 
@@ -53,8 +30,7 @@ X.c = people[-idx, ]
 X.t = people[idx, ]
 ```
 
-So `X.c` is our calibration subset we are going to use for creating a PCA model and `X.t` is a subset we will 
-apply the calibrated model to. Now let's calibrate the model and show an information about the model object:
+So `X.c` is our calibration subset we are going to use for creating a PCA model and `X.t` is a subset we will apply the calibrated model to. Now let's calibrate the model and show an information about the model object:
 
 ```{r}
 
@@ -65,13 +41,7 @@ m = selectCompNum(m, 5)
 
 Here `pca` is a function that builds (calibrates) a PCA model and returns the model object. 
 
-Function `selectCompNum` allows to select an “optimal” number of components for the model. In our case we 
-calibrate model with 7 principal components (second argument for the function `pca()`) however, e.g. after 
-investigation of explained variance we found out that 5 components is optimal. In this case we have two choices. 
-Either recalibrate the model using 5 components or use the model that is calibrated already but “tell” the model 
-that 5 components is the optimal number. In this case the model will keep all results calculated for 10 components 
-but will use optimal number of components when necessary. For example when showing residuals plot for the model. 
-Or when PCA model is used in SIMCA classification.
+Function `selectCompNum` allows to select an “optimal” number of components for the model. In our case we calibrate model with 7 principal components (second argument for the function `pca()`) however, e.g. after investigation of explained variance, we found out that 5 components is optimal. In this case we have two choices. Either recalibrate the model using 5 components or use the model that is calibrated already but “tell” the model that 5 components is the optimal number. In this case the model will keep all results calculated for 7 components but will use optimal number of components when necessary. For example, when showing residuals plot for the model. Or when PCA model is used in SIMCA classification.
 
 Finally, function `print` prints the model object info:
 
@@ -79,18 +49,14 @@ Finally, function `print` prints the model object info:
 print(m)
 ```
 
-As you can see there are no scores, explained variance values, residuals and so on. Because they actually are 
-not part of a PCA model, they are results of applying the model to a calibration set. But loadings, eigenvalues, 
-number of calculated and selected principal components, vectors for centering and scaling the data, number of 
-segments for cross-validation (if used) and significance levels are the model fields:
+As you can see, there are no scores, explained variance values, residuals and so on. Because they actually are not part of a PCA model, they are results of applying the model to a calibration set. But loadings, eigenvalues, number of calculated and selected principal components, vectors for centering and scaling the data, number of segments for cross-validation (if used) and significance levels are the model fields:
 
 ```{r}
 m$loadings[1:4, 1:4]  
 ```
 
 One can also notice that the model object has a particular field — `calres`, which is in fact a 
-PCA *result object* containing results of applying the model to the calibration set. If we look at the object 
-description we will get the following:
+PCA *result object* containing results of applying the model to the calibration set. If we look at the object description we will get the following:
 
 ```{r}
 print(m$calres)
@@ -103,13 +69,9 @@ And if we want to look at scores, here is the way:
 m$calres$scores[1:4, 1:4]
 ```
 
-Both model and result objects also have related functions (methods), first of all for visualizing various values 
-(e.g. scores plot, loadings plot, etc.). Some of the functions will be discussed later in this chapter, a full 
-list can be found in help for a proper method.
+Both model and result objects also have related functions (methods), first of all for visualizing various values (e.g. scores plot, loadings plot, etc.). Some of the functions will be discussed later in this chapter, a full list can be found in help for a proper method.
 
-The *result object* is also created every time you apply a model to a new data. Like in many built-in R methods, 
-method `predict()` is used in this case. The first argument of the method is always a model object. Here is a 
-PCA example (assuming we have already built the model):
+The *result object* is also created every time you apply a model to a new data. Like in many built-in R methods, method `predict()` is used in this case. The first argument of the method is always a model object. Here is a PCA example (assuming we have already built the model):
 
 ```{r}
 res = predict(m, X.t)
@@ -119,24 +81,16 @@ print(res)
 
 ### Model validation {-}
 
-Any model can be validated with cross-validation or/and test set validation. The validation results are, of course, 
-represented by *result objects*, which are fields of a *model object* similar to `calres`, but with 
-names `cvres` and `testres` correspondingly.
+Any model can be validated with cross-validation or/and test set validation. The validation results are, of course, represented by *result objects*, which are fields of a *model object* similar to `calres`, but with names `cvres` and `testres` correspondingly.
 
-Here is how to build a PCA model with full cross-validation and test set validation (we will use `X.t` as test 
-data) at the same time:
+Here is how to build a PCA model with full cross-validation and test set validation (we will use `X.t` as test data) at the same time:
 
 ```{r}
 m = pca(X.c, 7, scale = T, cv = 1, x.test = X.t, info = "PCA model")
 m = selectCompNum(m, 5)
 ```
 
-Parameter `cv` specifies options for cross-validation. If a numeric value is provided then it will be used as 
-number of segments for random cross-validation, e.g. if `cv = 2` cross-validation with two segments will be used. 
-For full cross-validation use `cv = 1` like we did in the example above (this is perhaps a bit misleading, but
-I  keep this option for compatability). For more advanced option you can provide a list with name of cross-validation method, 
-number of segments and number of iterations, e.g. `cv = list('rand', 4, 4)` for running random cross-validation 
-with four segments and four repetitions.
+Parameter `cv` specifies options for cross-validation. If a numeric value is provided then it will be used as number of segments for random cross-validation, e.g. if `cv = 2` cross-validation with two segments will be used. For full cross-validation use `cv = 1` like we did in the example above (this is perhaps a bit misleading, but I  keep this option for compatability). For more advanced option you can provide a list with name of cross-validation method, number of segments and number of iterations, e.g. `cv = list('rand', 4, 4)` for running random cross-validation with four segments and four repetitions.
 
 And here is the model object info:
 
@@ -144,31 +98,25 @@ And here is the model object info:
 print(m)
 ```
 
-As you can see we have all three types of results now — calibration (`calres`), cross-validation (`cvres`) and 
-test set validation (`testres`). Let us compare, for example, the explained variance values for the results:
+As you can see we have all three types of results now — calibration (`calres`), cross-validation (`cvres`) and test set validation (`testres`). Let us compare, for example, the explained variance values for the results:
 
 ```{r}
 var = data.frame(cal = m$calres$expvar, cv = m$cvres$expvar, test = m$testres$expvar)
 show(round(var, 1))
 ```
 
-Every model and every result has a method `summary()`, which shows some statistics for evaluation of a model 
-performance. Here are some examples.
+Every model and every result has a method `summary()`, which shows some statistics for evaluation of a model performance. Here are some examples.
 
 ```{r}
 summary(m)
 summary(m$calres)
 ```
 
-The same methodology is used for any other method, e.g. PLS or SIMCA. In the next section we will look at how to 
-use plotting functions for models and results.
+The same methodology is used for any other method, e.g. PLS or SIMCA. In the next section we will look at how to use plotting functions for models and results.
 
 ## Plotting methods {-}
 
-First of all you can use the methods `mdaplot()` and `mdaplotg()` (or any others, e.g. `ggplot2`) for easy 
-visualisation the results as they all available as matrices with proper names, attributes, etc. In the example
-below we create several scores and loadings plots. Here I assume that the last model you have created was the
-one with test set and cross-validation.
+First of all you can use the methods `mdaplot()` and `mdaplotg()` (or any others, e.g. `ggplot2`) for easy visualisation the results as they all available as matrices with proper names, attributes, etc. In the example below we create several scores and loadings plots. Here I assume that the last model you have created was the one with test set and cross-validation.
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
@@ -176,35 +124,25 @@ mdaplot(m$calres$scores, type = 'p', show.labels = T, show.lines = c(0, 0))
 mdaplot(m$loadings, type = 'p', show.labels = T, show.lines = c(0, 0))
 ```
 
-To simplify this routine, every model and result class also has a number of functions for visualization. 
-Thus for PCA the function list includes scores and loadings plots, explained variance and cumulative explained 
-variance plots, T<sup>2</sup> vs. Q residuals and many others.
+To simplify this routine, every model and result class also has a number of functions for visualization. Thus for PCA the function list includes scores and loadings plots, explained variance and cumulative explained variance plots, T<sup>2</sup> vs. Q residuals and many others.
 
-A function that does the same for different models and results has always the same name. For example `plotPredictions` 
-will show predicted vs. measured plot for PLS model and PLS result, MLR model and MLR result, PCR model and PCR 
-result and so on. The first argument must always be either a model or a result object.
+A function that does the same for different models and results has always the same name. For example, `plotPredictions` will show predicted vs. measured plot for PLS model and PLS result, MLR model and MLR result, PCR model and PCR result and so on. The first argument must always be either a model or a result object.
 
-The major difference between plots for model and plots for result is following. A plot for  result always shows 
-one set of data objects — one set of points, lines or bars. For example predicted vs. measured values for calibration 
-set or scores values for test set and so on. For such plots method `mdaplot()` is used and you can provide any
-arguments, available for this method (e.g. color group scores for calibration results).
+The major difference between plots for model and plots for result is following. A plot for  result always shows one set of data objects — one set of points, lines or bars. For example, predicted vs. measured values for calibration set or scores values for test set and so on. For such plots method `mdaplot()` is used and you can provide any arguments, available for this method (e.g. color group scores for calibration results).
 
-And a plot for a model in most cases shows several sets of data objects, e.g. predicted values for calibration 
-and validation. In this case, a corresponding method uses `mdaplotg()` and therefore you can adjust the plot
-using arguments described for this method.
+And a plot for a model in most cases shows several sets of data objects, e.g. predicted values for calibration and validation. In this case, a corresponding method uses `mdaplotg()` and, therefore, you can adjust the plot using arguments described for this method.
 
 Here are some examples for results:
 
 ```{r, fig.width = 9, fig.height = 9}
 par(mfrow = c(2, 2))
 plotScores(m$calres, show.labels = T)
-plotScores(m$calres, c(1, 3), pch = 18, cgroup = X.c[, 'Income'], show.labels = T, labels = 'indices')
+plotScores(m$calres, pch = 18, cgroup = X.c[, 'Income'], show.labels = T, labels = 'indices')
 plotResiduals(m$calres, show.labels = T, cgroup = X.c[, 'Weight'])
 plotVariance(m$calres, type = 'h', show.labels = T, labels = 'values')
 ```
 
-The color grouping option is not available for the group (model) plots as colors are used there to underline 
-the groups.
+The color grouping option is not available for the group (model) plots as colors are used there to underline the groups.
 
 Now let's look at similar plots (plus loadings) for a model.
 
@@ -222,14 +160,11 @@ Method `plot()` shows the main four PCA plots as a model (or results) overview.
 plot(m, show.labels = T)
 ```
 
-You do not have to care about labels, names, legend and so on, however if necessary you can always change
-almost anything. See full list of methods available for PCA by `?pca` and `?pcares`.
+You do not have to care about labels, names, legend and so on, however if necessary you can always change almost anything. See full list of methods available for PCA by `?pca` and `?pcares`.
 
 ### Support for images {-}
 
-As it was described before, images can be used as a source of data for any methods. In this case the results, 
-related to objects/pixels will inherit all necessary attributes and can be show as images as well. In the example
-below we make a PCA model for the image data from the package and show scores and residuals.
+As it was described before, images can be used as a source of data for any methods. In this case the results, related to objects/pixels will inherit all necessary attributes and can be show as images as well. In the example below we make a PCA model for the image data from the package and show scores and residuals.
 
 ```{r, fig.width = 9, fig.height = 9}
 data(pellets)
@@ -245,10 +180,7 @@ imshow(m$calres$Q, 2)
 
 ### Manual x-values for loading line plot {-}
 
-As it was discussed in the previous chapter, you can specify a special attribute, `'xaxis.values'` to
-a dataset, which will be used as manual x-values in bar and line plots. When we create any model and/or
-results the most important attributes, including this one, are inherited. For example when you make a 
-loading line plot it will be shown using the attribute values.
+As it was discussed in the previous chapter, you can specify a special attribute, `'xaxis.values'` to a dataset, which will be used as manual x-values in bar and line plots. When we create any model and/or results the most important attributes, including this one, are inherited. For example when you make a loading line plot it will be shown using the attribute values.
 
 ```{r, fig.width = 9, fig.height = 5}
 data(simdata)
@@ -263,21 +195,11 @@ plotLoadings(m, 1:3, type = 'l')
 
 ### Excluding rows and columns {-}
 
-From v. 0.8.0 PCA implementation as well as any other method in `mdatools` can exclude rows and columns from
-calculations. For example it can be useful if you have some candidates for outliers or do variable selection
-and do not want to remove rows and columns physically from the data matrix. In this case you can just specify
-two additional parameters, `exclcols` and `exclrows`, using either numbers or names of rows/columns to be 
-excluded. You can also specify a vector with logical values (all `TRUE`s will be excluded).
+From v. 0.8.0 PCA implementation as well as any other method in `mdatools` can exclude rows and columns from calculations. For example it can be useful if you have some candidates for outliers or do variable selection and do not want to remove rows and columns physically from the data matrix. In this case you can just specify two additional parameters, `exclcols` and `exclrows`, using either numbers or names of rows/columns to be excluded. You can also specify a vector with logical values (all `TRUE`s will be excluded).
 
-The excluded rows are not used for creating a model and calculaiton of model's and results' performance (e.g.
-explained variance). However main results (for PCA — scores and residuals) are calculated for these rows as
-well and set hidden, so you will not see them on plots. You can always e.g. show scores for excluded objects 
-by using `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* 
-so if you use e.g. *ggplot2* you will see all points.
+The excluded rows are not used for creating a model and calculaiton of model's and results' performance (e.g. explained variance). However main results (for PCA — scores and residuals) are calculated for these rows as well and set hidden, so you will not see them on plots. You can always e.g. show scores for excluded objects by using `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* so if you use e.g. *ggplot2* you will see all points.
 
-The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings or
-regression coefficients) will have zero values for such columns and be also hidden on plots. Here is a simple 
-example.
+The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings or regression coefficients) will have zero values for such columns and be also hidden on plots. Here is a simple example.
 
 ```{r, fig.width = 9, fig.height = 9}
 data(people)
@@ -296,3 +218,213 @@ show(m$loadings)
 
 Such behavior will help to exclude and include rows and columns interactively, when GUI add-in for
 `mdatools()` is available.
+
+## Residuals and critical limits {-}
+
+### Distance to model and score distance {-}
+
+When data objects are being projected to a principal component space, two distances (also known as *residual distances* or just *resudals*) are calculated and stored as a part of PCA results (`pcares` object). The first is a squared orthogonal Euclidean distance from original position of an object to the PC space, also known as *Q-distance* or *Q-residual*. The distance shows how well the object is fitted by the PCA model and allows to detect objects that do not follow a commond trend, captured by the PCs.
+
+The second distance shows how far a projection of the object to the PC space is from the origin. This distance is also known as Hotelling T^2^ distance or a *score distance*. To compute T^2^ distance scores should be first normalized by dividing them to corresponding singular values. The T^2^ distance allows to see extreme objects — which are far from the origin.
+
+If, for example, we use PCA for making decomposition of height and weight of people, then PC1 will be oriented along a linear trend between the height and weight values common for most of the people. If a person has height and weight within the data range but e.g. is overweighted or underweighted, the corresponding object will have large Q-distance, which indicates that this person does not share the common trend. And, if a person has a ratio between height and weight common for most of the people from the dataset, but, e.g. is too tall, then the corresponding object will have large T^2^ distance.
+
+In *mdatools* both distances are calculated for all objects of dataset and all possible components. So every distance is represented by *nObj x nComp* matrix, the first column contains distances for a model with only one component, second — for model with two components, and so on. The residual distances can be visialised using method `plotResiduals()` which is available both for PCA results as well as for PCA model. In the case of model the plot shows distances for calibration set, cross-validation and test set (if they were used of course).
+
+Here is an example.
+
+```{r, fig.width = 9, fig.height = 9}
+data(people)
+m = pca(people, 4, scale = T, cv = 1)
+
+par(mfrow = c(2, 2))
+plotResiduals(m, main = 'Residuals for model')
+plotResiduals(m, ncomp = 2, main = 'Residuals for model (2 Comp)')
+plotResiduals(m$calres, main = 'Residuals for calibration')
+plotResiduals(m$cvres, main = 'Residuals for cross-validated results')
+
+```
+
+The dashed and dotted lines on the plots are critical limits for extreme objects and for outliers, explained in the next section. They can be hidden/removed from the plots by using additional parameter `show.limits = F`. You can also change the color, line type and width for the lines by using options `lim.col`, `lim.lty` and `lim.lwd` as it is shown below. 
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotResiduals(m, show.limits = F)
+plotResiduals(m, lim.col = c('red', 'orange'), lim.lwd = c(2, 2), lim.lty = c(1, 2))
+```
+
+It is necessary to provide a vector with two values for each of the argument (first for extreme objects and second for outliers border).
+
+### Critical limits {-}
+
+If PCA model is made for dataset taken from the same poulation, Q and T^2^ residuals can be used to find outliers and extreme objects. One of the ways to do it is to use critical limits for the residuals assuming that they follow certain theoretical distribution.
+
+Critical limits are also important for SIMCA classification as they directly used for making decision on class belongings. This package implements several methods to compute the limits, which are explained in this section.
+
+#### Critical limits for score distance (T^2^-residuals) {-}
+
+The distribution of T^2^-residuals can be well described using [Hotelling's T^2^ distribution](https://en.wikipedia.org/wiki/Hotelling%27s_T-squared_distribution), which, in its turn is based on *F*-distribution. For given T^2^ values obtained for *N* objects using *A* principal components, the critical limit, *T2lim* can be computed as follows:
+
+$$T2lim = \frac{A (N - 1)}{(N - A)} F^{-1}_{1-\alpha}(A, N-A)$$
+Here $F^{-1}_{1-\alpha}(A, N-A)$ is inverse cumulative distribution function (ICDF) for F-distribution with $A$ and $N-A$ degrees of freedom and $\alpha$ is a significance level (for example if $\alpha = 0.05$ we can expect 5% of objects that will have T^2^-distance larger than this limit).
+
+In *mdatools* the limits are computed based on calibration results and for all possible number of components. The limits are represented as a matrix with four rows and $A$ columns, where the first row contains the limits computed for given `alpha` parameter (by default `alpha = 0.05`), second row has similar limits but calculated using another significance level, `gamma` (by default `gamma = 0.01`), third row contains mean value for the T^2^ distances and last row contains degrees of freedom, in this case $N-A$. The limits calculated for `gamma` are used to detect outliers and shown on residuals plot with dotted line.
+
+Here is the limits shown for PCA model computed in the previous example.
+
+```{r}
+show(m$T2lim)
+```
+
+So, you can see that the critical limit for model with 2 PCs is 6.85 and for model with 4 PCs is 12.02. This is exactly what can be seen as vertical dashed line on the two top residual plots shown in the figure above (left for 4 PCs and right for 2 PCs).
+
+#### Critical limits for orthogonal distance (Q-residuals) {-}
+
+The calculation of critical limits for Q-residuals can be done in many different ways. Thus, Swante Wold and Michael Sjöström in the [original paper](http://pubs.acs.org/doi/abs/10.1021/bk-1977-0052.ch012) about SIMCA classification suggested that the ratio between Q-distance for a particular object from dataset with $M$-variables (divided to the corresponding degrees of freedon, $M-A$) and the variance of all Q-residuals follows F-distribution with $M-A$ and $(N-A-1)(M-A)$ degrees of freedon. And, therefore, the limit can be found using ICDF for F-distribution.
+
+This method tends to reveal more extreme values than expected, first of all because of $(N-A-1)(M-A)$, which is a very big number for modern datasets with hundreds of objects and variables. Several corrections have been proposed since that, most of them are based on using different ways to estimate the degrees of freedom.
+
+##### Using chi-squared distribution {-}
+
+On the other hand, several researchers, have found that normalized Q-residuals can be well described by chi-squared distribution. The tricky part here is to find proper degrees of freedom as it requires rank of original data matrix, which most of the time is not known. One of the ways to solve this issue is to compute the DF based on the particular Q-values, for example as follows:
+
+$$ DF = 2\left(\frac{m(Q)}{s(Q)}\right)^2$$
+Here $m(Q)$ and $s(Q)$ are mean and standard deviation for Q-values. In this case, the critical limit for given significance level, $\alpha$, can be calculated as:
+$$Qlim = F^{-1}_{1-\alpha}(DF) m(Q)/DF$$
+
+where $F^{-1}_{1-\alpha}(DF)$ is ICDF for chi-squared distribution with $DF$ degrees of freedom. Starting from version *0.9.0* this method is implemented in `pca` class and can be chosen by specifying argument `lim.type = 'chisq'` as shown in the example below.
+
+```{r}
+m = pca(people, 4, scale = T, lim.type = 'chisq')
+show(m$Qlim)
+```
+
+The matrix with limits for Q-resodials has the same structure as similar matrix for T^2^-residuals. The third row contains mean values for Q and the fourth row — degrees of freedom calculated as shown above.
+
+##### Jackson-Mudholkar method {-}
+
+Another method [has been proposed](https://www.jstor.org/stable/1267757) by Jackson and Mudholkar and is based on using eigenvalues of the residual components thus requires a full decomposition of the data matrix, which makes it computationally heavy if the data is large. 
+
+Before the version *0.9.0* this method was the only one available for Q limits in *mdatools* and therefore still remains the default method (although you can specify it explicitly by using option `lim.type = 'jm'`). Here is an example.
+
+```{r}
+m1 = pca(people, 4, scale = T) # default value for lim.type
+m2 = pca(people, 4, scale = T, lim.type = 'jm') # specify JM as selected method
+
+# the calculated limits are the same
+show(m1$Qlim)
+show(m2$Qlim)
+```
+
+#### Data driven approach for critical limits {-}
+
+Later, it was realized (see for example [this](https://pubs.acs.org/doi/abs/10.1021/ie000141+) and [this](https://www.sciencedirect.com/science/article/abs/pii/S0169743905000365)) that chi-squared distribution can be used for both Q- and T^2^-residuals and it is possible to construct a combined limit for both. 
+
+A. Pomerantsev [proposed](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.1147) and then [extended](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.2506) an approach, based on similar  idea but with a new way for calculation of a combined index, which is now called Data Driven SIMCA (DD-SIMCA). Although the method was developed for SIMCA classification, it is based on calculation of critical limits and therefore can be also used in PCA for similar purposes — detection of extreme objects and outliers based on the residual distances.
+
+In this method it is assumed that Q- and T^2^-residuals are not independent and there is a combined statistic: $DF_Q Q/m(Q) + DF_{T^2} T^2 / m(T^2)$ which follows chi-squared distribution with $DF_Q + DF_{T^2}$ degrees of freedom. The $DF_Q$ and $DF_{T2}$ as well as the center estimates, $m(Q)$ and $m(T^2)$ are derived from the $Q$ and $T^2$ values computed for the calibration set. 
+
+There are two ways to estimate them. First is by using classical method of moments, already mentioned:
+
+$$ DF_Q = 2\left(\frac{m(Q)}{s(Q)}\right)^2$$
+$$ DF_{T^2} = 2\left(\frac{m(T^2)}{s(T^2)}\right)^2$$
+
+And the second is based on robust approach utilizing median and inter-quartile range instead of mean and standard deviation (see [the paper](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.2506) for details).
+
+Both ways are implemented in the package (starting from version *0.9.0*) and can be selected by using option `lim.type = 'ddmoments'` or `lim.type = 'ddrobust'` correspondingly. Since the acceptance area in this case is not rectangular but triangular, the matrices with calculated limits contain slope (`T2lim`) and intercept (`Qlim`) of the border line for the acceptance area instead of individual limits.
+
+For example, if we compute the limits as follows:
+
+```{r}
+m = pca(people, 4, scale = T, lim.type = 'ddmoments')
+```
+
+The matrices will look like this:
+
+```{r}
+show(m$Qlim)
+show(m$T2lim)
+```
+
+This means that, for example, for two components the line is defined as:
+$$Q = -4.16 T^2 + 19.1$$
+and for four components as:
+$$Q = -0.83 T^2 + 6.34$$
+And will look on the residuals plot as follows:
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotResiduals(m, ncomp = 2)
+plotResiduals(m, ncomp = 4)
+```
+
+More details about DD-SIMCA method can be also found in chapter, devoted to SIMCA classification.
+
+The residuals plot can be also shown for normalized values ($Q/m(Q)$ vs. $T^2/m(T^2)$) by using option `norm = T` in the `plotResiduals()` method.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotResiduals(m, ncomp = 2, norm = T)
+plotResiduals(m, ncomp = 4, norm = T)
+```
+
+## Randomized PCA algorithms {-}
+
+Both SVD and NIPALS are not very efficient when number of rows in dataset is very large (e.g. hundreds of thousands values or even more). Such datasets can be easily obtained in case of for example hyperspectral images. Direct use of the traditional algorithms with such datasets often leads to a lack of memory and long computational time.
+
+One of the solution here is to use probabilistic algorithms, which allow to reduce the number of values needed for estimation of principal components. Starting from *0.9.0* one of the probabilistic approach is also implemented in *mdatools*. The original idea can be found in [this paper](https://epubs.siam.org/doi/10.1137/090771806) and some examples on using the approach for PCA analysis of hyperspectral images are described [here](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.2966).
+
+The approach is based on calculation of matrix $B$, which has much smaller number of rows comparing to the original data, but captures the action of the data. To produce proper values for $B$, several parameters are used. First of all it is a rank of original data, $k$, if it is known. Second, it is oversampling parameter, $p$, which is important if rank is underestimated. The idea is to use $p$ to overestimate the rank thus making solution more stable. The third parameter, $q$, is a number of iterations needed to make $B$ more robust. Usually using $p = 5$ and $q = 1$ will work well on most of the datasets and, at the same time, will take less time for finding a solution comparing with conventional methods. By default, $k$ is set to number of components, used for PCA decomposition.
+
+The example below uses two methods (classic SVD and randomized SVD) for PCA decomposition of 100 000 x 300 dataset and compares time and main outcomes (loadings and explained variance).
+
+```{r}
+# create a dataset as a linear combination of three sin curves with random "concentrations"
+n = 100000
+X = seq(0, 29.9, by = 0.1)
+S = cbind(sin(X), sin(10 * X), sin(5 * X)) 
+C = cbind(runif(n, 0, 1), runif(n, 0, 2), runif(n, 0, 3))
+D = C %*% t(S) 
+D = D + matrix(runif(300 * n, 0, 0.5), ncol = 300)
+show(dim(D))
+
+# conventional SVD
+t1 = system.time({m1 = pca(D, ncomp = 2)})
+show(t1)
+
+# randomized SVD with p = 5 and q = 1
+t2 = system.time({m2 = pca(D, ncomp = 2, rand = c(5, 1))})
+show(t2)
+
+# compare variances
+summary(m1)
+summary(m2)
+
+# compare loadings
+show(m1$loadings[1:10, ])
+show(m2$loadings[1:10, ])
+
+```
+
+As you can see the explained variance values, eigenvalues and loadings are identical in the two models and the second method is about twice faster.
+
+It is possible to make PCA decomposition even faster if only loadings and scores are needed. In this case you can use method `pca.run()` and skip other steps, like calculation of residuals, variances, critical limits and so on. But in this case data matrix must be centered (and scaled if necessary) manually prior to the decomposition. Here is an example using the data generated in previous code.
+
+```{r}
+D = scale(D, center = T, scale = F)
+
+# conventional SVD
+t1 = system.time({P1 = pca.run(D, method = 'svd', ncomp = 2)})
+show(t1)
+
+# randomized SVD with p = 5 and q = 1
+t2 = system.time({P2 = pca.run(D, method = 'svd', ncomp = 2, rand = c(5, 1))})
+show(t2)
+
+# compare loadings
+show(P1$loadings[1:10, ])
+show(P2$loadings[1:10, ])
+
+```
+
+As you can see the loadings are still the same but the probabilistic algorithm is about 15 times faster.

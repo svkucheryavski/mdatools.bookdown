@@ -4,19 +4,23 @@
 
 **Book**
 
-* Chapters about PLS-DA classification
 * Chapter about interval PLS (iPLS)
+* Chapters about PLS-DA classification
 * Chapter about randomization test (randtest)
 
-**Package**
-
-* Randomized algorithms to work with big data faster (in 0.9.0)
-* Data driven SIMCA method (in 0.9.0)
-* Implementation of MCR-ALS and purity based method for curve resolution
-* Possibility to combine preprocessing methods into an object and provide it to a model
-* GUI for interactive modelling
-
 ### Last changes and improvements to book and package {-}
+
+**3.04.2018**
+
+* new chapter about [randomized PCA algorithms][Randomized PCA algorithms]
+* new chapter about [critical limits for residuals in PCA/SIMCA][Residuals and critical limits]
+* chapter for SIMCA has been updated with description of new methods
+* added a short text about new properties for `plotPredictions()` method in PLS
+* small corrections and improvements
+
+**23.11.2017**
+
+* corrections in SIMCA part of documentation about using test set
 
 **03.08.2017**
 
