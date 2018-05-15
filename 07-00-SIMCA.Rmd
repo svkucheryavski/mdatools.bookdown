@@ -149,7 +149,7 @@ The plot can be shown for any SIMCA results (including e.g. calibration set or c
 
 Extreme plot was [proposed](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.2506) as a tool for comparing methods for computing of critical limits as well as for optimization of model parameters, e.g. number of components. The idea of the plot is following. For any given $i$ we can compute $\alpha'$ as $\alpha' = i / n$, where $n$ is the number of objects in calibration set, so $i$ is the number of objects outside the acceptance area for the given $\alpha'$. Then we can count number of objects, $m$, in our data that have p-value below the $\alpha'$. 
 
-In ideal case $m = i$, but in fact there will be some small random variation of the $m$ around $i$. This variation can be computed as $±2\sqrt{i (1 - \alpha)}$. For example, if the expected number of actreme objects $i = 5$ and $n = 50$, like in our last model, $\alpha = 5/50 = 0.1$. So we can expect $5±2\sqrt{5 \times 0.9} ≈ 5 ± 4$ objects may have the p-value smaller than $0.1$. 
+In ideal case $m = i$, but in fact there will be some small random variation of the $m$ around $i$. This variation can be computed as $±2\sqrt{i (1 - \alpha)}$. For example, if the expected number of extreme objects $i = 5$ and $n = 50$, like in our last model, $\alpha = 5/50 = 0.1$. So we can expect $5±2\sqrt{5 \times 0.9} ≈ 5 ± 4$ objects may have the p-value smaller than $0.1$. 
 
 The `plotExtreme()` method counts the number of objects from calibration set rejected by the model for $i = 1, 2,...,n$ (and corresponding alpha values) and shows the values vs the $i$. Besides that, the statistical limits. If all points are lying within the limits, the classification model works as expected.
 

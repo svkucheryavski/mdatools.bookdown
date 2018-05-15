@@ -288,9 +288,9 @@ This method tends to reveal more extreme values than expected, first of all beca
 
 On the other hand, several researchers, have found that normalized Q-distances can be well described by chi-squared distribution. The tricky part here is to find proper degrees of freedom as it requires rank of original data matrix, which most of the time is not known. One of the ways to solve this issue is to compute the DF based on the particular Q-values, for example as follows:
 
-$$ DF = 2\left(\frac{m(Q)}{s(Q)}\right)^2$$
-Here $m(Q)$ and $s(Q)$ are mean and standard deviation for Q-values. In this case, the critical limit for given significance level, $\alpha$, can be calculated as:
-$$Qlim = F^{-1}_{1-\alpha}(DF) m(Q)/DF$$
+$$ DF = 2\left(\frac{m_Q}{s_Q}\right)^2$$
+Here $m_Q$ and $s_Q$ are mean and standard deviation for Q-values. In this case, the critical limit for given significance level, $\alpha$, can be calculated as:
+$$Qlim = F^{-1}_{1-\alpha}(DF) m_Q/DF$$
 
 where $F^{-1}_{1-\alpha}(DF)$ is ICDF for chi-squared distribution with $DF$ degrees of freedom. Starting from version *0.9.0* this method is implemented in `pca` class and can be chosen by specifying argument `lim.type = 'chisq'` as shown in the example below.
 
@@ -322,12 +322,12 @@ Later, it was realized (see for example [this](https://pubs.acs.org/doi/abs/10.1
 
 A. Pomerantsev [proposed](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.1147) and then [extended](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.2506) an approach, based on similar  idea but with a new way for calculation of a combined index, which is now called Data Driven SIMCA (DD-SIMCA). Although the method was developed for SIMCA classification, it is based on calculation of critical limits and therefore can be also used in PCA for similar purposes — detection of extreme objects and outliers based on the residual distances.
 
-In this method it is assumed that Q- and T^2^-values are not independent and there is a combined statistic: $DF_Q Q/m(Q) + DF_{T^2} T^2 / m(T^2)$ which follows chi-squared distribution with $DF_Q + DF_{T^2}$ degrees of freedom. The $DF_Q$ and $DF_{T2}$ as well as the center estimates, $m(Q)$ and $m(T^2)$ are derived from the $Q$ and $T^2$ values computed for the calibration set. 
+In this method it is assumed that Q- and T^2^-values are not independent and there is a combined statistic: $DF_Q Q/m_Q + DF_{T^2} T^2 / m_{T^2}$ which follows chi-squared distribution with $DF_Q + DF_{T^2}$ degrees of freedom. The $DF_Q$ and $DF_{T2}$ as well as the center estimates, $m_Q$ and $m_{T^2}$ are derived from the $Q$ and $T^2$ values computed for the calibration set. 
 
 There are two ways to estimate them. First is by using classical method of moments, already mentioned:
 
-$$ DF_Q = 2\left(\frac{m(Q)}{s(Q)}\right)^2$$
-$$ DF_{T^2} = 2\left(\frac{m(T^2)}{s(T^2)}\right)^2$$
+$$ DF_Q = 2\left(\frac{m_Q}{s_Q}\right)^2$$
+$$ DF_{T^2} = 2\left(\frac{m_{T^2})}{s_{T^2})}\right)^2$$
 
 And the second is based on robust approach utilizing median and inter-quartile range instead of mean and standard deviation (see [the paper](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.2506) for details).
 
@@ -360,7 +360,7 @@ plotResiduals(m, ncomp = 4)
 
 More details about DD-SIMCA method can be also found in chapter, devoted to SIMCA classification.
 
-The residuals plot can be also shown for normalized values ($Q/m(Q)$ vs. $T^2/m(T^2)$) by using option `norm = T` in the `plotResiduals()` method.
+The residuals plot can be also shown for normalized values ($Q/m_Q$ vs. $T^2/m_{T^2}$) by using option `norm = T` in the `plotResiduals()` method.
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
