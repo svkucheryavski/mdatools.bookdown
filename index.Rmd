@@ -1,7 +1,7 @@
 ---
 title: "Getting started with mdatools for R"
 author: "Sergey Kucheryavskiy"
-date: "April 3, 2018"
+date: "July 5, 2018"
 knit: bookdown::render_book 
 site: bookdown::bookdown_site
 output:

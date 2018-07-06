@@ -5,10 +5,15 @@
 **Book**
 
 * Chapter about interval PLS (iPLS)
-* Chapters about PLS-DA classification
 * Chapter about randomization test (randtest)
 
 ### Last changes and improvements to book and package {-}
+
+**5.07.2018**
+
+* new chapter about [PLS-DA][PLS Discriminant Analysis]
+* small improvements and corrections to text of other chapters
+* added a short description if new `opacity` parameter for `mdaplot()` method
 
 **3.04.2018**
 

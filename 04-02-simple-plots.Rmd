@@ -54,6 +54,8 @@ Parameter            Description
 `show.grid`          logical, show or not a grid 
 
 `show.excluded`      logical, show or not objects corresponded to the excluded rows
+
+`opacity`            opacity of colors in range 0...1 (applied to all colors of current plot)
 --------------------------------------------------------------------------
 
 ### Scatter plots {-}
@@ -75,10 +77,7 @@ mdaplot(people[, 1], type = 'p', ylab = 'Height')
 mdaplot(people[1, ], type = 'p', ylab = '')
 ```
 
-All parameters, available for the standard `points()` method will work with `mdaplot()` as well. Besides that,
-you can colorize points according to some values using a color gradient. By default, the gradient is generated 
-using one of the diverging color schemes from [colorbrewer2.org](http://colorbrewer2.org), but this can be 
-changed using parameter `colmap` as it is shown below.
+All parameters, available for the standard `points()` method will work with `mdaplot()` as well. Besides that, you can colorize points according to some values using a color gradient. By default, the gradient is generated using one of the diverging color schemes from [colorbrewer2.org](http://colorbrewer2.org), but this can be changed using parameter `colmap` as it is shown below.
 
 ```{r, fig.width = 9, fig.height = 9}
 par(mfrow = c(2, 2))
@@ -99,8 +98,7 @@ mdaplot(people, type = 'p', cgroup = g, colmap = 'gray')
 ```
 
 Another useful option is adding labels to the data points. By default row names will be taken for the labels
-but you can specify a parameter `'labels'`, which can be either a text (`'names'` or `'indices'`) or a vector 
-with values to show as labels. Color and size of the labels can be adjusted.
+but you can specify a parameter `'labels'`, which can be either a text (`'names'` or `'indices'`) or a vector with values to show as labels. Color and size of the labels can be adjusted.
 
 ```{r, fig.width = 9, fig.height = 9}
 par(mfrow = c(2, 2))
