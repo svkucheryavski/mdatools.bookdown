@@ -2,12 +2,19 @@
 
 ### What expect from future releases {-}
 
-**Book**
-
-* Chapter about interval PLS (iPLS)
-* Chapter about randomization test (randtest)
 
 ### Last changes and improvements to book and package {-}
+
+**29.01.2020**
+
+The new version of the package (0.10.0) has some important major changes and improvements,
+so it was decided to update the book to a large degree. In addition to that, chapters about
+iPLS and randomization tests have been added.
+
+**9.11.2018**
+
+* new minor version (0.9.2) of package is available via GitHub with several bug fixes
+* added text about `max.cov` parameter in [Preprocessing][Preprocessing] chapter.
 
 **5.07.2018**
 
@@ -42,10 +49,10 @@
 
 **14.10.2016**
 
-The new version (0.8.0) brings a lot of new features, therefore it was decided to rewrite this tutorial 
-completely and start this log from the scratch. Most of the things available in the previous version 
-of the package will work without any changes. But if you have been using functions `mdaplot()` 
-and `mdaplotg()` it makes sense to read how the new implementation works and rewrite your code. 
+The new version (0.8.0) brings a lot of new features, therefore it was decided to rewrite this tutorial
+completely and start this log from the scratch. Most of the things available in the previous version
+of the package will work without any changes. But if you have been using functions `mdaplot()`
+and `mdaplotg()` it makes sense to read how the new implementation works and rewrite your code.
 The use of plotting tools became much simpler and more efficient. The main changes in the package are:
 
 * added a possibility to assign specific attributes to datasets, which makes plotting easier.
@@ -59,7 +66,4 @@ The use of plotting tools became much simpler and more efficient. The main chang
 * cross-validation procedures were optimized for most of the methods and now takes less time
 * several bug fixes and small improvements
 
-Besides that, the tutorial is now available in `docs` folder of the package repository in GitHub. The tutorial
-is a static HTML site, which can be used locally without internet connection (start with `index.html`). 
-However, it is not available from CRAN repository due to CRAN limitations. You can also access the tutorial via 
-[GitHub Pages](https://svkucheryavski.github.io/mdatools)
+Besides that, the tutorial is now available in `docs` folder of the package repository in GitHub. The tutorial is a static HTML site, which can be used locally without internet connection (start with `index.html`). However, it is not available from CRAN repository due to CRAN limitations. You can also access the tutorial via [GitHub Pages](https://svkucheryavski.github.io/mdatools)

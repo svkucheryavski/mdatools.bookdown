@@ -1,13 +1,13 @@
 # Overview {-}
 
-This package was created for an introductory PhD course on Chemometrics given at Department of Chemistry and Bioscience, Aalborg University. Quickly I found out that using R for this course (with all advantages it gives) needs a lot of routine work from students, since most of them were also beginners in R. Of course it is very good for understanding when students get to know e.g. how to calculate explained variance or residuals in PCA manually or make corresponding plots and so on, but for the introductory course these things (as well as numerous typos and small mistakes in a code) take too much time, which can be spent for explaining methods and proper interpretation of results.
+This package was originally created for an introductory PhD course on Chemometrics given at Department of Chemistry and Bioscience, Aalborg University. Quickly I found out that using R for this course (with all advantages it gives) needs a lot of routine work from students, since most of them were also beginners in R. Of course it is very good for understanding when students get to know e.g. how to calculate explained variance or residuals in PCA manually or make corresponding plots and so on, but for the introductory course these things (as well as numerous typos and small mistakes in a code) take too much time, which can be spent for explaining methods and proper interpretation of results.
 
-This is actually also true for everyday using of these methods, most of the routines can be written ones and simply reused with various options. So it was decided to write a package where most widely used chemometric methods for multivariate data analysis are implemented and which gives also a quick and easy-to-use access to results, produced by these methods. First of all numerous plots.
+This is actually also true for everyday use of these methods, most of the routines can be written once and simply re-used with various options. So it was decided to write a package where most widely used chemometric methods for multivariate data analysis are implemented and which also gives a quick and easy-to-use access to results, produced by these methods. First of all numerous plots.
 
 Here how it works. Say, we need to make a PCA model for data matrix `x` with autoscaling. Then make an overview of most important plots and investigate scores and loadings for first three components. The `mdatools` solution will be:
 
 ```r
-# make a model for autoscaled data with maximum possible number of components 
+# make a model for autoscaled data with maximum possible number of components
 m = pca(x, scale = TRUE)
 
 # show explained variance plot
@@ -29,16 +29,15 @@ plotLoadings(m, c(1, 3))
 plotLoadings(m, c(1, 3), type = 'h')
 ```
 
-Fairly simple, is not it? The other "routine", which have been taken into account is validation — 
+Fairly simple, is not it? The other "routine", which have been taken into account is validation —
 any model can be cross-validated or validated with a test set. The model object will contain the validation results, which will also appear on all model plots, etc. See the next chapters for details.
 
 ## What mdatools can do? {-}
 
-The package includes classes and functions for analysis, preprocessing and plotting data and results. 
-So far the following methods for analysis are implemented:
+The package includes classes and functions for analysis, preprocessing and plotting data and results. So far the following methods for analysis are implemented:
 
 * Principal Component Analysis (PCA)
-* Soft Independent Modelling of Class Analogy (SIMCA)
+* Soft Independent Modelling of Class Analogy (SIMCA), including data driven approach (DD-DIMCA)
 * Partial Least Squares regression (PLS) with calculation of VIP scores and Selectivity ratio
 * Partial Least Squares Discriminant Analysis (PLS-DA)
 * Randomization test for PLS regression models
@@ -48,17 +47,17 @@ Preprocessing methods include:
 
 * Mean centering, standardization and autoscaling
 * Savitzky-Golay filter for smoothing and derivatives
-* Standard Normal Variate for removing scatter effect from spectral data
+* Standard Normal Variate for removing scatter and global intensity effect from spectral data
 * Mutliplicative Scatter Correction for the same issue
 * Normalization of spectra to unit area or unit length
 
-Besides that, some extensions for the basic R plotting functionality have been also implemented and 
+Besides that, some extensions for the basic R plotting functionality have been also implemented and
 allow to do the following:
 
 * Color grouping of objects with automatic color legend bar.
 * Plot for several groups of objects with automatically calculated axes limits and plot legend.
 * Three built-in color schemes — one is based on [Colorbrewer](http://colorbrewer2.org/) and the other two are jet and grayscale.
-* Very easy-to-use possibility to apply any user defined color scheme.  
+* Very easy-to-use possibility to apply any user defined color scheme.
 * Possibility to show horizontal and vertical lines on the plot with automatically adjusted axes limits.
 * Possibility to extend plotting functionality by using some attributes for datasets.
 
@@ -66,16 +65,14 @@ See `?mdatools` and next chapters for more details.
 
 ## How to install {-}
 
-The package is available from CRAN by usual installing procedure. However due to restrictions in CRAN politics regarding number of submissions (once in 3-4 month) only major releases will be published there. To get the latest release plase use GitHub sources. You can either [download](https://github.com/svkucheryavski/mdatools/releases) 
-a zip-file with the source package and install it using the `install.packages` command, e.g. if the 
-downloaded file is `mdatools_0.9.0.tar.gz` and it is located in a current working directory, 
+The package is available from CRAN by usual installing procedure. However due to restrictions in CRAN politics regarding number of submissions (once in 3-4 month) only major releases will be published there. To get the latest release plase use GitHub sources. You can either [download](https://github.com/svkucheryavski/mdatools/releases) a zip-file with the source package and install it using the `install.packages` command, e.g. if the downloaded file is `mdatools_0.10.0.tar.gz` and it is located in a current working directory,
 just run the following:
 
 ```r
-install.packages('mdatools_0.9.0.tar.gz')
+install.packages('mdatools_0.10.0.tar.gz')
 ```
 
-If you have `devtools` package installed, the following command will install the latest release from 
+If you have `devtools` package installed, the following command will install the latest release from
 the GitHub (do not forget to load the `devtools` package first):
 
 ```r

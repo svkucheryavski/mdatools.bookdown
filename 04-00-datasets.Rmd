@@ -1,6 +1,6 @@
 # Datasets and plots {-}
 
-The package uses standard representation of the data in R: data frames, matrices and vectors. However, there are several additional methods and attributes, which make the use of the datasets a bit more more efficient. There is also a support for images. But if you are used to simple datasets and standard procedures and do not want any complications, you can simply skip this chapter. 
+The package uses standard representation of the data in R: data frames, matrices and vectors. However, there are several additional methods and attributes, which makes the use of the datasets a bit more more efficient. There is also a support for images. But if you are used to simple datasets and standard procedures and do not want any complications, you can simply skip this chapter.
 
 The package also uses its own set of plotting tools, which is a sort of an add-on for the R basic plotting system, extending its possibilities. From this point of view, learning how these tools work will simplify understanding of model plots a lot. The main improvements comparing to the basic plotting system are:
 
@@ -9,7 +9,7 @@ The package also uses its own set of plotting tools, which is a sort of an add-o
 3. Much easier way of adding labels to data points, bars, etc.
 4. Automatic axis limits when a plot contains several groups of objects.
 5. Possibility to color points and lines according to values of a specific numerical variable of a factor.
-6. Two built in color pallets and an easy way to use user specific set of colors.
+6. Several built in color pallets and an easy way to use user specific set of colors.
 7. Much more!
 
 This chapter explains most of the details.
