@@ -1,0 +1,25 @@
+div.caution {
+   background: #fffff0;
+   box-shadow: 0 0 5px rgba(0.2, 0.2, 0, 0.1);
+   border-radius: 3px;
+   color: #403020;
+   height: auto;
+   margin: 1em 0;
+   padding: 1em 1em 1em 40px;
+   position: relative;
+}
+
+div.caution::before {
+   position: absolute;
+   top: 0;
+   left: 0;
+   height: 100%;
+   width: 40px;
+   text-align: center;
+   display: block;
+   content: "!";
+   font-size: 2em;
+   font-weight: bold;
+   color: #aa8800;
+   padding: 0;
+}
