@@ -520,14 +520,14 @@ As you can see the explained variance values, eigenvalues and loadings are ident
 It is possible to make PCA decomposition even faster if only loadings and scores are needed. In this case you can use method `pca.run()` and skip other steps, like calculation of residuals, variances, critical limits and so on. But in this case data matrix must be centered (and scaled if necessary) manually prior to the decomposition. Here is an example using the data generated in previous code.
 
 ```{r}
-D = scale(D, center = T, scale = F)
+D = scale(D, center = TRUE, scale = FALSE)
 
 # conventional SVD
-t1 = system.time({m1 = pca.run(D, method = 'svd', ncomp = 2)})
+t1 = system.time({m1 = pca.run(D, method = "svd", ncomp = 2)})
 show(t1)
 
 # randomized SVD with p = 5 and q = 1
-t2 = system.time({m2 = pca.run(D, method = 'svd', ncomp = 2, rand = c(5, 1))})
+t2 = system.time({m2 = pca.run(D, method = "svd", ncomp = 2, rand = c(5, 1))})
 show(t2)
 
 # compare loadings

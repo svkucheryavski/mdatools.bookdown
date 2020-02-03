@@ -1,15 +1,9 @@
 # What is new {-}
 
-### What expect from future releases {-}
-
-
-### Last changes and improvements to book and package {-}
-
 **29.01.2020**
 
-The new version of the package (0.10.0) has some important major changes and improvements,
-so it was decided to update the book to a large degree. In addition to that, chapters about
-iPLS and randomization tests have been added.
+The new version of the package (0.10.0) has a lot of changes and improvements, so it was decided
+to update the book to a large degree. In addition to that, chapters about [iPLS][Interval PLS] and [randomization tests][Randomization test] have been added as well as information on new tools. See [list of changes](https://github.com/svkucheryavski/mdatools/blob/master/NEWS.md) in the package for more details.
 
 **9.11.2018**
 

@@ -24,7 +24,7 @@
 <meta name="author" content="Sergey Kucheryavskiy" />
 
 
-<meta name="date" content="2020-01-25" />
+<meta name="date" content="2020-02-03" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -130,11 +130,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <ul class="summary">
 <li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Introduction</a></li>
-<li class="chapter" data-level="" data-path="what-is-new.html"><a href="what-is-new.html"><i class="fa fa-check"></i>What is new</a>
-<ul>
-<li class="chapter" data-level="" data-path="what-is-new.html"><a href="what-is-new.html#what-expect-from-future-releases"><i class="fa fa-check"></i>What expect from future releases</a></li>
-<li class="chapter" data-level="" data-path="what-is-new.html"><a href="what-is-new.html#last-changes-and-improvements-to-book-and-package"><i class="fa fa-check"></i>Last changes and improvements to book and package</a></li>
-</ul></li>
+<li class="chapter" data-level="" data-path="what-is-new.html"><a href="what-is-new.html"><i class="fa fa-check"></i>What is new</a></li>
 <li class="chapter" data-level="" data-path="overview.html"><a href="overview.html"><i class="fa fa-check"></i>Overview</a>
 <ul>
 <li class="chapter" data-level="" data-path="what-mdatools-can-do.html"><a href="what-mdatools-can-do.html"><i class="fa fa-check"></i>What mdatools can do?</a></li>
@@ -212,6 +208,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="" data-path="plotting-methods-1.html"><a href="plotting-methods-1.html#excluding-rows-and-columns-1"><i class="fa fa-check"></i>Excluding rows and columns</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="variable-selection.html"><a href="variable-selection.html"><i class="fa fa-check"></i>Variable selection</a></li>
+<li class="chapter" data-level="" data-path="distances-and-outlier-detection.html"><a href="distances-and-outlier-detection.html"><i class="fa fa-check"></i>Distances and outlier detection</a>
+<ul>
+<li class="chapter" data-level="" data-path="distances-and-outlier-detection.html"><a href="distances-and-outlier-detection.html#residual-distance-for-x-decomposition"><i class="fa fa-check"></i>Residual distance for X-decomposition</a></li>
+<li class="chapter" data-level="" data-path="distances-and-outlier-detection.html"><a href="distances-and-outlier-detection.html#residual-distance-for-y-decomposition-and-total-distance"><i class="fa fa-check"></i>Residual distance for Y-decomposition and total distance</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="randomization-test.html"><a href="randomization-test.html"><i class="fa fa-check"></i>Randomization test</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path="pls-discriminant-analysis.html"><a href="pls-discriminant-analysis.html"><i class="fa fa-check"></i>PLS Discriminant Analysis</a>
 <ul>
@@ -219,6 +221,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="" data-path="classification-plots.html"><a href="classification-plots.html"><i class="fa fa-check"></i>Classification plots</a></li>
 <li class="chapter" data-level="" data-path="performance-plots.html"><a href="performance-plots.html"><i class="fa fa-check"></i>Performance plots</a></li>
 <li class="chapter" data-level="" data-path="predictions-for-a-new-data.html"><a href="predictions-for-a-new-data.html"><i class="fa fa-check"></i>Predictions for a new data</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="interval-pls.html"><a href="interval-pls.html"><i class="fa fa-check"></i>Interval PLS</a>
+<ul>
+<li class="chapter" data-level="" data-path="interval-pls.html"><a href="interval-pls.html#forward-ipls"><i class="fa fa-check"></i>Forward iPLS</a></li>
+<li class="chapter" data-level="" data-path="interval-pls.html"><a href="interval-pls.html#backward-ipls"><i class="fa fa-check"></i>Backward iPLS</a></li>
 </ul></li>
 </ul>
 
@@ -242,18 +249,18 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Several SIMCA models can be combined to a special object <code>simcam</code>, which is used to make a multiclass classification. Besides this, it also allows calculating distance between individual models and a <em>discrimination power</em> — importance of variables to discriminate between any two classes. Let’s see how it works.</p>
 <p>First we create three single-class SIMCA models with individual settings, such as number of
 optimal components and alpha.</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="multiclass-classification.html#cb22-1"></a>m.set =<span class="st"> </span><span class="kw">simca</span>(X.set, <span class="st">&quot;setosa&quot;</span>, <span class="dv">3</span>, <span class="dt">alpha =</span> <span class="fl">0.01</span>)</span>
-<span id="cb22-2"><a href="multiclass-classification.html#cb22-2"></a>m.set =<span class="st"> </span><span class="kw">selectCompNum</span>(m.set, <span class="dv">1</span>)</span>
-<span id="cb22-3"><a href="multiclass-classification.html#cb22-3"></a></span>
-<span id="cb22-4"><a href="multiclass-classification.html#cb22-4"></a>m.vir =<span class="st"> </span><span class="kw">simca</span>(X.vir, <span class="st">&quot;virginica&quot;</span>, <span class="dv">3</span>)</span>
-<span id="cb22-5"><a href="multiclass-classification.html#cb22-5"></a>m.vir =<span class="st"> </span><span class="kw">selectCompNum</span>(m.vir, <span class="dv">2</span>)</span>
-<span id="cb22-6"><a href="multiclass-classification.html#cb22-6"></a></span>
-<span id="cb22-7"><a href="multiclass-classification.html#cb22-7"></a>m.ver =<span class="st"> </span><span class="kw">simca</span>(X.ver, <span class="st">&quot;versicolor&quot;</span>, <span class="dv">3</span>)</span>
-<span id="cb22-8"><a href="multiclass-classification.html#cb22-8"></a>m.ver =<span class="st"> </span><span class="kw">selectCompNum</span>(m.ver, <span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb139"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb139-1"><a href="multiclass-classification.html#cb139-1"></a>m.set =<span class="st"> </span><span class="kw">simca</span>(X.set, <span class="st">&quot;setosa&quot;</span>, <span class="dv">3</span>, <span class="dt">alpha =</span> <span class="fl">0.01</span>)</span>
+<span id="cb139-2"><a href="multiclass-classification.html#cb139-2"></a>m.set =<span class="st"> </span><span class="kw">selectCompNum</span>(m.set, <span class="dv">1</span>)</span>
+<span id="cb139-3"><a href="multiclass-classification.html#cb139-3"></a></span>
+<span id="cb139-4"><a href="multiclass-classification.html#cb139-4"></a>m.vir =<span class="st"> </span><span class="kw">simca</span>(X.vir, <span class="st">&quot;virginica&quot;</span>, <span class="dv">3</span>)</span>
+<span id="cb139-5"><a href="multiclass-classification.html#cb139-5"></a>m.vir =<span class="st"> </span><span class="kw">selectCompNum</span>(m.vir, <span class="dv">2</span>)</span>
+<span id="cb139-6"><a href="multiclass-classification.html#cb139-6"></a></span>
+<span id="cb139-7"><a href="multiclass-classification.html#cb139-7"></a>m.ver =<span class="st"> </span><span class="kw">simca</span>(X.ver, <span class="st">&quot;versicolor&quot;</span>, <span class="dv">3</span>)</span>
+<span id="cb139-8"><a href="multiclass-classification.html#cb139-8"></a>m.ver =<span class="st"> </span><span class="kw">selectCompNum</span>(m.ver, <span class="dv">1</span>)</span></code></pre></div>
 <p>Then we combine the models into a <code>simcam</code> model object. Summary will show the performance on
 calibration set, which is a combination of calibration sets for each of the individual models</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="multiclass-classification.html#cb23-1"></a>mm =<span class="st"> </span><span class="kw">simcam</span>(<span class="kw">list</span>(m.set, m.vir, m.ver))</span>
-<span id="cb23-2"><a href="multiclass-classification.html#cb23-2"></a><span class="kw">summary</span>(mm)</span></code></pre></div>
+<div class="sourceCode" id="cb140"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb140-1"><a href="multiclass-classification.html#cb140-1"></a>mm =<span class="st"> </span><span class="kw">simcam</span>(<span class="kw">list</span>(m.set, m.vir, m.ver))</span>
+<span id="cb140-2"><a href="multiclass-classification.html#cb140-2"></a><span class="kw">summary</span>(mm)</span></code></pre></div>
 <pre><code>## 
 ## SIMCA multiple classes classification (class simcam)
 ## 
@@ -266,11 +273,11 @@ calibration set, which is a combination of calibration sets for each of the indi
 ## virginica      2 22  3 47  3  0.94  0.88     0.92
 ## versicolor     1 25  3 47  0  0.94  1.00     0.96</code></pre>
 <p>Now we apply the combined model to the test set and look at the predictions.</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="multiclass-classification.html#cb25-1"></a>res =<span class="st"> </span><span class="kw">predict</span>(mm, Xt, ct)</span>
-<span id="cb25-2"><a href="multiclass-classification.html#cb25-2"></a><span class="kw">plotPredictions</span>(res)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-19-1.png" width="864" /></p>
+<div class="sourceCode" id="cb142"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb142-1"><a href="multiclass-classification.html#cb142-1"></a>res =<span class="st"> </span><span class="kw">predict</span>(mm, Xt, ct)</span>
+<span id="cb142-2"><a href="multiclass-classification.html#cb142-2"></a><span class="kw">plotPredictions</span>(res)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-96-1.png" width="864" /></p>
 <p>In this case, the predictions are shown only for the number of components each model found optimal. The names of classes along y-axis are the individual models. Similarly we can show the predicted values.</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="multiclass-classification.html#cb26-1"></a><span class="kw">show</span>(res<span class="op">$</span>c.pred[<span class="dv">20</span><span class="op">:</span><span class="dv">30</span>, <span class="dv">1</span>, ])</span></code></pre></div>
+<div class="sourceCode" id="cb143"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb143-1"><a href="multiclass-classification.html#cb143-1"></a><span class="kw">show</span>(res<span class="op">$</span>c.pred[<span class="dv">20</span><span class="op">:</span><span class="dv">30</span>, <span class="dv">1</span>, ])</span></code></pre></div>
 <pre><code>##    setosa virginica versicolor
 ## 40      1        -1         -1
 ## 42     -1        -1         -1
@@ -284,27 +291,27 @@ calibration set, which is a combination of calibration sets for each of the indi
 ## 58     -1        -1          1
 ## 60     -1        -1          1</code></pre>
 <p>Method <code>getConfusionMatrix()</code> is also available in this case.</p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="multiclass-classification.html#cb28-1"></a><span class="kw">show</span>(<span class="kw">getConfusionMatrix</span>(res))</span></code></pre></div>
+<div class="sourceCode" id="cb145"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb145-1"><a href="multiclass-classification.html#cb145-1"></a><span class="kw">show</span>(<span class="kw">getConfusionMatrix</span>(res))</span></code></pre></div>
 <pre><code>##            setosa virginica versicolor None
 ## setosa         23         0          0    2
 ## virginica       0        21          4    4
 ## versicolor      0         1         25    0</code></pre>
 <p>There are three additional plots available for multiclass SIMCA model. First of all it is a distance between a selected model and the others.</p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="multiclass-classification.html#cb30-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
-<span id="cb30-2"><a href="multiclass-classification.html#cb30-2"></a><span class="kw">plotModelDistance</span>(mm, <span class="dv">1</span>)</span>
-<span id="cb30-3"><a href="multiclass-classification.html#cb30-3"></a><span class="kw">plotModelDistance</span>(mm, <span class="dv">2</span>)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-22-1.png" width="864" />
+<div class="sourceCode" id="cb147"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb147-1"><a href="multiclass-classification.html#cb147-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb147-2"><a href="multiclass-classification.html#cb147-2"></a><span class="kw">plotModelDistance</span>(mm, <span class="dv">1</span>)</span>
+<span id="cb147-3"><a href="multiclass-classification.html#cb147-3"></a><span class="kw">plotModelDistance</span>(mm, <span class="dv">2</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-99-1.png" width="864" />
 The plot shows not a real distance but rather a similarity between a selected model and the others as a ratio of residual variances. You can find more detailed description about how model is calculated in description of the method or in help for <code>plotModelDistance.simcam</code> function.</p>
 <p>The second plot is a discrimination power, mentioned in the beginning of the section.</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="multiclass-classification.html#cb31-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
-<span id="cb31-2"><a href="multiclass-classification.html#cb31-2"></a><span class="kw">plotDiscriminationPower</span>(mm, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), <span class="dt">show.labels =</span> <span class="ot">TRUE</span>)</span>
-<span id="cb31-3"><a href="multiclass-classification.html#cb31-3"></a><span class="kw">plotDiscriminationPower</span>(mm, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), <span class="dt">show.labels =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-23-1.png" width="864" /></p>
+<div class="sourceCode" id="cb148"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb148-1"><a href="multiclass-classification.html#cb148-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb148-2"><a href="multiclass-classification.html#cb148-2"></a><span class="kw">plotDiscriminationPower</span>(mm, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), <span class="dt">show.labels =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb148-3"><a href="multiclass-classification.html#cb148-3"></a><span class="kw">plotDiscriminationPower</span>(mm, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), <span class="dt">show.labels =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-100-1.png" width="864" /></p>
 <p>And, finally, a Cooman’s plot showing an orthogonal distance, <span class="math inline">\(q\)</span>, from objects to two selected classes/models.</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="multiclass-classification.html#cb32-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
-<span id="cb32-2"><a href="multiclass-classification.html#cb32-2"></a><span class="kw">plotCooman</span>(mm, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), <span class="dt">show.labels =</span> <span class="ot">TRUE</span>)</span>
-<span id="cb32-3"><a href="multiclass-classification.html#cb32-3"></a><span class="kw">plotCooman</span>(mm, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), <span class="dt">show.labels =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-24-1.png" width="864" /></p>
+<div class="sourceCode" id="cb149"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb149-1"><a href="multiclass-classification.html#cb149-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb149-2"><a href="multiclass-classification.html#cb149-2"></a><span class="kw">plotCooman</span>(mm, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), <span class="dt">show.labels =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb149-3"><a href="multiclass-classification.html#cb149-3"></a><span class="kw">plotCooman</span>(mm, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), <span class="dt">show.labels =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-101-1.png" width="864" /></p>
 <p>The limits, shown as dashed lines, are computed using chi-square distribution but only for <span class="math inline">\(q\)</span> values.</p>
 
 </div>

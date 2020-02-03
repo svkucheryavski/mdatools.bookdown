@@ -38,6 +38,7 @@ Attribute         Meaning
 
  `yaxis.values`   a vector of values, which correspond to the rows (e.g. for
                   kinetic data it can be time or temperature of reaction).
+
 ----------------------------------------------------------------------------
 
 
@@ -60,22 +61,23 @@ See more details in the [section][Simple plots] about plots.
 Since data objects in R loose all user specified attributes when e.g. we transpose them or taking a subset, it was decided to write several methods, which would process attributes correctly. They also adjust indices of excluded rows and columns when user takes a subset or merge two data objects together. When data matrix is transposed the corresponding method will switch the x- and y- attributes. All methods with a brief description are listed in the table below (including the ones already introduces).
 
 -------------------------------------------------------------------------------------------------
-Method                                 Description
+Method                                Description
 ----------------                      -----------------------------------------------------------
-`mda.show(data)`                       Show data object without excluded elements
+`mda.show(data)`                      Show data object without excluded elements
 
-`mda.t(data)`                          Transpose data object
+`mda.t(data)`                         Transpose data object
 
-`mda.cbind(data1, data2, ...)`         Merge several datasets by columns
+`mda.cbind(data1, data2, ...)`        Merge several datasets by columns
 
-`mda.rbind(data1, data2, ...)`         Merge several datasets by rows
+`mda.rbind(data1, data2, ...)`        Merge several datasets by rows
 
-`mda.subset(data1, subset, select)`    Take a subset of data object (`subset` is numeric indices,                                          names or logical values for rows, `select` — the same
-                                       for columns)
+`mda.subset(data1, subset, select)`   Take a subset of data object (`subset` is numeric indices,                                          names or logical values for rows, `select` — the same
+                                      for columns)
 
-`attrs = mda.getattr(data)`            Return all user specific attributes from an object
+`attrs = mda.getattr(data)`           Return all user specific attributes from an object
 
-`data = mda.getattr(data, attrs)`      Assign user specific attributes to an object
+`data = mda.getattr(data, attrs)`     Assign user specific attributes to an object
+
 ------------------------------------------------------------------------------------------------
 
 
@@ -87,7 +89,7 @@ Let us first crate a simple data with a factor column.
 
 ```{r}
 h = c(180, 175, 165, 190, 188)
-c = c('Gray', 'Green', 'Gray', 'Green', 'Blue')
+c = c("Gray", "Green", "Gray", "Green", "Blue")
 d = data.frame(Height = h, Eye.color = c)
 show(d)
 ```

@@ -26,7 +26,7 @@ plotScores(m, c(1, 3))
 plotLoadings(m, c(1, 3))
 
 # show the loadings as a set of bar plots
-plotLoadings(m, c(1, 3), type = 'h')
+plotLoadings(m, c(1, 3), type = "h")
 ```
 
 Fairly simple, is not it? The other "routine", which have been taken into account is validation —
@@ -69,13 +69,13 @@ The package is available from CRAN by usual installing procedure. However due to
 just run the following:
 
 ```r
-install.packages('mdatools_0.10.0.tar.gz')
+install.packages("mdatools_0.10.0.tar.gz")
 ```
 
 If you have `devtools` package installed, the following command will install the latest release from
 the GitHub (do not forget to load the `devtools` package first):
 
 ```r
-install_github('svkucheryavski/mdatools')
+install_github("svkucheryavski/mdatools")
 ```
 
