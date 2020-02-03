@@ -2,17 +2,17 @@
 
 PLS Discriminant Analysis (PLS-DA) is a discrimination method based on PLS regression. At some point the idea of PLS-DA is similar to logistic regression — we use PLS for a dummy response variable, *y*, which is equal to +1 for objects belonging to a class, and -1 for those that do not (in some implementations it can also be 1 and 0 correspondingly). Then a conventional PLS regression model is calibrated and validated, which means that all methods and plots, you already used in PLS, can be used for PLS-DA models and results as well.
 
-The extra step in PLS-DA is, actually, classification, which is based on thresholding of predicted y-values. If the predicted value is above 0, a corresponding object is considered as a member of a class and if not — as a stranger. In *mdatools* this is done automatically using methods `plsda()` and `plsdares()`, which inhertit all `pls()` and `plsres()` methods. Plus they have something extra to represent classification results, which you have already read about in the [chapter][SIMCA Classification] devoted to SIMCA. If you have not, it makes sense to do this first, to make the understanding of PLS-DA implementation easier.
+The extra step in PLS-DA is, actually, classification, which is based on thresholding of predicted y-values. If the predicted value is above 0, a corresponding object is considered as a member of a class and if not — as a stranger. In *mdatools* this is done automatically using methods `plsda()` and `plsdares()`, which inhertit all `pls()` and `plsres()` methods. Plus they have something extra to represent classification results, which you have already read about in the [chapter][SIMCA/DD-SIMCA classification] devoted to SIMCA. If you have not, it makes sense to do this first, to make the understanding of PLS-DA implementation easier.
 
 In this chapter we will describe shortly how PLS-DA implementation works. All examples are based on the well-known Iris dataset, which will be split into two subsets — calibration (75 objects, 25 for each class) and validation (another 75 objects). Two PLS-DA models will be built — one only for *virginica* class and one for all three classes.
 
 ## Calibration of PLS-DA model {-}
 
-Calibration of PLS-DA model is very similar to conventional PLS with one difference — you need to provide information about class membership of each object instead of a matrix or a vector with response values. This can be done in two different ways. If you have multiple classes, it is always recommended to provide your class membering data as a *factor* with predefined labels or a vector with class names as text values. The labels/values in this case will be used as class names. It is also acceptable to use numbers as labels but it will make interpretation of results less readable and can possible cause problems with performance statistics calculations. So use names!
+Calibration of PLS-DA model is very similar to conventional PLS with one difference — you need to provide information about class membership of each object instead of a matrix or a vector with response values. This can be done in two different ways. If you have multiple classes, it is always recommended to provide your class membership data as a *factor* with predefined labels or a vector with class names as text values. The labels/values in this case will be used as class names. It is also acceptable to use numbers as labels but it will make interpretation of results less readable and can possible cause problems with performance statistics calculations. So use names!
 
 It is very important that you use the same labels/names for e.g. calibration and test set, because this is the way model will identify which class an object came from. And if you have e.g. a typo in a label value, model will assume that the corresponding object is a stranger.
 
-So let's prepare our data. 
+So let's prepare our data.
 
 ```{r}
 data(iris)
@@ -37,8 +37,8 @@ show(cc.all)
 However, for the model with just one class, *virginica*, we need to prepare the class variable in a different way. In this case it is enought to provide a vector with logical values, where `TRUE` will correspond to a member and `FALSE` to a non-member of the class. Here is an example how to do it (we will make two — one for calibration and one for validation subsets).
 
 ```{r}
-cc.vir = cc.all == 'virginica'
-cv.vir = cv.all == 'virginica'
+cc.vir = cc.all == "virginica"
+cv.vir = cv.all == "virginica"
 show(cc.vir)
 ```
 
@@ -46,23 +46,23 @@ Now we can calibrate the models:
 
 ```{r}
 m.all = plsda(Xc, cc.all, 3, cv = 1)
-m.vir = plsda(Xc, cc.vir, 3, cv = 1, classname = 'virginica')
+m.vir = plsda(Xc, cc.vir, 3, cv = 1, classname = "virginica")
 ```
 
 You could notice one important difference. In case when parameter `c` is a vector with logical values you also need to provide a name of the class. If you do not do this, a default name will be used, but it may cause problems when you e.g. validate your model using test set where class membership is a factor as we have in this example.
 
-Let's look at the summary for each of the model. As you can see below, summary for multi class PLS-DA simply shows one set of results for each class. The performance statistics include explained X and Y variance (individual for last used component and cumulative for all of them), values for confusion matrix (True Positives, False Positives, True Negatives, False Negatives) as well as specificity and sensitivity values.
+Let's look at the summary for each of the model. As you can see below, summary for multi class PLS-DA simply shows one set of results for each class. The performance statistics include explained X and Y variance (cumulative), values for confusion matrix (true positives, false positives, true negatives, false negatives) as well as specificity, sensitivity and accuracy values.
 
 ```{r}
 summary(m.all)
 ```
 
 Dealing with the multi-class PLS-DA model is similar to dealing with PLS2 models, when you have several y-variables. Every time you want to show a plot or results for a particular class, just provide the class number using parameter `nc`. For example this is how to show summary only for the third class (*virginica*).
- 
+
 ```{r}
  summary(m.all, nc = 3)
 ```
- 
+
 You can also show statistics only for calibration or only for cross-validation parts, in this case you will see details about contribution of every component to the model.
 
 ```{r}
@@ -89,20 +89,20 @@ getConfusionMatrix(m.vir$calres)
 
 ## Classification plots {-}
 
-Most of the plots for visualisation of classification results described in SIMCA chapter can be also used for PLS-DA models and results. Let's start with classification plots. By default it is shown for cross-validation results (we change position of the legend so it does not hide the points). You can clearly spot for example three false negatives and one false positive in the one-class PLS-DA model for virginica.
+Most of the plots for visualisation of classification results described in SIMCA chapter can be also used for PLS-DA models and results. Let's start with classification plots. By default it is shown for cross-validation results (we change position of the legend so it does not hide the points). You can clearly spot for example three false positives and one false negatives in the one-class PLS-DA model for virginica.
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
-plotPredictions(m.all, legend.position = 'top')
-plotPredictions(m.vir, legend.position = 'top')
+plotPredictions(m.all)
+plotPredictions(m.vir)
 ```
- 
+
 In case of multiple classes model you can select which class to show the predictions for.
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
-plotPredictions(m.all, nc = 1, legend.position = 'top')
-plotPredictions(m.all, nc = 3, legend.position = 'top')
+plotPredictions(m.all, nc = 1)
+plotPredictions(m.all, nc = 3)
 ```
 
 ## Performance plots {-}
@@ -110,14 +110,14 @@ plotPredictions(m.all, nc = 3, legend.position = 'top')
 As in SIMCA you can show how sensitivity, specificity and total amount of misclassified samples depending on number of components by using corresponding plots. In case of multiple-classes model you can also provide a class number to show the plot for (by default package will show the plot for overall statistic computed for all classes).
 
 
-```{r, fig.width = 9, fig.height = 8}
+```{r, fig.width = 9, fig.height = 12}
 par(mfrow = c(3, 2))
-plotMisclassified(m.all, nc = 2, legend.position = 'top')
-plotMisclassified(m.vir, legend.position = 'top')
-plotSensitivity(m.all, nc = 2, legend.position = 'top')
-plotSensitivity(m.vir, legend.position = 'top')
-plotSpecificity(m.all, nc = 2, legend.position = 'top')
-plotSpecificity(m.vir, legend.position = 'top')
+plotMisclassified(m.all, nc = 2)
+plotMisclassified(m.vir)
+plotSensitivity(m.all, nc = 2)
+plotSensitivity(m.vir)
+plotSpecificity(m.all, nc = 2)
+plotSpecificity(m.vir)
 ```
 
 As usual, you can also change type of plot to line or scatter-line, change colors, etc. All PLS regression plots, including RMSE, X and Y variance, etc. will also work smoothly with PLS-DA models or results. You can also show regression coefficients like in the example below. To show regression coefficients for particular class you need to provide its number using parameter `ny` (the reason we use `ny` and not `nc` here is that this plot is inherited from PLS model). So in our example both plots show regression coefficients for prediction of virginica objects (left obtained using multiple class model and right — using one class model).
@@ -126,9 +126,9 @@ As usual, you can also change type of plot to line or scatter-line, change color
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
 plotRegcoeffs(m.all, ncomp = 3, ny = 3)
-plotRegcoeffs(m.vir)
+plotRegcoeffs(m.vir, ncomp = 1, show.ci = TRUE)
 ```
- 
+
 ## Predictions for a new data {-}
 
 Again very similar to PLS — just use method `predict()` and provide at least matrix or data frame with predictors (which should contain the same number of variables/columns). For test set validation you can also provide class reference information similar to what you have used for calibration of PLS-DA models.
@@ -144,7 +144,7 @@ And the corresponding plot with predictions.
 
 ```{r, fig.width=9, fig.height=5}
 par(mfrow = c(1, 1))
-plotPredictions(res, legend.position = 'topleft')
+plotPredictions(res)
 ```
 
 If vector with reference class values contains names of classes model knows nothing about, they will simply be considered as members of non of the known clases ("None").
@@ -163,11 +163,11 @@ As you can see, statistically results are identical. However, predictions plot w
 
 ```{r, fig.width=9, fig.height=8}
 par(mfrow = c(2, 1))
-plotPredictions(res21, legend.position = 'topleft')
-plotPredictions(res22, legend.position = 'topleft')
+plotPredictions(res21)
+plotPredictions(res22)
 ```
 
-And because `predict()` returns an object with results you can also use most of the plots available for PLS regression results. In the last example below you will find plots for X-residuals and Y-varaince.
+And because `predict()` returns an object with results you can also use most of the plots available for PLS regression results. In the last example below you will find plots for X-residuals and Y-variance.
 
 ```{r, fig.width=9, fig.height=5}
 par(mfrow = c(1, 2))
