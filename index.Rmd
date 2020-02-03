@@ -34,3 +34,5 @@ The current version of tutorial is compatible with version 0.10.0 of the package
 
 All methods implemented in the package were tested using well-known datasets. However, there still could be some bugs, in this case please report to [svkucheryavski@gmail.com](mailto:svkucheryavski@gmail.com) or use [Issues tool](https://github.com/svkucheryavski/mdatools/issues) at GitHub. You are also very welcome to share your comments and suggestions about the package functionality.
 
+If you want to cite the package, please use the following: Sergey Kucheryavskiy, mdatools – R package for chemometrics, Chemometrics and Intelligent Laboratory Systems, Volume 198,
+2020 (DOI: 10.1016/j.chemolab.2020.103937).
