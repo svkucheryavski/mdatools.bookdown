@@ -249,49 +249,52 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Calibration of PLS-DA model is very similar to conventional PLS with one difference — you need to provide information about class membership of each object instead of a matrix or a vector with response values. This can be done in two different ways. If you have multiple classes, it is always recommended to provide your class membership data as a <em>factor</em> with predefined labels or a vector with class names as text values. The labels/values in this case will be used as class names. It is also acceptable to use numbers as labels but it will make interpretation of results less readable and can possible cause problems with performance statistics calculations. So use names!</p>
 <p>It is very important that you use the same labels/names for e.g. calibration and test set, because this is the way model will identify which class an object came from. And if you have e.g. a typo in a label value, model will assume that the corresponding object is a stranger.</p>
 <p>So let’s prepare our data.</p>
-<div class="sourceCode" id="cb212"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb212-1"><a href="calibration-of-pls-da-model.html#cb212-1"></a><span class="kw">data</span>(iris)</span>
-<span id="cb212-2"><a href="calibration-of-pls-da-model.html#cb212-2"></a></span>
-<span id="cb212-3"><a href="calibration-of-pls-da-model.html#cb212-3"></a>cal.ind =<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">25</span>, <span class="dv">51</span><span class="op">:</span><span class="dv">75</span>, <span class="dv">101</span><span class="op">:</span><span class="dv">125</span>)</span>
-<span id="cb212-4"><a href="calibration-of-pls-da-model.html#cb212-4"></a>val.ind =<span class="st"> </span><span class="kw">c</span>(<span class="dv">26</span><span class="op">:</span><span class="dv">50</span>, <span class="dv">76</span><span class="op">:</span><span class="dv">100</span>, <span class="dv">126</span><span class="op">:</span><span class="dv">150</span>)</span>
-<span id="cb212-5"><a href="calibration-of-pls-da-model.html#cb212-5"></a></span>
-<span id="cb212-6"><a href="calibration-of-pls-da-model.html#cb212-6"></a>Xc =<span class="st"> </span>iris[cal.ind, <span class="dv">1</span><span class="op">:</span><span class="dv">4</span>]</span>
-<span id="cb212-7"><a href="calibration-of-pls-da-model.html#cb212-7"></a>Xv =<span class="st"> </span>iris[val.ind, <span class="dv">1</span><span class="op">:</span><span class="dv">4</span>]</span>
-<span id="cb212-8"><a href="calibration-of-pls-da-model.html#cb212-8"></a></span>
-<span id="cb212-9"><a href="calibration-of-pls-da-model.html#cb212-9"></a>cc.all =<span class="st"> </span>iris[cal.ind, <span class="dv">5</span>]</span>
-<span id="cb212-10"><a href="calibration-of-pls-da-model.html#cb212-10"></a>cv.all =<span class="st"> </span>iris[val.ind, <span class="dv">5</span>]</span></code></pre></div>
+<div class="sourceCode" id="cb218"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb218-1"><a href="calibration-of-pls-da-model.html#cb218-1"></a><span class="kw">data</span>(iris)</span>
+<span id="cb218-2"><a href="calibration-of-pls-da-model.html#cb218-2"></a></span>
+<span id="cb218-3"><a href="calibration-of-pls-da-model.html#cb218-3"></a>cal.ind =<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">25</span>, <span class="dv">51</span><span class="op">:</span><span class="dv">75</span>, <span class="dv">101</span><span class="op">:</span><span class="dv">125</span>)</span>
+<span id="cb218-4"><a href="calibration-of-pls-da-model.html#cb218-4"></a>val.ind =<span class="st"> </span><span class="kw">c</span>(<span class="dv">26</span><span class="op">:</span><span class="dv">50</span>, <span class="dv">76</span><span class="op">:</span><span class="dv">100</span>, <span class="dv">126</span><span class="op">:</span><span class="dv">150</span>)</span>
+<span id="cb218-5"><a href="calibration-of-pls-da-model.html#cb218-5"></a></span>
+<span id="cb218-6"><a href="calibration-of-pls-da-model.html#cb218-6"></a>Xc =<span class="st"> </span>iris[cal.ind, <span class="dv">1</span><span class="op">:</span><span class="dv">4</span>]</span>
+<span id="cb218-7"><a href="calibration-of-pls-da-model.html#cb218-7"></a>Xv =<span class="st"> </span>iris[val.ind, <span class="dv">1</span><span class="op">:</span><span class="dv">4</span>]</span>
+<span id="cb218-8"><a href="calibration-of-pls-da-model.html#cb218-8"></a></span>
+<span id="cb218-9"><a href="calibration-of-pls-da-model.html#cb218-9"></a>cc.all =<span class="st"> </span>iris[cal.ind, <span class="dv">5</span>]</span>
+<span id="cb218-10"><a href="calibration-of-pls-da-model.html#cb218-10"></a>cv.all =<span class="st"> </span>iris[val.ind, <span class="dv">5</span>]</span></code></pre></div>
 <p>In this case, the fifth column of dataset <em>Iris</em> is already factor, otherwise we have to make it as a factor explicitely. Lets check if it is indeed correct.</p>
-<div class="sourceCode" id="cb213"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb213-1"><a href="calibration-of-pls-da-model.html#cb213-1"></a><span class="kw">show</span>(cc.all)</span></code></pre></div>
-<pre><code>##  [1] setosa     setosa     setosa     setosa     setosa     setosa    
-##  [7] setosa     setosa     setosa     setosa     setosa     setosa    
-## [13] setosa     setosa     setosa     setosa     setosa     setosa    
-## [19] setosa     setosa     setosa     setosa     setosa     setosa    
-## [25] setosa     versicolor versicolor versicolor versicolor versicolor
-## [31] versicolor versicolor versicolor versicolor versicolor versicolor
-## [37] versicolor versicolor versicolor versicolor versicolor versicolor
-## [43] versicolor versicolor versicolor versicolor versicolor versicolor
-## [49] versicolor versicolor virginica  virginica  virginica  virginica 
-## [55] virginica  virginica  virginica  virginica  virginica  virginica 
-## [61] virginica  virginica  virginica  virginica  virginica  virginica 
-## [67] virginica  virginica  virginica  virginica  virginica  virginica 
-## [73] virginica  virginica  virginica 
+<div class="sourceCode" id="cb219"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb219-1"><a href="calibration-of-pls-da-model.html#cb219-1"></a><span class="kw">show</span>(cc.all)</span></code></pre></div>
+<pre><code>##  [1] setosa     setosa     setosa     setosa     setosa    
+##  [6] setosa     setosa     setosa     setosa     setosa    
+## [11] setosa     setosa     setosa     setosa     setosa    
+## [16] setosa     setosa     setosa     setosa     setosa    
+## [21] setosa     setosa     setosa     setosa     setosa    
+## [26] versicolor versicolor versicolor versicolor versicolor
+## [31] versicolor versicolor versicolor versicolor versicolor
+## [36] versicolor versicolor versicolor versicolor versicolor
+## [41] versicolor versicolor versicolor versicolor versicolor
+## [46] versicolor versicolor versicolor versicolor versicolor
+## [51] virginica  virginica  virginica  virginica  virginica 
+## [56] virginica  virginica  virginica  virginica  virginica 
+## [61] virginica  virginica  virginica  virginica  virginica 
+## [66] virginica  virginica  virginica  virginica  virginica 
+## [71] virginica  virginica  virginica  virginica  virginica 
 ## Levels: setosa versicolor virginica</code></pre>
 <p>However, for the model with just one class, <em>virginica</em>, we need to prepare the class variable in a different way. In this case it is enought to provide a vector with logical values, where <code>TRUE</code> will correspond to a member and <code>FALSE</code> to a non-member of the class. Here is an example how to do it (we will make two — one for calibration and one for validation subsets).</p>
-<div class="sourceCode" id="cb215"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb215-1"><a href="calibration-of-pls-da-model.html#cb215-1"></a>cc.vir =<span class="st"> </span>cc.all <span class="op">==</span><span class="st"> &quot;virginica&quot;</span></span>
-<span id="cb215-2"><a href="calibration-of-pls-da-model.html#cb215-2"></a>cv.vir =<span class="st"> </span>cv.all <span class="op">==</span><span class="st"> &quot;virginica&quot;</span></span>
-<span id="cb215-3"><a href="calibration-of-pls-da-model.html#cb215-3"></a><span class="kw">show</span>(cc.vir)</span></code></pre></div>
-<pre><code>##  [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
-## [12] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
-## [23] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
-## [34] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
-## [45] FALSE FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE  TRUE  TRUE  TRUE
-## [56]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE
-## [67]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE</code></pre>
+<div class="sourceCode" id="cb221"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb221-1"><a href="calibration-of-pls-da-model.html#cb221-1"></a>cc.vir =<span class="st"> </span>cc.all <span class="op">==</span><span class="st"> &quot;virginica&quot;</span></span>
+<span id="cb221-2"><a href="calibration-of-pls-da-model.html#cb221-2"></a>cv.vir =<span class="st"> </span>cv.all <span class="op">==</span><span class="st"> &quot;virginica&quot;</span></span>
+<span id="cb221-3"><a href="calibration-of-pls-da-model.html#cb221-3"></a><span class="kw">show</span>(cc.vir)</span></code></pre></div>
+<pre><code>##  [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## [11] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## [21] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## [31] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## [41] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## [51]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE
+## [61]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE
+## [71]  TRUE  TRUE  TRUE  TRUE  TRUE</code></pre>
 <p>Now we can calibrate the models:</p>
-<div class="sourceCode" id="cb217"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb217-1"><a href="calibration-of-pls-da-model.html#cb217-1"></a>m.all =<span class="st"> </span><span class="kw">plsda</span>(Xc, cc.all, <span class="dv">3</span>, <span class="dt">cv =</span> <span class="dv">1</span>)</span>
-<span id="cb217-2"><a href="calibration-of-pls-da-model.html#cb217-2"></a>m.vir =<span class="st"> </span><span class="kw">plsda</span>(Xc, cc.vir, <span class="dv">3</span>, <span class="dt">cv =</span> <span class="dv">1</span>, <span class="dt">classname =</span> <span class="st">&quot;virginica&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb223"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb223-1"><a href="calibration-of-pls-da-model.html#cb223-1"></a>m.all =<span class="st"> </span><span class="kw">plsda</span>(Xc, cc.all, <span class="dv">3</span>, <span class="dt">cv =</span> <span class="dv">1</span>)</span>
+<span id="cb223-2"><a href="calibration-of-pls-da-model.html#cb223-2"></a>m.vir =<span class="st"> </span><span class="kw">plsda</span>(Xc, cc.vir, <span class="dv">3</span>, <span class="dt">cv =</span> <span class="dv">1</span>, <span class="dt">classname =</span> <span class="st">&quot;virginica&quot;</span>)</span></code></pre></div>
 <p>You could notice one important difference. In case when parameter <code>c</code> is a vector with logical values you also need to provide a name of the class. If you do not do this, a default name will be used, but it may cause problems when you e.g. validate your model using test set where class membership is a factor as we have in this example.</p>
 <p>Let’s look at the summary for each of the model. As you can see below, summary for multi class PLS-DA simply shows one set of results for each class. The performance statistics include explained X and Y variance (cumulative), values for confusion matrix (true positives, false positives, true negatives, false negatives) as well as specificity, sensitivity and accuracy values.</p>
-<div class="sourceCode" id="cb218"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb218-1"><a href="calibration-of-pls-da-model.html#cb218-1"></a><span class="kw">summary</span>(m.all)</span></code></pre></div>
+<div class="sourceCode" id="cb224"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb224-1"><a href="calibration-of-pls-da-model.html#cb224-1"></a><span class="kw">summary</span>(m.all)</span></code></pre></div>
 <pre><code>## 
 ## PLS-DA model (class plsda) summary
 ## ------------------------------------
@@ -314,7 +317,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## Cal       91.97       46.36 24  5 45  1  0.90  0.96    0.920
 ## Cv           NA          NA 24  6 44  1  0.88  0.96    0.907</code></pre>
 <p>Dealing with the multi-class PLS-DA model is similar to dealing with PLS2 models, when you have several y-variables. Every time you want to show a plot or results for a particular class, just provide the class number using parameter <code>nc</code>. For example this is how to show summary only for the third class (<em>virginica</em>).</p>
-<div class="sourceCode" id="cb220"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb220-1"><a href="calibration-of-pls-da-model.html#cb220-1"></a> <span class="kw">summary</span>(m.all, <span class="dt">nc =</span> <span class="dv">3</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb226"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb226-1"><a href="calibration-of-pls-da-model.html#cb226-1"></a> <span class="kw">summary</span>(m.all, <span class="dt">nc =</span> <span class="dv">3</span>)</span></code></pre></div>
 <pre><code>## 
 ## PLS-DA model (class plsda) summary
 ## ------------------------------------
@@ -327,22 +330,22 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## Cal       91.97       46.36 24  5 45  1  0.90  0.96    0.920
 ## Cv           NA          NA 24  6 44  1  0.88  0.96    0.907</code></pre>
 <p>You can also show statistics only for calibration or only for cross-validation parts, in this case you will see details about contribution of every component to the model.</p>
-<div class="sourceCode" id="cb222"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb222-1"><a href="calibration-of-pls-da-model.html#cb222-1"></a> <span class="kw">summary</span>(m.all<span class="op">$</span>calres, <span class="dt">nc =</span> <span class="dv">3</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb228"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb228-1"><a href="calibration-of-pls-da-model.html#cb228-1"></a> <span class="kw">summary</span>(m.all<span class="op">$</span>calres, <span class="dt">nc =</span> <span class="dv">3</span>)</span></code></pre></div>
 <pre><code>## 
 ## PLS-DA results (class plsdares) summary:
 ## Number of selected components: 1
 ## 
 ## Class #3 (virginica):
-##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN Spec. Sens.
-## Comp 1   91.969      91.969   46.356      46.356 24  5 45  1  0.90  0.96
-## Comp 2    5.500      97.468    6.878      53.233 21  5 45  4  0.90  0.84
-## Comp 3    2.186      99.654    4.816      58.049 24  3 47  1  0.94  0.96
-##        Accuracy
-## Comp 1    0.920
-## Comp 2    0.880
-## Comp 3    0.947</code></pre>
+##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN
+## Comp 1   91.969      91.969   46.356      46.356 24  5 45  1
+## Comp 2    5.500      97.468    6.878      53.233 21  5 45  4
+## Comp 3    2.186      99.654    4.816      58.049 24  3 47  1
+##        Spec. Sens. Accuracy
+## Comp 1  0.90  0.96    0.920
+## Comp 2  0.90  0.84    0.880
+## Comp 3  0.94  0.96    0.947</code></pre>
 <p>For one class models, the behaviour is actually similar, but there will be always one set of results — for the corresponding class. Here is the summary.</p>
-<div class="sourceCode" id="cb224"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb224-1"><a href="calibration-of-pls-da-model.html#cb224-1"></a><span class="kw">summary</span>(m.vir)</span></code></pre></div>
+<div class="sourceCode" id="cb230"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb230-1"><a href="calibration-of-pls-da-model.html#cb230-1"></a><span class="kw">summary</span>(m.vir)</span></code></pre></div>
 <pre><code>## 
 ## PLS-DA model (class plsda) summary
 ## ------------------------------------
@@ -355,13 +358,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## Cal       98.53       61.31 24  3 47  1  0.94  0.96    0.947
 ## Cv           NA          NA 24  3 47  1  0.94  0.96    0.947</code></pre>
 <p>Like in SIMCA you can also get a confusion matrix for particular result. Here is an example for multiple classes model.</p>
-<div class="sourceCode" id="cb226"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb226-1"><a href="calibration-of-pls-da-model.html#cb226-1"></a><span class="kw">getConfusionMatrix</span>(m.all<span class="op">$</span>calres)</span></code></pre></div>
+<div class="sourceCode" id="cb232"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb232-1"><a href="calibration-of-pls-da-model.html#cb232-1"></a><span class="kw">getConfusionMatrix</span>(m.all<span class="op">$</span>calres)</span></code></pre></div>
 <pre><code>##            setosa versicolor virginica None
 ## setosa         25          0         0    0
 ## versicolor      0          0         5   20
 ## virginica       0          0        24    1</code></pre>
 <p>And for the one-class model.</p>
-<div class="sourceCode" id="cb228"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb228-1"><a href="calibration-of-pls-da-model.html#cb228-1"></a><span class="kw">getConfusionMatrix</span>(m.vir<span class="op">$</span>calres)</span></code></pre></div>
+<div class="sourceCode" id="cb234"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb234-1"><a href="calibration-of-pls-da-model.html#cb234-1"></a><span class="kw">getConfusionMatrix</span>(m.vir<span class="op">$</span>calres)</span></code></pre></div>
 <pre><code>##           virginica None
 ## virginica        24    1
 ## None              3   47</code></pre>

@@ -247,15 +247,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="classification-plots" class="section level2">
 <h2>Classification plots</h2>
 <p>Most of the plots for visualisation of classification results described in SIMCA chapter can be also used for PLS-DA models and results. Let’s start with classification plots. By default it is shown for cross-validation results (we change position of the legend so it does not hide the points). You can clearly spot for example three false positives and one false negatives in the one-class PLS-DA model for virginica.</p>
-<div class="sourceCode" id="cb230"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb230-1"><a href="classification-plots.html#cb230-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
-<span id="cb230-2"><a href="classification-plots.html#cb230-2"></a><span class="kw">plotPredictions</span>(m.all)</span>
-<span id="cb230-3"><a href="classification-plots.html#cb230-3"></a><span class="kw">plotPredictions</span>(m.vir)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-146-1.png" width="864" /></p>
+<div class="sourceCode" id="cb236"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb236-1"><a href="classification-plots.html#cb236-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb236-2"><a href="classification-plots.html#cb236-2"></a><span class="kw">plotPredictions</span>(m.all)</span>
+<span id="cb236-3"><a href="classification-plots.html#cb236-3"></a><span class="kw">plotPredictions</span>(m.vir)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-150-1.png" width="864" /></p>
 <p>In case of multiple classes model you can select which class to show the predictions for.</p>
-<div class="sourceCode" id="cb231"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb231-1"><a href="classification-plots.html#cb231-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
-<span id="cb231-2"><a href="classification-plots.html#cb231-2"></a><span class="kw">plotPredictions</span>(m.all, <span class="dt">nc =</span> <span class="dv">1</span>)</span>
-<span id="cb231-3"><a href="classification-plots.html#cb231-3"></a><span class="kw">plotPredictions</span>(m.all, <span class="dt">nc =</span> <span class="dv">3</span>)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-147-1.png" width="864" /></p>
+<div class="sourceCode" id="cb237"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb237-1"><a href="classification-plots.html#cb237-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb237-2"><a href="classification-plots.html#cb237-2"></a><span class="kw">plotPredictions</span>(m.all, <span class="dt">nc =</span> <span class="dv">1</span>)</span>
+<span id="cb237-3"><a href="classification-plots.html#cb237-3"></a><span class="kw">plotPredictions</span>(m.all, <span class="dt">nc =</span> <span class="dv">3</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-151-1.png" width="864" /></p>
 </div>
             </section>
 

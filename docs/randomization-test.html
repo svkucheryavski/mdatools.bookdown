@@ -250,13 +250,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>If a component is important, then the covariance for unpermuted data should be larger than the covariance for permuted data and therefore the value for <code>alpha</code> will be quie small (there is still a small chance to get similar covariance). This makes <code>alpha</code> very similar to p-value in a statistical test.</p>
 <p>The function <code>randtest()</code> calculates alpha for each component, the values can be observed using <code>summary()</code> or <code>plot()</code> functions. There are also several functions, allowing e.g. to show distribution of statistics and the critical value for each component.</p>
 <p>In example of code below most of the functions are shown.</p>
-<div class="sourceCode" id="cb209"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb209-1"><a href="randomization-test.html#cb209-1"></a><span class="kw">data</span>(people)</span>
-<span id="cb209-2"><a href="randomization-test.html#cb209-2"></a></span>
-<span id="cb209-3"><a href="randomization-test.html#cb209-3"></a>y =<span class="st"> </span>people[, <span class="dv">4</span>, drop =<span class="st"> </span><span class="ot">FALSE</span>]</span>
-<span id="cb209-4"><a href="randomization-test.html#cb209-4"></a>X =<span class="st"> </span>people[, <span class="dv">-4</span>]</span>
-<span id="cb209-5"><a href="randomization-test.html#cb209-5"></a></span>
-<span id="cb209-6"><a href="randomization-test.html#cb209-6"></a>r =<span class="st"> </span><span class="kw">randtest</span>(X, y, <span class="dt">ncomp =</span> <span class="dv">5</span>, <span class="dt">nperm =</span> <span class="dv">1000</span>, <span class="dt">silent =</span> <span class="ot">TRUE</span>)</span>
-<span id="cb209-7"><a href="randomization-test.html#cb209-7"></a><span class="kw">summary</span>(r)</span></code></pre></div>
+<div class="sourceCode" id="cb215"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb215-1"><a href="randomization-test.html#cb215-1"></a><span class="kw">data</span>(people)</span>
+<span id="cb215-2"><a href="randomization-test.html#cb215-2"></a></span>
+<span id="cb215-3"><a href="randomization-test.html#cb215-3"></a>y =<span class="st"> </span>people[, <span class="dv">4</span>, drop =<span class="st"> </span><span class="ot">FALSE</span>]</span>
+<span id="cb215-4"><a href="randomization-test.html#cb215-4"></a>X =<span class="st"> </span>people[, <span class="dv">-4</span>]</span>
+<span id="cb215-5"><a href="randomization-test.html#cb215-5"></a></span>
+<span id="cb215-6"><a href="randomization-test.html#cb215-6"></a>r =<span class="st"> </span><span class="kw">randtest</span>(X, y, <span class="dt">ncomp =</span> <span class="dv">5</span>, <span class="dt">nperm =</span> <span class="dv">1000</span>, <span class="dt">silent =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb215-7"><a href="randomization-test.html#cb215-7"></a><span class="kw">summary</span>(r)</span></code></pre></div>
 <pre><code>## 
 ## Summary for permutation test results
 ## Number of permutations: 1000
@@ -264,15 +264,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## 
 ## Statistics and alpha values:
 ##              Comp 1    Comp 2    Comp 3    Comp 4     Comp 5
-## Alpha     0.0400000 0.0000000 0.0000000 0.0000000 0.14300000
+## Alpha     0.0470000 0.0000000 0.0000000 0.0000000 0.11700000
 ## Statistic 0.2403837 0.4349094 0.3571243 0.2678767 0.03603819</code></pre>
 <p>As you can see, <code>alpha</code> is very small for components 2–4 and then jumps up.</p>
-<div class="sourceCode" id="cb211"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb211-1"><a href="randomization-test.html#cb211-1"></a><span class="kw">par</span>( <span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))</span>
-<span id="cb211-2"><a href="randomization-test.html#cb211-2"></a><span class="kw">plotHist</span>(r, <span class="dt">ncomp =</span> <span class="dv">3</span>)</span>
-<span id="cb211-3"><a href="randomization-test.html#cb211-3"></a><span class="kw">plotHist</span>(r, <span class="dt">ncomp =</span> <span class="dv">5</span>)</span>
-<span id="cb211-4"><a href="randomization-test.html#cb211-4"></a><span class="kw">plotCorr</span>(r, <span class="dt">ncomp =</span> <span class="dv">3</span>)</span>
-<span id="cb211-5"><a href="randomization-test.html#cb211-5"></a><span class="kw">plotCorr</span>(r, <span class="dt">ncomp =</span> <span class="dv">5</span>)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-135-1.png" width="864" /></p>
+<div class="sourceCode" id="cb217"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb217-1"><a href="randomization-test.html#cb217-1"></a><span class="kw">par</span>( <span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>))</span>
+<span id="cb217-2"><a href="randomization-test.html#cb217-2"></a><span class="kw">plotHist</span>(r, <span class="dt">ncomp =</span> <span class="dv">3</span>)</span>
+<span id="cb217-3"><a href="randomization-test.html#cb217-3"></a><span class="kw">plotHist</span>(r, <span class="dt">ncomp =</span> <span class="dv">5</span>)</span>
+<span id="cb217-4"><a href="randomization-test.html#cb217-4"></a><span class="kw">plotCorr</span>(r, <span class="dt">ncomp =</span> <span class="dv">3</span>)</span>
+<span id="cb217-5"><a href="randomization-test.html#cb217-5"></a><span class="kw">plotCorr</span>(r, <span class="dt">ncomp =</span> <span class="dv">5</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-139-1.png" width="864" /></p>
 
 </div>
 <!-- </div> -->

@@ -248,89 +248,89 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h2>Predictions for a new data</h2>
 <p>Again very similar to PLS — just use method <code>predict()</code> and provide at least matrix or data frame with predictors (which should contain the same number of variables/columns). For test set validation you can also provide class reference information similar to what you have used for calibration of PLS-DA models.</p>
 <p>In case of multiple class model, the reference values should be provided as a factor or vector with class names as text values. Here is an example.</p>
-<div class="sourceCode" id="cb234"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb234-1"><a href="predictions-for-a-new-data.html#cb234-1"></a>res =<span class="st"> </span><span class="kw">predict</span>(m.all, Xv, cv.all)</span>
-<span id="cb234-2"><a href="predictions-for-a-new-data.html#cb234-2"></a><span class="kw">summary</span>(res)</span></code></pre></div>
+<div class="sourceCode" id="cb240"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb240-1"><a href="predictions-for-a-new-data.html#cb240-1"></a>res =<span class="st"> </span><span class="kw">predict</span>(m.all, Xv, cv.all)</span>
+<span id="cb240-2"><a href="predictions-for-a-new-data.html#cb240-2"></a><span class="kw">summary</span>(res)</span></code></pre></div>
 <pre><code>## 
 ## PLS-DA results (class plsdares) summary:
 ## Number of selected components: 1
 ## 
 ## Class #1 (setosa):
-##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN Spec. Sens.
-## Comp 1   92.924      92.924   42.703      42.703 25  1 49  0  0.98     1
-## Comp 2    4.560      97.484   11.216      53.920 25  0 50  0  1.00     1
-## Comp 3    1.790      99.274    1.717      55.637 25  0 50  0  1.00     1
-##        Accuracy
-## Comp 1    0.987
-## Comp 2    1.000
-## Comp 3    1.000
+##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN
+## Comp 1   92.924      92.924   42.703      42.703 25  1 49  0
+## Comp 2    4.560      97.484   11.216      53.920 25  0 50  0
+## Comp 3    1.790      99.274    1.717      55.637 25  0 50  0
+##        Spec. Sens. Accuracy
+## Comp 1  0.98     1    0.987
+## Comp 2  1.00     1    1.000
+## Comp 3  1.00     1    1.000
 ## 
 ## 
 ## Class #2 (versicolor):
-##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN Spec. Sens.
-## Comp 1   92.924      92.924   42.703      42.703  0  0 50 25  1.00   0.0
-## Comp 2    4.560      97.484   11.216      53.920 10  4 46 15  0.92   0.4
-## Comp 3    1.790      99.274    1.717      55.637 10  6 44 15  0.88   0.4
-##        Accuracy
-## Comp 1    0.667
-## Comp 2    0.747
-## Comp 3    0.720
+##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN
+## Comp 1   92.924      92.924   42.703      42.703  0  0 50 25
+## Comp 2    4.560      97.484   11.216      53.920 10  4 46 15
+## Comp 3    1.790      99.274    1.717      55.637 10  6 44 15
+##        Spec. Sens. Accuracy
+## Comp 1  1.00   0.0    0.667
+## Comp 2  0.92   0.4    0.747
+## Comp 3  0.88   0.4    0.720
 ## 
 ## 
 ## Class #3 (virginica):
-##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN Spec. Sens.
-## Comp 1   92.924      92.924   42.703      42.703 25  4 46  0  0.92  1.00
-## Comp 2    4.560      97.484   11.216      53.920 25  4 46  0  0.92  1.00
-## Comp 3    1.790      99.274    1.717      55.637 24  4 46  1  0.92  0.96
-##        Accuracy
-## Comp 1    0.947
-## Comp 2    0.947
-## Comp 3    0.933</code></pre>
+##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN
+## Comp 1   92.924      92.924   42.703      42.703 25  4 46  0
+## Comp 2    4.560      97.484   11.216      53.920 25  4 46  0
+## Comp 3    1.790      99.274    1.717      55.637 24  4 46  1
+##        Spec. Sens. Accuracy
+## Comp 1  0.92  1.00    0.947
+## Comp 2  0.92  1.00    0.947
+## Comp 3  0.92  0.96    0.933</code></pre>
 <p>And the corresponding plot with predictions.</p>
-<div class="sourceCode" id="cb236"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb236-1"><a href="predictions-for-a-new-data.html#cb236-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span>
-<span id="cb236-2"><a href="predictions-for-a-new-data.html#cb236-2"></a><span class="kw">plotPredictions</span>(res)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-151-1.png" width="864" /></p>
+<div class="sourceCode" id="cb242"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb242-1"><a href="predictions-for-a-new-data.html#cb242-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb242-2"><a href="predictions-for-a-new-data.html#cb242-2"></a><span class="kw">plotPredictions</span>(res)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-155-1.png" width="864" /></p>
 <p>If vector with reference class values contains names of classes model knows nothing about, they will simply be considered as members of non of the known clases (“None”).</p>
 <p>In case of one-class model, the reference values can be either factor/vector with names or logical values, like the ones used for calibration of the model. Here is an example for each of the cases.</p>
-<div class="sourceCode" id="cb237"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb237-1"><a href="predictions-for-a-new-data.html#cb237-1"></a>res21 =<span class="st"> </span><span class="kw">predict</span>(m.vir, Xv, cv.all)</span>
-<span id="cb237-2"><a href="predictions-for-a-new-data.html#cb237-2"></a><span class="kw">summary</span>(res21)</span></code></pre></div>
+<div class="sourceCode" id="cb243"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb243-1"><a href="predictions-for-a-new-data.html#cb243-1"></a>res21 =<span class="st"> </span><span class="kw">predict</span>(m.vir, Xv, cv.all)</span>
+<span id="cb243-2"><a href="predictions-for-a-new-data.html#cb243-2"></a><span class="kw">summary</span>(res21)</span></code></pre></div>
 <pre><code>## 
 ## PLS-DA results (class plsdares) summary:
 ## Number of selected components: 3
 ## 
 ## Class #1 (virginica):
-##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN Spec. Sens.
-## Comp 1   93.107      93.107   54.394      54.394 25  4 46  0  0.92  1.00
-## Comp 2    1.588      94.695    6.039      60.433 24  4 46  1  0.92  0.96
-## Comp 3    2.641      97.336   -0.149      60.284 22  4 46  3  0.92  0.88
-##        Accuracy
-## Comp 1    0.947
-## Comp 2    0.933
-## Comp 3    0.907</code></pre>
-<div class="sourceCode" id="cb239"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb239-1"><a href="predictions-for-a-new-data.html#cb239-1"></a>res22 =<span class="st"> </span><span class="kw">predict</span>(m.vir, Xv, cv.vir)</span>
-<span id="cb239-2"><a href="predictions-for-a-new-data.html#cb239-2"></a><span class="kw">summary</span>(res22)</span></code></pre></div>
+##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN
+## Comp 1   93.107      93.107   54.394      54.394 25  4 46  0
+## Comp 2    1.588      94.695    6.039      60.433 24  4 46  1
+## Comp 3    2.641      97.336   -0.149      60.284 22  4 46  3
+##        Spec. Sens. Accuracy
+## Comp 1  0.92  1.00    0.947
+## Comp 2  0.92  0.96    0.933
+## Comp 3  0.92  0.88    0.907</code></pre>
+<div class="sourceCode" id="cb245"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb245-1"><a href="predictions-for-a-new-data.html#cb245-1"></a>res22 =<span class="st"> </span><span class="kw">predict</span>(m.vir, Xv, cv.vir)</span>
+<span id="cb245-2"><a href="predictions-for-a-new-data.html#cb245-2"></a><span class="kw">summary</span>(res22)</span></code></pre></div>
 <pre><code>## 
 ## PLS-DA results (class plsdares) summary:
 ## Number of selected components: 3
 ## 
 ## Class #1 (virginica):
-##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN Spec. Sens.
-## Comp 1   93.107      93.107   54.394      54.394 25  4 46  0  0.92  1.00
-## Comp 2    1.588      94.695    6.039      60.433 24  4 46  1  0.92  0.96
-## Comp 3    2.641      97.336   -0.149      60.284 22  4 46  3  0.92  0.88
-##        Accuracy
-## Comp 1    0.947
-## Comp 2    0.933
-## Comp 3    0.907</code></pre>
+##        X expvar X cumexpvar Y expvar Y cumexpvar TP FP TN FN
+## Comp 1   93.107      93.107   54.394      54.394 25  4 46  0
+## Comp 2    1.588      94.695    6.039      60.433 24  4 46  1
+## Comp 3    2.641      97.336   -0.149      60.284 22  4 46  3
+##        Spec. Sens. Accuracy
+## Comp 1  0.92  1.00    0.947
+## Comp 2  0.92  0.96    0.933
+## Comp 3  0.92  0.88    0.907</code></pre>
 <p>As you can see, statistically results are identical. However, predictions plot will look a bit different for these two cases, as you can see below.</p>
-<div class="sourceCode" id="cb241"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb241-1"><a href="predictions-for-a-new-data.html#cb241-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))</span>
-<span id="cb241-2"><a href="predictions-for-a-new-data.html#cb241-2"></a><span class="kw">plotPredictions</span>(res21)</span>
-<span id="cb241-3"><a href="predictions-for-a-new-data.html#cb241-3"></a><span class="kw">plotPredictions</span>(res22)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-153-1.png" width="864" /></p>
+<div class="sourceCode" id="cb247"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb247-1"><a href="predictions-for-a-new-data.html#cb247-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">1</span>))</span>
+<span id="cb247-2"><a href="predictions-for-a-new-data.html#cb247-2"></a><span class="kw">plotPredictions</span>(res21)</span>
+<span id="cb247-3"><a href="predictions-for-a-new-data.html#cb247-3"></a><span class="kw">plotPredictions</span>(res22)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-157-1.png" width="864" /></p>
 <p>And because <code>predict()</code> returns an object with results you can also use most of the plots available for PLS regression results. In the last example below you will find plots for X-residuals and Y-variance.</p>
-<div class="sourceCode" id="cb242"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb242-1"><a href="predictions-for-a-new-data.html#cb242-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
-<span id="cb242-2"><a href="predictions-for-a-new-data.html#cb242-2"></a><span class="kw">plotXResiduals</span>(res21)</span>
-<span id="cb242-3"><a href="predictions-for-a-new-data.html#cb242-3"></a><span class="kw">plotYVariance</span>(res22)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-154-1.png" width="864" /></p>
+<div class="sourceCode" id="cb248"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb248-1"><a href="predictions-for-a-new-data.html#cb248-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb248-2"><a href="predictions-for-a-new-data.html#cb248-2"></a><span class="kw">plotXResiduals</span>(res21)</span>
+<span id="cb248-3"><a href="predictions-for-a-new-data.html#cb248-3"></a><span class="kw">plotYVariance</span>(res22)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-158-1.png" width="864" /></p>
 
 </div>
 <!-- </div> -->

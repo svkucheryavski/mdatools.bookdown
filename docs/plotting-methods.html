@@ -340,19 +340,32 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Here is the matrix with loadings, note that variable <code>Income</code> has zeros for loadings and the matrix has attribute <code>exclrows</code> set to 6 (which is a position of the variable):</p>
 <div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="plotting-methods.html#cb83-1"></a><span class="co"># show matrix with loadings (look at row Income and attribute &quot;exclrows&quot;)</span></span>
 <span id="cb83-2"><a href="plotting-methods.html#cb83-2"></a><span class="kw">show</span>(m<span class="op">$</span>loadings)</span></code></pre></div>
-<pre><code>##                Comp 1      Comp 2       Comp 3      Comp 4      Comp 5
-## Height   -0.386393327  0.10697019 -0.004829174  0.12693029 -0.13128331
-## Weight   -0.391013398  0.07820097  0.051916032  0.04049593 -0.14757465
-## Hairleng  0.350435073 -0.11623295 -0.103852349 -0.04969503 -0.73669997
-## Shoesize -0.385424793  0.13805817 -0.069172117  0.01049098 -0.17075488
-## Age      -0.103466285  0.18964288 -0.337243182 -0.89254403 -0.02998028
-## Income    0.000000000  0.00000000  0.000000000  0.00000000  0.00000000
-## Beer     -0.317356319 -0.38259695  0.044338872 -0.03908064 -0.21419831
-## Wine      0.140711271  0.57861817 -0.059833970  0.12347379 -0.41488773
-## Sex       0.364537185 -0.23838610  0.010818891  0.04025631 -0.18263577
-## Swim     -0.377470722  0.04330411  0.008151288  0.18149268 -0.30163601
-## Region    0.140581701  0.60435183  0.040969200  0.15147464  0.17857614
-## IQ        0.009849911  0.09372132  0.927669306 -0.32978247 -0.11815762
+<pre><code>##                Comp 1      Comp 2       Comp 3      Comp 4
+## Height   -0.386393327  0.10697019 -0.004829174  0.12693029
+## Weight   -0.391013398  0.07820097  0.051916032  0.04049593
+## Hairleng  0.350435073 -0.11623295 -0.103852349 -0.04969503
+## Shoesize -0.385424793  0.13805817 -0.069172117  0.01049098
+## Age      -0.103466285  0.18964288 -0.337243182 -0.89254403
+## Income    0.000000000  0.00000000  0.000000000  0.00000000
+## Beer     -0.317356319 -0.38259695  0.044338872 -0.03908064
+## Wine      0.140711271  0.57861817 -0.059833970  0.12347379
+## Sex       0.364537185 -0.23838610  0.010818891  0.04025631
+## Swim     -0.377470722  0.04330411  0.008151288  0.18149268
+## Region    0.140581701  0.60435183  0.040969200  0.15147464
+## IQ        0.009849911  0.09372132  0.927669306 -0.32978247
+##               Comp 5
+## Height   -0.13128331
+## Weight   -0.14757465
+## Hairleng -0.73669997
+## Shoesize -0.17075488
+## Age      -0.02998028
+## Income    0.00000000
+## Beer     -0.21419831
+## Wine     -0.41488773
+## Sex      -0.18263577
+## Swim     -0.30163601
+## Region    0.17857614
+## IQ       -0.11815762
 ## attr(,&quot;exclrows&quot;)
 ## [1] 6
 ## attr(,&quot;name&quot;)

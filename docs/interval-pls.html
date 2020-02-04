@@ -260,11 +260,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>In <em>mdatools</em>, you can run iPLS selection by using function <code>ipls()</code>. You have to specify matrix with predictors (<code>x</code>) and responses (<code>y</code>), number of components in global model (<code>glob.ncomp</code>), and define the intervals. In addition to that, you can also specify parameters of cross-validation (<code>cv</code>) as well as criterion for selection of optimal number of components (<code>ncomp.selcrit</code>) for local models similar to PLS. Forward iPLS is used as a default algorithm.</p>
 <p>Intervals can be defined using one of the following three parameters: number of intervals (<code>int.num</code>), width of an interval (<code>int.width</code>) or specify start and end of each interval as a two-column matrix with variable indices (<code>int.limits</code>). In addition to that, you can specify maximum number of component for local models (<code>int.ncomp</code>) and maximum number of iterations — so method will stop regardless if you have improvements or not (<code>int.niter</code>). By default the maximum number of iterations is limited to 30.</p>
 <p>Here is an example of applying iPLS for Simdata (for concentration of second chemical component, C2) using 15 intervals.</p>
-<div class="sourceCode" id="cb243"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb243-1"><a href="interval-pls.html#cb243-1"></a><span class="kw">data</span>(simdata)</span>
-<span id="cb243-2"><a href="interval-pls.html#cb243-2"></a>X =<span class="st"> </span>simdata<span class="op">$</span>spectra.c</span>
-<span id="cb243-3"><a href="interval-pls.html#cb243-3"></a>y =<span class="st"> </span>simdata<span class="op">$</span>conc.c[, <span class="dv">2</span>, drop =<span class="st"> </span><span class="ot">FALSE</span>]</span>
-<span id="cb243-4"><a href="interval-pls.html#cb243-4"></a></span>
-<span id="cb243-5"><a href="interval-pls.html#cb243-5"></a>m =<span class="st"> </span><span class="kw">ipls</span>(X, y, <span class="dt">glob.ncomp =</span> <span class="dv">4</span>, <span class="dt">int.num =</span> <span class="dv">15</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb249"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb249-1"><a href="interval-pls.html#cb249-1"></a><span class="kw">data</span>(simdata)</span>
+<span id="cb249-2"><a href="interval-pls.html#cb249-2"></a>X =<span class="st"> </span>simdata<span class="op">$</span>spectra.c</span>
+<span id="cb249-3"><a href="interval-pls.html#cb249-3"></a>y =<span class="st"> </span>simdata<span class="op">$</span>conc.c[, <span class="dv">2</span>, drop =<span class="st"> </span><span class="ot">FALSE</span>]</span>
+<span id="cb249-4"><a href="interval-pls.html#cb249-4"></a></span>
+<span id="cb249-5"><a href="interval-pls.html#cb249-5"></a>m =<span class="st"> </span><span class="kw">ipls</span>(X, y, <span class="dt">glob.ncomp =</span> <span class="dv">4</span>, <span class="dt">int.num =</span> <span class="dv">15</span>)</span></code></pre></div>
 <pre><code>## 
 ## Model with all intervals: RMSECV = 0.027572, nLV = 3
 ## Iteration   1/ 15... selected interval   6 (RMSECV = 0.030405, nLV = 1)
@@ -276,7 +276,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## Iteration   7/ 15... no improvements, stop.</code></pre>
 <p>As you can see, by default method shows information for every step in the console. Use parameter <code>silent = TRUE</code> to change this behaviour. From the example above we can see that the global model had RMSECV = 0.027572 with 3 components. Creating local models with individual intervals gave the best performance with RMSECV = 0.030405 (interval #6). Combination of the interval #6 with interval #11 (next step) gave RMSECV = 0.0027882. The small improvement was obtained for adding 4 more intervals giving final result with RMSECV = 0.027201.</p>
 <p>There are several ways to explore the iPLS results both graphically and numerically. First of all, summary will show full information about the selected interval, including number of variables on both ends:</p>
-<div class="sourceCode" id="cb245"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb245-1"><a href="interval-pls.html#cb245-1"></a><span class="kw">summary</span>(m)</span></code></pre></div>
+<div class="sourceCode" id="cb251"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb251-1"><a href="interval-pls.html#cb251-1"></a><span class="kw">summary</span>(m)</span></code></pre></div>
 <pre><code>## 
 ## iPLS variable selection results
 ##   Method: forward
@@ -296,26 +296,26 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## 6 13   121 130     TRUE     2 0.02720961 0.966
 ## 7 12   111 120     TRUE     2 0.02720089 0.966</code></pre>
 <p>Also you can see the first step (performance of individual models) and the selected interval by using function <code>plot()</code> for the whole model:</p>
-<div class="sourceCode" id="cb247"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb247-1"><a href="interval-pls.html#cb247-1"></a><span class="kw">plot</span>(m)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-157-1.png" width="864" /></p>
+<div class="sourceCode" id="cb253"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb253-1"><a href="interval-pls.html#cb253-1"></a><span class="kw">plot</span>(m)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-161-1.png" width="864" /></p>
 <p>The red curve here is an average spectrum. Bars are intervals, height of each bar corresponds to RMSECV value for local model made using variables from this interval as predictors (first iteration). Number inside each bar is number of PLS components used in the local model. Green color shows intervals which have been selected at the end and dashed line shows error for the global model</p>
 <p>You can also see the improvements of RMSECV graphically:</p>
-<div class="sourceCode" id="cb248"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb248-1"><a href="interval-pls.html#cb248-1"></a><span class="kw">plotRMSE</span>(m)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-158-1.png" width="864" /></p>
+<div class="sourceCode" id="cb254"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb254-1"><a href="interval-pls.html#cb254-1"></a><span class="kw">plotRMSE</span>(m)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-162-1.png" width="864" /></p>
 <p>Dashed line in this case shows RMSECV value for the global model with all intervals included.</p>
 <p>Fnally, you can get both seleced intervals and corresponding indices of variables (all of them not just interval limits) as follows:</p>
-<div class="sourceCode" id="cb249"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb249-1"><a href="interval-pls.html#cb249-1"></a><span class="kw">show</span>(m<span class="op">$</span>int.selected)</span></code></pre></div>
+<div class="sourceCode" id="cb255"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb255-1"><a href="interval-pls.html#cb255-1"></a><span class="kw">show</span>(m<span class="op">$</span>int.selected)</span></code></pre></div>
 <pre><code>## [1]  6 11  1  2 13 12</code></pre>
-<div class="sourceCode" id="cb251"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb251-1"><a href="interval-pls.html#cb251-1"></a><span class="kw">show</span>(m<span class="op">$</span>var.selected)</span></code></pre></div>
-<pre><code>##  [1]   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17
-## [18]  18  19  20  51  52  53  54  55  56  57  58  59  60 101 102 103 104
-## [35] 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121
-## [52] 122 123 124 125 126 127 128 129 130</code></pre>
+<div class="sourceCode" id="cb257"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb257-1"><a href="interval-pls.html#cb257-1"></a><span class="kw">show</span>(m<span class="op">$</span>var.selected)</span></code></pre></div>
+<pre><code>##  [1]   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+## [16]  16  17  18  19  20  51  52  53  54  55  56  57  58  59  60
+## [31] 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115
+## [46] 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130</code></pre>
 <p>Also the model object contains the initial global model for full data (<code>m$gm</code>) and final PLS model made for the all selected data, <code>m$om</code>. In the following example I compare RMSE plots for both:</p>
-<div class="sourceCode" id="cb253"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb253-1"><a href="interval-pls.html#cb253-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
-<span id="cb253-2"><a href="interval-pls.html#cb253-2"></a><span class="kw">plotRMSE</span>(m<span class="op">$</span>gm)</span>
-<span id="cb253-3"><a href="interval-pls.html#cb253-3"></a><span class="kw">plotRMSE</span>(m<span class="op">$</span>om)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-160-1.png" width="864" /></p>
+<div class="sourceCode" id="cb259"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb259-1"><a href="interval-pls.html#cb259-1"></a><span class="kw">par</span>(<span class="dt">mfrow =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb259-2"><a href="interval-pls.html#cb259-2"></a><span class="kw">plotRMSE</span>(m<span class="op">$</span>gm)</span>
+<span id="cb259-3"><a href="interval-pls.html#cb259-3"></a><span class="kw">plotRMSE</span>(m<span class="op">$</span>om)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-164-1.png" width="864" /></p>
 </div>
 <div id="backward-ipls" class="section level3">
 <h3>Backward iPLS</h3>
