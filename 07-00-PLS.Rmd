@@ -372,30 +372,125 @@ Here $y_{ik}$ is a reference value for sample $i$ and y-variable $k$ and $\hat{y
 
 $$N_z \frac{z}{z_0} \propto \chi^2(N_z)$$
 
-In case of PLS1 (when there is only one y-variable), $N_z = 1$. Otherwise, both $z_0$ and $N_z$ are computed using [data driven approach][Data driven approach], similar to $q_0$, $N_q$, $h_0$, $N_h$, using either classical (based on moments) or robst approach.
+In case of PLS1 (when there is only one y-variable), $N_z = 1$. Otherwise, both $z_0$ and $N_z$ are computed using [data driven approach][Data driven approach], similar to $q_0$, $N_q$, $h_0$, $N_h$, using either classical (based on moments) or robust approach.
 
 Full distance for X-decomposition, $f$ and the Y-distance, $z$ can be combined into XY total distance, $g$:
 
 $$g = N_f\frac{f}{f_0} + N_z\frac{z}{z_0} \propto \chi^2(N_g)$$
 
-Here $N_g = N_f + N_z$. This approach was proposed by Rodionova and Pomerantsev and described in [this paper](https://pubs.acs.org/doi/10.1021/acs.analchem.9b04611). The distances and the critical limits can be visualized in `plotXYResiduals()`:
+Here $N_g = N_f + N_z$. This approach was proposed by Rodionova and Pomerantsev and described in [this paper](https://pubs.acs.org/doi/10.1021/acs.analchem.9b04611). The distances and the critical limits can be visualized using function `plotXYResiduals()` as illustrated in the next example.
+
+The example is based on People data (prediction of shoesize), however we will first introduce two outliers. We will change response value for row #9 to 25, which is apparently too small value for shoesize of an adult person. The predictor values will be the same. Then we will change height of first person (row #1) to 125 cm, which is again quite small value. And keep the response value unchanged. After that, we create a PLS model with classic data driven approach for computing critical limits and show the XY-residuals plot. Finally, that we change the method for limits to robust and show the plot again:
 
 ```{r, fig.width = 9, fig.height = 5}
+# prepare data
+data(people)
+X = people[, -4]
+y = people[, 4, drop = FALSE]
+
+# add outliers
+y[9] = 25
+X[1, 1] = 125
+
+# create model and show plots
+m = pls(X, y, 4, scale = TRUE, cv = 1, lim.type = "ddmoments")
+
 par(mfrow = c(1, 2))
-plotXYResiduals(m)
-plotXYResiduals(m, ncomp = 2, log = TRUE, show.labels = TRUE, labels = "indices")
+plotXYResiduals(m, show.labels = TRUE, labels = "indices")
+
+m = setDistanceLimits(m, lim.type = "ddrobust")
+plotXYResiduals(m, show.labels = TRUE, labels = "indices")
 ```
 
-It can be used to detect outliers in PLS by comparing the total distance, $g$, with critical limit computed for predefined significance level, $\gamma$:
+As one can see, both classic and robust approach detect sample number 9 (with wrong y-value) as a clear outlier. Using robust approach helps to identify the second outlier as well. However, you can see that the location of the two samples is different — sample #9 has large Y-distance ($z/z_0$), while sample #1 has large full X-distance ($f/f_0$). Which is in agreement with the way we created the outliers.
+
+The limits shown on the plot are made for the total distance, $g$. For example, to detect outliers we need to compare the total distance, $g$, with critical limit computed for predefined significance level, $\gamma$ (shown as dotted line on the plots):
 
 $$g > \chi^{-2} \big( (1 - \gamma)^{1/I}, N_g \big) $$
 
-The proper procedure for detection and removing outliers can be found in the [this](https://pubs.acs.org/doi/10.1021/acs.analchem.9b04611). The detection can be done using function `categorize()` which works similar to the same function for PCA decomposition — returns vector with categories for each measurement, as shown in an example below:
+The proper procedure for detection and removing outliers can be found in the [paper](https://pubs.acs.org/doi/10.1021/acs.analchem.9b04611) and will be very briefly touched upon here. The detection can be done using function `categorize()` which works similar to the same function for PCA decomposition — returns vector with categories for each measurement, as shown in an example below:
 
 ```{r}
-c = categorize(m, m$res$cal, ncomp = 2)
+c = categorize(m, m$res$cal)
 print(c)
 ```
+
+A simplified description of the recommended procedure proposed in the [mentioned paper](https://pubs.acs.org/doi/10.1021/acs.analchem.9b04611) is following:
+
+1. Make a PLS model with robust estimator of critical limits
+2. Detect outliers if any, remove them and keep the removed objects separately
+3. Repeat steps 1-2 until no outliers are detected
+4. Apply model to the collected outliers (use `predict`)
+5. If any of them appear as regular objects, return them back to the dataset and go to step 1
+6. Repeat all steps until step 5 does not reveal any regular objects
+7. Make a final PLS model using classic estimator for the critical limits
+
+If test set validation is used, the outlier detection should be done for both sets. And it is of course important to use optimal number of components, which can be identified using RMSE plot and plot for explained Y-variance.
+
+The code chunks below show the steps for detection of outliers in the People data used in an example earlier. We start with creating PLS model for the whole data.
+
+```{r, fig.width = 9, fig.height = 5}
+# prepare data
+data(people)
+X = people[, -4]
+y = people[, 4, drop = FALSE]
+
+# add outliers
+y[9] = 25
+X[1, 1] = 125
+
+# compute initial PLS model with all data
+m = pls(X, y, 10, scale = TRUE, cv = 1, lim.type = "ddrobust")
+
+# look at RMSE and XY-residuals plot
+par(mfrow = c(1, 2))
+plotRMSE(m)
+plotXYResiduals(m)
+```
+
+Apparently four components selected automatically is indeed a proper value. The XY-residuals plot shows that we have two outliers, let's find and remove them:
+
+```{r, fig.width = 9, fig.height = 5}
+# get row indices for outliers in calibration set
+outliers = which(categorize(m, m$res$cal) == "outlier")
+
+# keep data for outliers in separate matrices
+Xo = X[outliers, , drop = FALSE]
+yo = X[outliers, drop = FALSE]
+
+# remove the rows with outliers from the data
+X = X[-outliers, , drop = FALSE]
+y = y[-outliers, drop = FALSE]
+
+# make a new model for oulier free data
+m = pls(X, y, 10, scale = TRUE, cv = 1, lim.type = "ddrobust")
+
+# look at RMSE and XY-residuals plot
+par(mfrow = c(1, 2))
+plotRMSE(m)
+plotXYResiduals(m)
+```
+Again, four or three components seem to be optimal and this time no extra outliers are detected. Let's now apply the model to the two outliers found previously and see their status.
+
+```{r, fig.width = 4.5, fig.height = 5}
+res = predict(m, Xo, yo)
+plotXYResiduals(m, res = list("cal" = m$res$cal, "out" = res))
+```
+
+The two objects seem now even more extreme for the model built using the outliers free data, no need to have them back. So we just need to make a final model and look at it:
+
+```{r, fig.width = 9, fig.height = 9}
+# make a new model for oulier free data and explore it
+m = pls(X, y, 10, scale = TRUE, cv = 1, lim.type = "ddmoments")
+summary(m)
+
+par(mfrow = c(2, 2))
+plotXYResiduals(m)
+plotRegcoeffs(m, type = "h", show.labels = TRUE, show.ci = TRUE)
+plotRMSE(m)
+plotPredictions(m)
+```
+
 
 ## Randomization test {-}
 
