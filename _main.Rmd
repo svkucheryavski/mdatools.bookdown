@@ -1,0 +1,2451 @@
+---
+title: "Getting started with mdatools for R"
+author: "Sergey Kucheryavskiy"
+date: "February 3, 2020"
+knit: bookdown::render_book
+site: bookdown::bookdown_site
+output:
+   bookdown::gitbook:
+      split_by: section
+      css: [styles.css]
+      config:
+         toc:
+            collapse: section
+         fontsettings:
+            theme: white
+            family: sans
+            size: 1
+   bookdown::pdf_book:
+      keep_text: yes
+documentclass: book
+github-repo: svkucheryavski/mdatools.bookdown
+description: "This is a user guide for mdatools — R package for preprocessing, exploring and analysis of multivariate data. The package provides methods mostly common for Chemometrics. The general idea of the package is to collect most of the common chemometric methods and give a similar user interface for using them. So if a user knows how to make a model and visualise results for one method, he or she can easily do this for the others."
+---
+
+```{r, echo = FALSE}
+library(mdatools)
+```
+
+# Introduction {-}
+
+This is a user guide for _mdatools_ — R package for preprocessing, exploring and analysis of multivariate data. The package provides methods mostly common for [Chemometrics](http://en.wikipedia.org/wiki/Chemometrics). The general idea of the package is to collect the popular chemometric methods and give a similar "user interface" for applying the methods to different datasets. So, if a user knows how to make a model and visualize results for one method, he or she can easily do this for the other methods as well. Usually I update the tutorial when a new version of the package is released, you can track main changes [here][What is new].
+
+The current version of tutorial is compatible with version 0.10.0 of the package.
+
+All methods implemented in the package were tested using well-known datasets. However, there still could be some bugs, in this case please report to [svkucheryavski@gmail.com](mailto:svkucheryavski@gmail.com) or use [Issues tool](https://github.com/svkucheryavski/mdatools/issues) at GitHub. You are also very welcome to share your comments and suggestions about the package functionality.
+
+If you want to cite the package, please use the following:
+
+Sergey Kucheryavskiy, *mdatools – R package for chemometrics*, Chemometrics and Intelligent Laboratory Systems, Volume 198, 2020 (DOI: [10.1016/j.chemolab.2020.103937](https://dx.doi.org/10.1016/j.chemolab.2020.103937)).
+
+<!--chapter:end:index.Rmd-->
+
+# What is new {-}
+
+**29.01.2020**
+
+The new version of the package (0.10.0) has a lot of changes and improvements, so it was decided
+to update the book to a large degree. In addition to that, chapters about [iPLS][Interval PLS] and [randomization tests][Randomization test] have been added as well as information on new tools. See [list of changes](https://github.com/svkucheryavski/mdatools/blob/master/NEWS.md) in the package for more details.
+
+**9.11.2018**
+
+* new minor version (0.9.2) of package is available via GitHub with several bug fixes
+* added text about `max.cov` parameter in [Preprocessing][Preprocessing] chapter.
+
+**5.07.2018**
+
+* new chapter about [PLS-DA][PLS Discriminant Analysis]
+* small improvements and corrections to text of other chapters
+* added a short description if new `opacity` parameter for `mdaplot()` method
+
+**3.04.2018**
+
+* new chapter about [randomized PCA algorithms][Randomized PCA algorithms]
+* new chapter about [critical limits for residuals in PCA/SIMCA][Residuals and critical limits]
+* chapter for SIMCA has been updated with description of new methods
+* added a short text about new properties for `plotPredictions()` method in PLS
+* small corrections and improvements
+
+**23.11.2017**
+
+* corrections in SIMCA part of documentation about using test set
+
+**03.08.2017**
+
+* several minor versions has been released since the last book update (0.8.1-0.8.4)
+* new text describes how to use `summary()` for regression coefficients
+* text about `getRegcoeffs().pls` has been updated
+* some updates in plans (see section above)
+
+**30.10.2016**
+
+* fixed a bug in PCA when explained variance was calculated incorrectly for data with excluded rows
+* fixed several issues with SIMCA (cross-validation) and SIMCAM (Cooman's plot)
+* added a chapter about SIMCA to the tutorial
+
+**14.10.2016**
+
+The new version (0.8.0) brings a lot of new features, therefore it was decided to rewrite this tutorial
+completely and start this log from the scratch. Most of the things available in the previous version
+of the package will work without any changes. But if you have been using functions `mdaplot()`
+and `mdaplotg()` it makes sense to read how the new implementation works and rewrite your code.
+The use of plotting tools became much simpler and more efficient. The main changes in the package are:
+
+* added a possibility to assign specific attributes to datasets, which makes plotting easier.
+* added a possibility to exclude (hide) selected rows and columns when create a model.
+* if a data frame has factor columns they will be automatically converted to a set of dummy variables.
+* added several functions to make the operations with datasets containing specific attributes easier.
+* plotting tools (`mdaplot()`, `mdaplotg()`) were rewritten to make the use of them easier and more efficient
+* scores and loadings plots now show a percent of explained variance
+* biplot is now available for PCA models (`plotBiplot`)
+* added support for images, see a [specific chapter][Working with images] for details
+* cross-validation procedures were optimized for most of the methods and now takes less time
+* several bug fixes and small improvements
+
+Besides that, the tutorial is now available in `docs` folder of the package repository in GitHub. The tutorial is a static HTML site, which can be used locally without internet connection (start with `index.html`). However, it is not available from CRAN repository due to CRAN limitations. You can also access the tutorial via [GitHub Pages](https://svkucheryavski.github.io/mdatools)
+
+<!--chapter:end:02-news.Rmd-->
+
+# Overview {-}
+
+This package was originally created for an introductory PhD course on Chemometrics given at Department of Chemistry and Bioscience, Aalborg University. Quickly I found out that using R for this course (with all advantages it gives) needs a lot of routine work from students, since most of them were also beginners in R. Of course it is very good for understanding when students get to know e.g. how to calculate explained variance or residuals in PCA manually or make corresponding plots and so on, but for the introductory course these things (as well as numerous typos and small mistakes in a code) take too much time, which can be spent for explaining methods and proper interpretation of results.
+
+This is actually also true for everyday use of these methods, most of the routines can be written once and simply re-used with various options. So it was decided to write a package where most widely used chemometric methods for multivariate data analysis are implemented and which also gives a quick and easy-to-use access to results, produced by these methods. First of all numerous plots.
+
+Here how it works. Say, we need to make a PCA model for data matrix `x` with autoscaling. Then make an overview of most important plots and investigate scores and loadings for first three components. The `mdatools` solution will be:
+
+```r
+# make a model for autoscaled data with maximum possible number of components
+m = pca(x, scale = TRUE)
+
+# show explained variance plot
+plotVariance(m)
+
+# select optimal number of components (say, 4) for correct calculation of residuals
+m = selectCompNum(m, 4)
+
+# show plots for model overview
+plot(m)
+
+# show scores plot for PC1 and PC3
+plotScores(m, c(1, 3))
+
+# show loadings plot for the same components
+plotLoadings(m, c(1, 3))
+
+# show the loadings as a set of bar plots
+plotLoadings(m, c(1, 3), type = "h")
+```
+
+Fairly simple, is not it? The other "routine", which have been taken into account is validation —
+any model can be cross-validated or validated with a test set. The model object will contain the validation results, which will also appear on all model plots, etc. See the next chapters for details.
+
+## What mdatools can do? {-}
+
+The package includes classes and functions for analysis, preprocessing and plotting data and results. So far the following methods for analysis are implemented:
+
+* Principal Component Analysis (PCA)
+* Soft Independent Modelling of Class Analogy (SIMCA), including data driven approach (DD-DIMCA)
+* Partial Least Squares regression (PLS) with calculation of VIP scores and Selectivity ratio
+* Partial Least Squares Discriminant Analysis (PLS-DA)
+* Randomization test for PLS regression models
+* Interval PLS for variable selection
+
+Preprocessing methods include:
+
+* Mean centering, standardization and autoscaling
+* Savitzky-Golay filter for smoothing and derivatives
+* Standard Normal Variate for removing scatter and global intensity effect from spectral data
+* Mutliplicative Scatter Correction for the same issue
+* Normalization of spectra to unit area or unit length
+
+Besides that, some extensions for the basic R plotting functionality have been also implemented and
+allow to do the following:
+
+* Color grouping of objects with automatic color legend bar.
+* Plot for several groups of objects with automatically calculated axes limits and plot legend.
+* Three built-in color schemes — one is based on [Colorbrewer](http://colorbrewer2.org/) and the other two are jet and grayscale.
+* Very easy-to-use possibility to apply any user defined color scheme.
+* Possibility to show horizontal and vertical lines on the plot with automatically adjusted axes limits.
+* Possibility to extend plotting functionality by using some attributes for datasets.
+
+See `?mdatools` and next chapters for more details.
+
+## How to install {-}
+
+The package is available from CRAN by usual installing procedure. However due to restrictions in CRAN politics regarding number of submissions (once in 3-4 month) only major releases will be published there. To get the latest release plase use GitHub sources. You can either [download](https://github.com/svkucheryavski/mdatools/releases) a zip-file with the source package and install it using the `install.packages` command, e.g. if the downloaded file is `mdatools_0.10.0.tar.gz` and it is located in a current working directory,
+just run the following:
+
+```r
+install.packages("mdatools_0.10.0.tar.gz")
+```
+
+If you have `devtools` package installed, the following command will install the latest release from
+the GitHub (do not forget to load the `devtools` package first):
+
+```r
+install_github("svkucheryavski/mdatools")
+```
+
+
+<!--chapter:end:03-overview.Rmd-->
+
+# Datasets and plots {-}
+
+The package uses standard representation of the data in R: data frames, matrices and vectors. However, there are several additional methods and attributes, which makes the use of the datasets a bit more more efficient. There is also a support for images. But if you are used to simple datasets and standard procedures and do not want any complications, you can simply skip this chapter.
+
+The package also uses its own set of plotting tools, which is a sort of an add-on for the R basic plotting system, extending its possibilities. From this point of view, learning how these tools work will simplify understanding of model plots a lot. The main improvements comparing to the basic plotting system are:
+
+1. Much easier way to make plots with groups of objects (points, lines, bars, etc.)
+2. Much easier way of adding legend to the group plots.
+3. Much easier way of adding labels to data points, bars, etc.
+4. Automatic axis limits when a plot contains several groups of objects.
+5. Possibility to color points and lines according to values of a specific numerical variable of a factor.
+6. Several built in color pallets and an easy way to use user specific set of colors.
+7. Much more!
+
+This chapter explains most of the details.
+
+
+<!--chapter:end:04-00-datasets.Rmd-->
+
+## Attributes and factors {-}
+
+```{r, echo = FALSE}
+library(mdatools)
+```
+
+This section tells how to extend the functionality of the package by using attributes assigned to datasets and how methods implemented in the package deal with factors.
+
+### Package specific attributes  {-}
+
+There are several groups of attributes, which allow to assign names and manual x-values to the datasets, exclude columns and rows from calculations without removing them physically as well as working with images. We will illustrate how to work with most of the attributes by using a simple dataset defined below. It consists of three variables `Height`, `Weight`, `Shoesize` and four objects/rows.
+
+```{r}
+d = matrix(c(190, 180, 170, 175, 85, 88, 70, 75, 44, 45, 38, 40), ncol = 3)
+colnames(d) = c("Height", "Weight", "Shoesize")
+rownames(d) = c("Bob", "Peter", "Lisa", "Lena")
+d = as.data.frame(d)
+show(d)
+```
+
+### Attributes for plots  {-}
+
+These attributes will be explained very briefly here, you can find much more details in the next two sections. The idea is to provide some names and values to the data, which can be used later e.g. for making labels and titles on the plots. When dataset is used to create a model (e.g. PCA) all results representing objects (e.g. scores, Q-residuals, T2-residuals, etc.) will inherit the row specific attributes and all results related to variables (e.g. loadings) will inherit column specific attributes.
+
+The attributes are following:
+
+----------------------------------------------------------------------------
+Attribute         Meaning
+----------        ----------------------------------------------------------
+ `name`           name of a dataset (used for plot parameter `main`).
+
+ `xaxis.name`     name for all data columns (used for plot parameter `xlab`)
+
+ `yaxis.name`     name for all data rows (used for plot parameter `ylab`).
+
+ `xaxis.values`   a vector of values, which correspond to the columns (e.g. for
+                  spectroscopic data it can be wavelength or wavenumbers).
+
+ `yaxis.values`   a vector of values, which correspond to the rows (e.g. for
+                  kinetic data it can be time or temperature of reaction).
+
+----------------------------------------------------------------------------
+
+
+Here is a very simple example.
+
+```{r, fig.width = 9, fig.height = 5}
+attr(d, "name") = "People"
+attr(d, "xaxis.name") = "Parameters"
+attr(d, "yaxis.name") = "Persons"
+
+par(mfrow = c(1, 2))
+mdaplot(d, type = "p")
+mdaplot(d, type = "l")
+```
+
+See more details in the [section][Simple plots] about plots.
+
+### Special methods for data transformations {-}
+
+Since data objects in R loose all user specified attributes when e.g. we transpose them or taking a subset, it was decided to write several methods, which would process attributes correctly. They also adjust indices of excluded rows and columns when user takes a subset or merge two data objects together. When data matrix is transposed the corresponding method will switch the x- and y- attributes. All methods with a brief description are listed in the table below (including the ones already introduces).
+
+-------------------------------------------------------------------------------------------------
+Method                                Description
+----------------                      -----------------------------------------------------------
+`mda.show(data)`                      Show data object without excluded elements
+
+`mda.t(data)`                         Transpose data object
+
+`mda.cbind(data1, data2, ...)`        Merge several datasets by columns
+
+`mda.rbind(data1, data2, ...)`        Merge several datasets by rows
+
+`mda.subset(data1, subset, select)`   Take a subset of data object (`subset` is numeric indices,                                          names or logical values for rows, `select` — the same
+                                      for columns)
+
+`attrs = mda.getattr(data)`           Return all user specific attributes from an object
+
+`data = mda.getattr(data, attrs)`     Assign user specific attributes to an object
+
+------------------------------------------------------------------------------------------------
+
+
+### Data frames with factors  {-}
+
+All methods, implemented in the package, work with matrices, therefore, if a user provides data values as data frame, it is converted to matrix. From version _0.8.0_ it is also possible to provide data frames with one or several factor columns. In this case all factors will be converted to dummy variables with values 0 and 1. You can also do it manually, by using function `prep.df2mat()` as this is shown in an example below.
+
+Let us first crate a simple data with a factor column.
+
+```{r}
+h = c(180, 175, 165, 190, 188)
+c = c("Gray", "Green", "Gray", "Green", "Blue")
+d = data.frame(Height = h, Eye.color = c)
+show(d)
+```
+
+And this is the result of converting it to a matrix.
+
+```{r}
+d.mat = mda.df2mat(d)
+show(d.mat)
+```
+
+The number of dummy variables by default is the number of levels minus one. You can change this by using argument `full = TRUE` is it is shown in the example below.
+
+```{r}
+d.mat = mda.df2mat(d, full = TRUE)
+show(d.mat)
+```
+
+It is important to have level labels in all factor columns of the same data frame unique, as they are used for names of the dummy variables (e.g. you should not have two factors with the same level name). If a factor is hidden it will be just converted to numeric values and remain excluded from modelling.
+
+
+<!--chapter:end:04-01-attributes-and-factors.Rmd-->
+
+## Simple plots {-}
+
+```{r, echo = FALSE}
+library(mdatools)
+```
+
+As it was already mentioned, *mdatools* has its own functions for plotting with several extra options not available in basic plot tools. These functions are used to make all plots in the models and results (e.g. scores, loadings, predictions, etc.) therefore it can be useful to spend some time and learn the new features (e.g. coloring data points with a vector of values or using manual ticks for axes). But if you are going to make all plots manually (e.g. using *ggplot2*) you can skip this and the next sections.
+
+In this section we will look at how to make simple plots from your data objects. Simple plots are scatter (`type = "p"`), line (`type = "l"`), line-scatter (`type = "b"`), bar (`type = "h"`)
+or errorbar (`type = "e"`) plots made for a one set of objects. All plots can be created using the same method `mdaplot()` by providing a whole dataset as a main argument. Depending on a plot type, the method "treats" the data values differently.
+
+This table below contains a list of parameters for `mdaplot()`, which are not available for traditional R plots. In this section we will describe most of the details using simple examples.
+
+--------------------------------------------------------------------------------
+Parameter            Description
+------------         -----------------------------------------------------------
+`cgroup`             a vector of values (same as number of rows in data) used to colorize plot
+                     objects with a color gradient.
+
+`colmap`             color map for the color gradient (possible values are `'default'`, `'gray'`
+                     or a vector with colors).
+
+`show.colorbar`      when color grouping is used, `mdaplot()` shows a color bar legend, this
+                     parameter allows to turn it off.
+
+`show.labels`        logical parameter showing labels beside plot objects (points, lines, etc).
+                     Size and color of labels can be adjusted using parameters `lab.cex` and `lab.col`.
+
+`labels`             parameter telling what to use as labels (by default row names, but can also
+                     be indices or manual values).
+
+`lab.col`            color for the labels.
+
+`lab.cex`            font size for the labels (as a scale factor).
+
+`xticks`             vector with numeric values to show the x-axis ticks at.
+
+`yticks`             vector with numeric values to show the y-axis ticks at.
+
+`xticklabels`        vector with labels (numbers or text) for the x-ticks.
+
+`yticklabels`        vector with labels (numbers or text) for the y-ticks.
+
+`xlas`               an integer between 0 and 3 telling at which angle the x-tick labels
+                     have to be shown.
+
+`ylas`               an integer between 0 and 3 telling at which angle the y-tick labels have
+                     to be shown.
+
+`show.axes`          logical, if `TRUE`, function will make a new plot, if `FALSE`, add the plot
+                     objects to a previous one.
+
+`show.lines`         a vector with two numbers — position of horizontal and vertical lines on a
+                     plot (e.g. coordinate axes).
+
+`show.grid`          logical, show or not a grid. It places grid behind the plot object in contrast
+                     to conventional `grid()` method. Use `grid.lwd` and `grid.col` parameters to
+                     adjust the grid look.
+
+`show.excluded`      logical, show or not points or lines corresponded to the excluded rows.
+
+`opacity`            opacity of colors in range 0...1 (applied to all colors of current plot).
+
+--------------------------------------------------------------------------------
+
+### Scatter plots {-}
+
+We will use `people` dataset for illustration how scatter plots work (see `?people` for details).
+
+```{r}
+data(people)
+attr(people, "name") <- "People"
+attr(people, "xaxis.name") <- "Variables"
+attr(people, "yaxis.name") <- "Persons"
+```
+
+For scatter plots the method takes first two columns of a dataset as x and y vectors. If only one column is available `mdaplot()` uses it for y-values and generate x-values as an index for each value.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(people, type = "p")
+mdaplot(mda.subset(people, select = c(6, 7)), type = "p")
+```
+
+All parameters, available for the standard `points()` method will work with `mdaplot()` as well. Besides that, you can colorize points according to some values using a color gradient. By default, the gradient is generated using one of the diverging color schemes from [colorbrewer2.org](http://colorbrewer2.org), but this can be changed using parameter `colmap` as it is shown below.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+mdaplot(people, type = "p", cgroup = people[, "Beer"])
+mdaplot(people, type = "p", cgroup = people[, "Beer"], show.colorbar = FALSE)
+mdaplot(people, type = "p", cgroup = people[, "Beer"], colmap = "gray")
+mdaplot(people, type = "p", cgroup = people[, "Beer"], colmap = c("red", "yellow", "green"))
+```
+
+If the vector with values for color grouping is a factor, level labels will be shown on a colorbar legend and there will be a small margin between bars.
+
+```{r, fig.width = 9, fig.height = 5}
+g = factor(people[, "Sex"], labels = c("Male", "Female"))
+
+par(mfrow = c(1, 2))
+mdaplot(people, type = "p", cgroup = g)
+mdaplot(people, type = "p", cgroup = g, colmap = "gray")
+```
+
+If you use point characters from 21 to 25 (the ones which allow to specify both color of border and
+background of the marker symbol) you can use `pch.colinv` to apply color grouping to background
+instead of border. See an example below
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(people, type = "p", cgroup = people[, "Beer"], pch = 21, bg = "white")
+mdaplot(people, type = "p", cgroup = people[, "Beer"], pch = 21, bg = "white", pch.colinv = TRUE)
+```
+
+Another useful option is adding labels to the data points. By default row names will be taken for the labels but you can specify a parameter `labels`, which can be either a text (`"names"` or `"indices"`) or a vector with values to show as labels. Color and size of the labels can be adjusted.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+mdaplot(people, type = "p", show.labels = TRUE)
+mdaplot(people, type = "p", show.labels = TRUE, labels = "indices")
+mdaplot(people, type = "p", show.labels = TRUE, labels = "names", lab.col = "red", lab.cex = 0.5)
+mdaplot(people, type = "p", show.labels = TRUE, labels = paste0("O", seq_len(nrow(people))))
+```
+
+To avoid any problems with arguments when you make a subset, use `mda.subset()` instead of the traditional ways. As you can see in the example below, if we take first 16 rows, information about excluded objects (as well as all other uder defined arguments, e.g. `"name"`) disappear and they are show in the plot as normal. But if we use `mda.subset()` it will take the subset without excluded rows as it is shown below. The subset can be created using logical expressions as well as indices or names of the rows.
+
+```{r, fig.width = 9, fig.height = 9}
+weight = people[, "Weight"]
+par(mfrow = c(2, 2))
+mdaplot(people[1:16, ], show.labels = TRUE)
+mdaplot(mda.subset(people, subset = 1:16), show.labels = TRUE)
+mdaplot(mda.subset(people, subset = c("Lisa", "Benito", "Federico")), show.labels = TRUE)
+mdaplot(mda.subset(people, subset = weight > 70), show.labels = TRUE)
+```
+
+You can also manually specify axis ticks and tick labels. The labels can be rotated using parameters `xlas` and `ylas`, see the examples below.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+mdaplot(people, xticks = c(165, 175, 185), xticklabels = c("Small", "Medium", "Hight"))
+mdaplot(people, yticks = c(55, 70, 85), yticklabels = c("Light", "Medium", "Heavy"))
+mdaplot(people, xticks = c(165, 175, 185), xticklabels = c("Small", "Medium", "Hight"), xlas = 2)
+mdaplot(people, yticks = c(55, 70, 85), yticklabels = c("Light", "Medium", "Heavy"), ylas = 2)
+```
+
+If both axis labels and rotated axis ticks have to be shown, you can adjust plot margins and position of the label using `par()` function and `mtext()` for positioning axis label manually.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+
+# change margin for bottom part
+par(mar = c(6, 4, 4, 2) + 0.1)
+mdaplot(people, xticks = c(165, 175, 185), xticklabels = c("Small", "Medium", "Hight"),
+        xlas = 2, xlab = "")
+mtext("Height", side = 1, line = 5)
+
+# change margin for left part
+par(mar = c(5, 6, 4, 1) + 0.1)
+mdaplot(people, yticks = c(55, 70, 85), yticklabels = c("Light", "Medium", "Heavy"),
+        ylas = 2, ylab = "")
+mtext("Weight", side = 2, line = 5)
+```
+
+```{r, echo = FALSE}
+par(mar = c(5, 4, 4, 2) + 0.1)
+```
+
+There is also a couple of other parameters, allowing to show/hide grid as well as show horizontal and vertical lines on the plot (axes limits will be adjusted correspondingly).
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(people, show.grid = FALSE, show.lines = c(170, 65))
+mdaplot(people, show.lines = c(220, NA))
+```
+
+From version *0.10.0* function `mdaplot()` returns plot series data, which can be used for
+extra options. For example, in case of scatter plot you can add confidence ellipse or convex
+hull for data points. To do this, points must be color grouped by a factor as shown below. For confidence ellipse you can specify the confidence level (default 0.95).
+
+```{r, fig.width = 9, fig.height = 5}
+g = factor(people[, "Sex"], labels = c("M", "F"))
+
+par(mfrow = c(1, 2))
+p = mdaplot(people, cgroup = g)
+plotConvexHull(p)
+p = mdaplot(people, cgroup = g)
+plotConfidenceEllipse(p, conf.level = 0.90)
+```
+
+### Line plots {-}
+
+When line plot is created, the `mdatools()` shows a line plot for every row. So if data set has more than one row, the plot will show a banch of lines having same properties (color, type, etc). This is particularly useful when working with signals and spectroscopic data. In this subsection we will use simulated UV/Vis spectra from `simdata`.
+
+```{r}
+data(simdata)
+spectra = simdata$spectra.c
+conc = simdata$conc.c[, 1]
+wavelength = simdata$wavelength
+
+attr(spectra, "name") = "UV/Vis spectra"
+attr(spectra, "xaxis.name") = "Band index"
+```
+
+Here are simple examples of how to make the line plots.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 1))
+mdaplot(spectra, type = "l")
+mdaplot(spectra, type = "l", col = "darkgray", lty = 2)
+```
+
+Most of the parameters described for scatter plots will work for the line plots as well. For example, you can colorise the lines by using a vector with some values (in the example below I use concentration of one of the chemical components).
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 1))
+mdaplot(spectra, type = "l", cgroup = conc)
+```
+
+One of the new features, appeared first in version 0.8.0, is a special attribute, allowing to provide manual x-values — `'xaxis.values'` (similar parameter for y-values is `'yaxis.values'`). In the example below we show the spectra using wavelength in nm and wavenumbers in inverse cm.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 1))
+
+attr(spectra, "xaxis.name") = expression("Wavenumbers, cm"^-1)
+attr(spectra, "xaxis.values") = 10^7/wavelength
+mdaplot(spectra, type = "l")
+
+attr(spectra, "xaxis.name") = "Wavelength, nm"
+attr(spectra, "xaxis.values") = wavelength
+mdaplot(spectra, type = "l")
+```
+
+When you provide such data to any model methods (e.g. PCA, PLS, etc), then all variable related results (loadings, regression coefficients, etc.) will inherit this attribute and use it for making line plots.
+
+### Bar and errorbar plots {-}
+
+Bar plot is perhaps the simplest as it shows values for the first row of the data as bars. Let us get back to the people data, calculate mean for all variables and show the calculated values as a bar plot (excluding column with Income as it has much bigger values comparing to the others) — in the simplest form as well as with some extra parameters.
+
+```{r, fig.width = 9, fig.height = 9}
+m = matrix(apply(people, 2, mean), nrow = 1)
+colnames(m) = colnames(people)
+m = mda.exclcols(m, "Income")
+attr(m, "name") = "People (means)"
+
+par(mfrow = c(2, 1))
+mdaplot(m, type = "h")
+mdaplot(m, type = "h", xticks = 1:12, xticklabels = colnames(people), col = "red",
+   show.labels = TRUE, labels = "values")
+```
+
+Errorbar plot always expect data to have two or three rows. The first row is a origin points of the error bars, secod row is the size of the bottom part and the third row is the size of the top part. If data has only two rows the both parts will be symmetric related to the origin. In the example below we show mean and standard deviation of the people data as an error bar.
+
+```{r, fig.width = 9, fig.height = 9}
+d = rbind(apply(people, 2, mean), apply(people, 2, sd))
+rownames(d) = c("Mean", "Std")
+colnames(d) = colnames(people)
+attr(d, 'name') = "Statistics"
+d = mda.exclcols(d, "Income")
+
+par(mfrow = c(2, 1))
+mdaplot(d, type = "e")
+mdaplot(d, type = "e", xticks = 1:12, xticklabels = colnames(people), col = "red")
+```
+
+All simple plots can be combined together on the same axes. In this case, first plot is created as usual and all other plots have to be created with option `show.axes = FALSE` as it is shown below. It must be noted that in this case axes limits have to be set manually when creating the first plot.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 1))
+
+mdaplot(m, type = "h", col = "lightgray", ylim = c(0, 400))
+mdaplot(d, type = "e", show.axes = FALSE, pch = NA)
+
+mdaplot(m, type = "b", ylim = c(0, 400))
+mdaplot(d, type = "e", show.axes = FALSE)
+```
+
+In the next section we will discuss plots for several groups of objects (rows).
+
+<!--chapter:end:04-02-simple-plots.Rmd-->
+
+## Plots for groups of objects {-}
+
+The package has another method for creating plots, `mdaplotg()`, which aims at making plots for groups of objects. It can be several groups of points, lines or bars, where every group has its own attributes, such as color, marker, line type and width, etc. There is a simple criterion to distinguish between the simple and group plots: group plots usually need a legend and simple plots — not. The `mdaplotg()` method allows to do a lot of things (e.g. split data into groups, add a legend and labels, etc) much easier and this section will show most of the details.
+
+I will use the *People* dataset for most of the examples, so let us load it first, add some attributes, and exclude column with income.
+
+```{r, echo = FALSE}
+library(mdatools)
+```
+
+```{r}
+data(people)
+attr(people, "name") = "People"
+attr(people, "xaxis.name") = "Parameters"
+
+people = mda.exclcols(people, "Income")
+```
+
+There are three ways to provide data sets for making the group plots. Let's discuss them first and then talk about some extra features.
+
+### One matrix or data frame {-}
+
+If dataset is a matrix or a data frame, `mdaplotg()` will make a line, scatter-line or a bar plot, considering every row as a separate group. This can be useful, when, for example, you want to show how explained variance depends on a number of components for calibration and test set, or how loadings for first two components look like. If you want to change any parameters, like `pch`, `lty`, `lwd`, `col` or similar you need to provide either a vector with value for each group or one value for all groups. Axis limits, ticks, ticklabels, etc. can be defined similarly to the simple plots. Here are some examples.
+
+```{r, fig.width = 9, fig.height = 9}
+# let's create a small subset of the people data
+p = mda.subset(people, subset = c(1, 2, 4), select = c("Height", "Weight", "Shoesize", "Swim"))
+
+par(mfrow = c(2, 2))
+mdaplotg(p, type = "l")
+mdaplotg(p, type = "b")
+mdaplotg(p, type = "h", xticks = 1:4)
+mdaplotg(p, type = "b", lty = c(1, 2, 1), col = c("red", "green", "blue"), pch = 1,
+         xticks = 1:4, xticklabels = colnames(p))
+```
+
+As you can see, `mdaplotg()` automatically created the legend and set colors, line parameters, etc. correctly. You can change position of the legend using same names as for basic `legend()` command from R, or hide it using parameter `show.legend = FALSE`, as it is shown below.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+mdaplotg(p, type = "l", legend.position = "top")
+mdaplotg(p, type = "b", legend.position = "bottomleft")
+mdaplotg(p, type = "h", legend.position = "bottom")
+mdaplotg(p, type = "b", show.legend = FALSE)
+```
+
+Group plot also allow to show labels, in this case they can be either values, names or indices of the columns.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+mdaplotg(p, type = "l", show.labels = TRUE)
+mdaplotg(p, type = "b", show.labels = TRUE, labels = "indices")
+mdaplotg(p, type = "h", show.labels = TRUE, labels = "values")
+mdaplotg(p, type = "b", show.labels = TRUE, labels = "values")
+```
+
+### List with matrices or data frames {-}
+
+In this case every element of the list will be treated as a separate group. This way allow to make scatter plots as well and line plots with several line in a group. Barplot can be also made but in this case first row from each datasets will be used. If you use names when create the list, the names will be taken as legend labels, otherwise method will look at attribute `"name"` for each data set.
+
+In the example below we split *People* data to males and females and show the group plots.
+
+```{r, fig.width = 9, fig.height = 9}
+sex = people[, "Sex"]
+m = mda.subset(people, subset = sex == -1)
+f = mda.subset(people, subset = sex ==  1)
+d = list(male = m, female = f)
+
+par(mfrow = c(2, 2))
+mdaplotg(d, type = "p")
+mdaplotg(d, type = "b")
+mdaplotg(d, type = "h")
+mdaplotg(d, type = "b", lty = c(1, 2), col = c("red", "blue"), pch = 1)
+```
+
+Most of the things described in the previous subsection will work similarly for this case. We will just add a bit more details on how labels and excluded rows are processed for the scatter plots. By default labels are row names or indices. In `mdaplotg()` you can not provide vector with manual values, so the best way to change them is to assign them as the row names. Indices are unique within each group, so if you have, e.g. three groups of points, there will be three points with index "1", three with "2", etc.
+
+### Use factors to split a dataset into groups {-}
+
+One more way to split data set into groups is to provide one or several factor columns using argument `groupby`. In this case `mdaplotg()` will find all combinations of the factor levels and split rows of dataset to the corresponding groups. In the example below we use variables *Region* and *Sex* to make plots for four groups.
+
+```{r, fig.width = 9, fig.height = 9}
+sex = factor(people[, "Sex"], labels = c("M", "F"))
+reg = factor(people[, "Region"], labels = c("S", "M"))
+groups = data.frame(sex, reg)
+
+par(mfrow = c(2, 2))
+mdaplotg(people, type = "p", groupby = groups)
+mdaplotg(people, type = "l", groupby = groups)
+mdaplotg(people, type = "b", groupby = groups)
+mdaplotg(people, type = "h", groupby = groups)
+```
+
+All parameters, described before, will work the same way in this case.
+
+<!--chapter:end:04-03-plots-for-groups-of-objects.Rmd-->
+
+## Working with images {-}
+
+From version 0.8.0 the package also supports images, however they have to be transformed into datasets. The idea is very simple, we keep information about image pixels in an unfolded form, as a matrix, and use attributes `width` and `height` to reshape the data when we need to show it as an image.
+
+There are three methods that make this procedure easier: `mda.im2data()`, `mda.data2im()` and `imshow()`. The first convert an image (represented as 3-way array) to a data set, second does the opposite and the third takes dataset and shows it as an image. In the code chunk below you will see several examples how the methods work.
+
+We will use a dataset `image` available in the package. It is a 3-way array of numbers, if you want to work with e.g. JPEG, PNG or other standard image files you can load them using specific packages ([jpeg](https://cran.r-project.org/web/packages/jpeg/index.html),
+[png](https://cran.r-project.org/web/packages/png/index.html)).
+
+```{r, echo = FALSE}
+library(mdatools)
+```
+
+```{r, fig.width = 9, fig.height = 9}
+data(pellets)
+# convert image to a data matrix and add some attributed
+d = mda.im2data(pellets)
+colnames(d) = c("Red", "Green", "Blue")
+attr(d, "name") = "Image"
+
+# show data values
+mda.show(d, 10)
+
+# show separate channels and the whole image in plots
+par(mfrow = c(2, 2))
+imshow(d, 1)
+imshow(d, 2)
+imshow(d, 3)
+imshow(d, 1:3)
+```
+
+By default image for one channels is shown using jet color palette for intensities, but you can also use gray colors, palette from *colorbrewer2* as well as your own.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+imshow(d, 1)
+imshow(d, 1, colmap = "gray")
+imshow(d, 1, colmap = heat.colors(256))
+imshow(d, 1, colmap = colorRampPalette(c("red", "green"))(256))
+```
+
+You can work with the image values as normal dataset and show scatter, line plots, calculate statistics, etc.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(d, type = "p")
+mdaplot(d, type = "l")
+```
+
+However, it will take some time to show these plots as this image has several hundreds of thousands pixels, a faster alternative can be the use density plot based on hexagonal binning. Use `type = "d"` for this as shown below. Number of bins can be adjusted by using parameter `nbins`.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(d, type = "d")
+mdaplot(mda.subset(d, select = c("Red", "Blue")), type = "d", nbins = 40)
+```
+
+Another useful thing is to set some of the pixels as background. The background pixels are removed from the image dataset physically, there is no way to get them back (in cotrast to excluded rows/pixels). It can be particularly useful when working with e.g. geocorrected hyperspectral images, where, often, many pixels have NA values and there is no need to keep them in memory. To set pixels as background you need to use method `mda.setimbg()` with either pixel indices or vector with logical values as it is shown below.
+
+```{r, fig.width = 9, fig.height = 5}
+
+# original size
+show(dim(d))
+
+# set red epixels as background and show new size
+d = mda.setimbg(d, d[, "Red"] > 100)
+show(dim(d))
+
+# show image with background pixels
+par(mfrow = c(1, 2))
+imshow(d, 1)
+imshow(d, 1:3)
+```
+
+All image related attributes are inherited by all object/rows related results, e.g. scores, residuals, predicted values and classes, etc. This means if you provide an image to any modelling method, you can visualise the corresponding results also as an image. Some examples will be shown in
+[chapter about PCA][Principal component analysis].
+
+<!--chapter:end:04-04-working-with-images.Rmd-->
+
+## Preprocessing {-}
+
+The package has several preprocessing methods implemented, mostly for different kinds of spectral data. All functions for preprocessing starts from prefix `prep.` which makes them easier to find by using code completion. In this chapter a brief description of the methods with several examples will be shown.
+
+### Autoscaling {-}
+
+*Autoscaling* consists of two steps. First step is *centering* (or, more precise, *mean centering*) when center of a data cloud in variable space is moved to an origin. Mathematically it is done by subtracting mean from the data values separately for every column/variable. Second step is *scaling* og *standardization* when data values are divided to standard deviation so the variables have unit variance. This autoscaling procedure (both steps) is known in statistics simply as *standardization'. You can also use arbitrary values to center or/and scale the data, in this case use sequence or vector with these values should be provided as an argument for `center` or `scale`.
+
+R has a built-in function for centering and scaling, `scale()`. The method `prep.autoscale()` is actually a wrapper for this function, which is mostly needed to set all user defined attributes to the result (all preprocessing methods will keep the attributes). Here are some examples how to use it:
+
+```{r, fig.width = 9, fig.height = 9}
+library(mdatools)
+
+# get data and exclude column Income
+data(people)
+
+# centering
+data1 = people
+data1 = prep.autoscale(data1, center = T, scale = F)
+
+# standardization
+data2 = people
+data2 = prep.autoscale(data2, center = F, scale = T)
+
+# autoscaling
+data3 = people
+data3 = prep.autoscale(data3, center = T, scale = T)
+
+# centering with median values and standardization
+data4 = people
+data4 = prep.autoscale(data4, center = apply(data4, 2, median), scale = T)
+
+par(mfrow = c(2, 2))
+boxplot(data1, main = "Mean centered")
+boxplot(data2, main = "Standardized")
+boxplot(data3, main = "Mean centered and standardized")
+boxplot(data4, main = "Median centered and standardized")
+```
+
+Starting form v. 0.9.0, the method has additional parameter `max.cov` which allows to avoid scaling of variables with zero or very low variation. The parameter defines a limit for coefficient of variation in percent `sd(x) / m(x) * 100` and the method will not scale variables with coefficient of variation betlow this limit. Default value for the parameter is 0 which will prevent scaling of constant variables (which is leading to `Inf` values).
+
+### Correction of spectral baseline {-}
+
+Baseline correction methods so far include Standard Normal Variate (SNV) and Multiplicative Scatter
+Correction (MSC). You can find more methods in the package [baseline](https://cran.r-project.org/web/packages/baseline/index.html). SNV is a very simple procedure aiming first of all at remove additive and multiplicative scatter effects from Vis/NIR spectra as well as correct the global intensity effect. It is applied to every individual spectrum by subtracting its average and dividing its standard deviation from all spectral values. Here is an example:
+
+```{r, fig.width = 9, fig.height = 9}
+
+# load UV/Vis spectra from Simdata
+data(simdata)
+ospectra = simdata$spectra.c
+attr(ospectra, "xaxis.values") = simdata$wavelength
+attr(ospectra, "xaxis.name") = "Wavelength, nm"
+
+# apply SNV and show the spectra
+pspectra = prep.snv(ospectra)
+
+par(mfrow = c(2, 1))
+mdaplot(ospectra, type = "l", main = "Original")
+mdaplot(pspectra, type = "l", main = "after SNV")
+```
+
+Multiplicative Scatter Correction does the same as SNV but in a different way. First it calculates a mean spectrum for the whole set (mean spectrum can be also provided as an extra argument). Then, for each individual spectrum, it makes a line fit for the spectral values and the mean spectrum. The coefficients of the line, intercept and slope, are used to correct the additive and multiplicative effects correspondingly.
+
+The `prep.msc()` function adds the mean spectrum calculated for the original spectral data, to the attributes of the results, so it can be reused later.
+
+```{r, fig.width = 9, fig.height = 9}
+# apply MSC and and get the preprocessed spectra
+pspectra = prep.msc(ospectra)
+
+# show the result
+par(mfrow = c(2, 1))
+mdaplot(ospectra, type = "l", main = "Original")
+mdaplot(pspectra, type = "l", main = "after MSC")
+```
+
+### Smoothing and derivatives {-}
+
+Savitzky-Golay filter is used to smooth signals and calculate derivatives. The filter has three arguments: a width of the filter (`width`), a polynomial order (`porder`) and the derivative order (`dorder`). If the derivative order is zero (default value) only smoothing will be performed.
+
+```{r, fig.width = 9, fig.height = 9}
+# add random noise to the spectra
+nspectra = ospectra + 0.025 * matrix(rnorm(length(ospectra)), dim(ospectra))
+
+# apply SG filter for smoothing
+pspectra = prep.savgol(nspectra, width = 15, porder = 1)
+
+# apply SG filter for smoothing and take a first derivative
+dpspectra = prep.savgol(nspectra, width = 15, porder = 1, dorder = 1)
+
+# show results
+par(mfrow = c(2, 2))
+mdaplot(ospectra, type = "l", main = "Original")
+mdaplot(nspectra, type = "l", main = "Noise added")
+mdaplot(pspectra, type = "l", main = "Smoothing")
+mdaplot(dpspectra, type = "l",main = "First derivative")
+```
+
+
+<!--chapter:end:04-05-preprocessing.Rmd-->
+
+# Principal component analysis {-}
+
+In this chapter we will discuss how to use PCA method implemented in the *mdatools*. Besides that, we will use PCA examples to introduce some principles, which are common for most of the other methods (e.g. PLS, SIMCA, PLS-DA, etc.) available in this package. This includes such things as model and result objects, getting and visualization of performance statistics, validation, use of different kinds of plots, and so on.
+
+Principal component analysis is one of the methods that decompose a data matrix $\mathbf{X}$ into a combination of three matrices: $\mathbf{X} = \mathbf{TP}^\mathrm{T} + \mathbf{E}$. Here $\mathbf{P}$ is a matrix with unit vectors, defined in the original variables space. The unit vectors, also knwon as *loadings*, form a new basis — *principal components*. The components are mutually orthogonal and oriented in variable space to capture direction of maximum variation of data points.
+
+The data points are being projected to the principal components. Coordinates of these projections in principal component space, known as *scores*, forming matrix  $\mathbf{T} = \mathbf{XP}$. Product of scores and loadings, $\mathbf{TP}^\mathrm{T}$ gives coordinates of the projections in the original variable space. Matrix $\mathbf{E}$ contains residuals — difference between position of projected data points and their original locations. This diffence is a part of data variation, which PCA model does not capture, hence the name.
+
+If original data matrix has $I$ rows (observations, objects) and $J$ variables and PCA decomposition is made with $A$ components, then matrix $\mathbf{P}$ will have dimension $J\times A$, matrix $\mathbf{T}$ — $I\times A$, and $\mathbf{TP}^\mathrm{T}$ and $\mathbf{E}$ will have the same dimension as the original data matrix, $\mathbf{X}$.
+
+Relationship between data objects and principal component space (PCA model) can be described using two distances (in some literature they are also called residual distances) — *orthogonal distance*, OD, and *score distance*, SD. The orthogonal distance is a squared Euclidean distance between the position of an object and its projection in original variable space. It can be computed by taking sum of squared values from matrix $\mathbf{E} = \{e_{ij}\}$ along every row:
+
+$$q_i = \sum_{j=1}^{J} e_{ij}^2$$
+
+This distance usually is denoted as $Q$ or $q$. It can be considered as a lack of fit measure for this particular object.
+
+The score distance is a squared Mahalanobis distance between the projection of the objects and the origin. It is a measure of extremeness of object and usually denoted as $h$ or $T^2$. The latter is used because Hotelling $T^2$ distribution is often used to describe the distribution of the score distance values, so in many software the distance is called as *Hotelling $T^2$ distance*. The distance can be computed using standardized scores (so score values for every component have unit variance).
+
+$$h_i = \sum_{a = 1}^{A} \frac{t_{ia}^2}{\lambda_a} $$
+
+Here $\lambda$ are eigenvalues for the principal components, which correspond to the variance of corresponding scores.
+
+Both score and orthogonal distances are important statistics allowing to assess how well objects are described by PCA model. They can be assessed visually, using the *Distance plot*, — scatter plot where orthogonal distance is plotted against the score distance for particular number of components. In *mdatools* this plot is called as *Residuals plot* due to some historical reasons.
+
+Both distances can be described using theoretical distributions. This helps to identify regular and extreme objects as well as outliers. All details will be shown later in this tutorial.
+
+There are several other methods, which can be used for decomposition of data similar to PCA. Some of them are Projection Pursuit (PP), Independent Component Analysis (ICA) and many others, that work in a similar way. The main difference among the methods is the way they find the orientation of the unit-vectors. Thus, PCA finds them as directions of maximum variance of data points. In addition to that, all PCA loadings are orthogonal to each other. The PP and ICA use other criteria for the orientation of the basis vectors and e.g. for ICA the vectors are not orthogonal.
+
+There are several methods to compute PCA loadings, including Singular Values Decomposition (SVD) and Non-linear Iterative Partial Least Squares (NIPALS). Both methods are implemented in this package and can be selected using `method` argument of main class `pca`. By default SVD is used. In addition, one can use randomized version of the two methods, which can be efficient if data matrix contains large amount of rows. This is explained in the last part of this chapter.
+
+## Models and results {-}
+
+In *mdatools*, any method for data analysis, such as PCA, PLS regression, SIMCA classification and so on, can create two types of objects — a model and a result. Every time you build a model you get a *model object*. Every time you apply the model to a dataset you get a *result object*. Thus for PCA, the objects have classes `pca` and `pcares` correspondingly.
+
+Each object includes a list with object's properties (e.g. loadings for model, scores and explained variance for result) and provides a number of methods for visualization and exploration.
+
+### Model calibration {-}
+
+Let's see how this works using a simple example — *People* data. We already used this data when was playing with plots, it consists of 32 objects (persons from Scandinavian and Mediterranean countries, 16 male and 16 female) and 12 variables (height, weight, shoesize, annual income, beer and wine consumption and so on.). More information about the data can be found using `?people`. We will first load the data matrix and split it into two subsets as following:
+
+```{r}
+library(mdatools)
+data(people)
+
+idx = seq(4, 32, 4)
+Xc = people[-idx, ]
+Xt = people[idx, ]
+```
+
+So `Xc` is our calibration subset we are going to use for creating a PCA model and `Xt` is a subset we will apply the calibrated model to. Now let's calibrate the model:
+
+```{r}
+m = pca(Xc, 7, scale = TRUE, info = "People PCA model")
+m = selectCompNum(m, 5)
+```
+
+
+Here `pca` is a function that builds (calibrates) a PCA model and returns the model object. In terms of programming we can call function `pca()` a constructor of pca model object. The constructor has one mandatory argument — matrix or data frame with data values. Other arguments are optional as they all have default values. In this case we use three additional: `7` is maximum number of components, `scale = TRUE` tells that data values should be standardized (centering is a default option) and `info` allows to add a short text with information about the model which can be shown later.
+
+Function `selectCompNum()` allows to select an “optimal” number of components for the model. In our case we calibrate model with 7 principal components however, e.g. after investigation of explained variance, we found out that 5 components is optimal. In this case we have two choices. Either recalibrate the model using 5 components or use the model that is calibrated already but “tell” the model that 5 components is the optimal number. In this case the model will keep all results calculated for 7 components but will use optimal number of components when necessary. For example, when showing residuals plot for the model. Or when PCA model is used in SIMCA classification.
+
+Function `print` prints the model object info:
+
+```{r}
+print(m)
+```
+
+As you can see, there are no scores, explained variance values, residuals and so on. Because they actually are not part of a PCA model, they are results of applying the model to a calibration set. But loadings, eigenvalues, number of calculated and selected principal components, vectors for centering and scaling the data, significance levels and corresponding critical limits for distances — all are parameters of the model.
+
+Here is an example how to get values from loading matrix having the model object:
+
+```{r}
+m$loadings[1:4, 1:4]
+```
+
+One can also notice that the model object has a particular field — `res`, which is in fact a
+list of PCA *result objects* containing results of applying the model to the calibration set (`cal`) and (if available) test set (`test`). In case of regression and classification `res` also contains object with cross-validation results (`cv`). For example here is the description of object with calibration results:
+
+```{r}
+print(m$res$cal)
+```
+
+And if we want to look at scores, here is the way:
+
+```{r}
+m$res$cal$scores[1:4, 1:4]
+```
+
+Both model and result objects also have related functions (methods), first of all for visualizing various values (e.g. scores plot, loadings plot, etc.). Some of the functions will be discussed later in this chapter, a full list can be found in help for a proper constructor (e.g. `?pca`).
+
+The *result object* is also created every time you apply a model to a new data. Like in many built-in R methods, method `predict()` is used in this case. The first argument of the method is always a model object. Here is a PCA example (assuming we have already built the model):
+
+```{r}
+res = predict(m, Xt)
+print(res)
+```
+
+
+### Model validation {-}
+
+PCA model can be validated using only test set validation, while for supervised model, e.g. PLS or SIMCA, you can use cross-validation as well. The validation results are, of course, represented by *result objects*, which are fields of a *model object* similar to `cal`, but with names `test`.
+
+Here is how to build a PCA model with test set validation (we will use `Xt` as test data):
+
+```{r}
+m = pca(Xc, 7, scale = TRUE, x.test = Xt, info = "PCA model")
+m = selectCompNum(m, 5)
+```
+
+And here is the info for both result objects:
+
+```{r}
+print(m$res$cal)
+print(m$res$test)
+```
+
+Let us compare, for example, the explained variance values for the results:
+
+```{r}
+var = data.frame(
+   cal = m$res$cal$expvar,
+   test = m$res$test$expvar
+)
+show(round(var, 1))
+```
+
+Every model and every result object has a method `summary()`, which shows some statistics for evaluation of a model performance. Here are some examples.
+
+```{r}
+# summary for whole model
+summary(m)
+```
+
+```{r}
+# summary for calibration results
+summary(m$res$cal)
+```
+
+The same methodology is used for any other method, e.g. PLS or SIMCA. In the next section we will look at how to use plotting functions for models and results.
+
+## Plotting methods {-}
+
+First of all you can use the methods `mdaplot()` and `mdaplotg()` (or any others, e.g. `ggplot2`) for easy visualisation of the results as they are all available as matrices with proper names, attributes, etc. In the example below I create scores and loadings plots for PC1 vs PC2. Here I assume that the last model you have created was the one with test set validation, however scores are shown only for calibration set.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(m$res$cal$scores, type = "p", show.labels = TRUE, show.lines = c(0, 0))
+mdaplot(m$loadings, type = "p", show.labels = TRUE, show.lines = c(0, 0))
+```
+
+To simplify this routine, every model and result class also has a number of functions for visualization. Thus for PCA the function list includes scores and loadings plots, explained variance and cumulative explained variance plots, distance/reduals plots, and many others.
+
+A function that does the same for different models and results has always the same name. For example, `plotPredictions` will show predicted vs. measured plot for PLS model and PLS result, MLR model and MLR result, SIMCA model and SIMCA result, and so on, although the plot itself will be quite different. The first argument must always be either a model or a result object.
+
+The major difference between plots for model and plots for result is following. A plot for  result always shows one set of data objects — one set of points, lines or bars. For example, predicted vs. measured values for calibration set or scores values for test set and so on. For such plots method `mdaplot()` is used and you can provide any arguments, available for this method (e.g. color group scores for calibration results, add confidence ellipses for scores, etc.).
+
+And a plot for a model in most cases shows several sets of data objects, e.g. predicted values for calibration and validation. In this case, a corresponding method uses `mdaplotg()` and, therefore, you can adjust the plot using arguments described for this method.
+
+Here are some examples for results:
+
+```{r, fig.width = 9, fig.height = 9}
+# create a factor for combination of Sex and Region values
+g1 <- factor(Xc[, "Sex"], labels = c("M", "F"))
+g2 <- factor(Xc[, "Region"], labels = c("S", "M"))
+g <- interaction(g1, g2)
+
+# scores plot for calibration results colored by Height
+par(mfrow = c(2, 2))
+plotScores(m$res$cal, show.labels = TRUE, cgroup = Xc[, "Height"])
+
+# scores plot colored by the factor created above and confidence ellipses
+p = plotScores(m$res$cal, c(1, 2), cgroup = g)
+plotConfidenceEllipse(p)
+
+# residuals plot for calibration results with labels
+plotResiduals(m$res$cal, show.labels = TRUE)
+
+# variance plot for calibration results with values as labels
+plotVariance(m$res$cal, type = "h", show.labels = TRUE, labels = "values")
+```
+
+The color grouping option is not available for the group (model) plots as colors are used there to underline the groups.
+
+Now let's look at similar plots (plus loadings) for a model.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+plotScores(m, c(1, 3), show.labels = TRUE)
+plotLoadings(m, c(1, 3), show.labels = TRUE)
+plotResiduals(m, show.labels = TRUE, col = c("green", "red"))
+plotVariance(m, type = "h", show.labels = TRUE, labels = "values")
+```
+
+As you can see, for in case of model, residual distance plot also shows some lines. These are critical limits, all details about them as well as how to use the distance/residuals plot will be given in the next section.
+
+If model plot show values from calibration and validation objects (e.g. scores, residuals, etc), you can specify which result to show. In the example below left plot is made using default settings, for the right plot we specified list with results explicitly. Note, that the results should be specified as a named list.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotResiduals(m)
+plotResiduals(m, res = list("train" = m$res$cal))
+```
+
+Finally, method `plot()` shows the main four PCA plots as a model (or results) overview.
+
+```{r, fig.width = 9, fig.height = 9}
+plot(m, show.labels = TRUE)
+```
+
+You do not have to care about labels, names, legend and so on, however if necessary you can always change almost anything. See full list of methods available for PCA by `?pca` and `?pcares`.
+
+### Support for images {-}
+
+As it was described before, images can be used as a source of data for any methods. In this case the results, related to objects/pixels will inherit all necessary attributes and can be show as images as well. In the example below we make a PCA model for the image data from the package and show scores and residuals.
+
+```{r, fig.width = 9, fig.height = 9}
+data(pellets)
+X = mda.im2data(pellets)
+m = pca(X)
+
+par(mfrow = c(2, 2))
+imshow(m$res$cal$scores)
+imshow(m$res$cal$Q)
+imshow(m$res$cal$scores, 2)
+imshow(m$res$cal$Q, 2)
+```
+
+### Manual x-values for loading line plot {-}
+
+As it was discussed in the previous chapter, you can specify a special attribute, `"xaxis.values"` to a dataset, which will be used as manual x-values in bar and line plots. When we create any model and/or results the most important attributes, including this one, are inherited. For example when you make a loading line plot it will be shown using the attribute values.
+
+Here is an example that demonstrate this feature using PCA decomposition of the Simdata (UV/Vis spectra).
+
+```{r, fig.width = 9, fig.height = 5}
+data(simdata)
+
+X = simdata$spectra.c
+attr(X, "xaxis.name") = "Wavelength, nm"
+attr(X, "xaxis.values") = simdata$wavelength
+
+m = pca(X, 3)
+plotLoadings(m, 1:2, type = "l")
+```
+
+### Excluding rows and columns {-}
+
+PCA as well as any other method in `mdatools` can exclude rows and columns from calculations. For example, it can be useful if you have some candidates for outliers or do variable selection and do not want to remove rows and columns from the data matrix. In this case you can just specify two additional parameters, `exclcols` and `exclrows`, using either numbers or names of rows/columns to be excluded. You can also specify a vector with logical values (all `TRUE`s will be excluded).
+
+The excluded rows are not used for creating a model and calculaiton of model's and results' performance (e.g. explained variance). However main results (for PCA — scores and residual distances) are calculated for these rows as well and set hidden, so you will not see them on plots. You can always show values for excluded objects by using parameter `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* so if you use e.g. *ggplot2* you will see all points.
+
+The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings or regression coefficients) will have zero values for such columns and be also hidden on plots. Here is a simple example.
+
+```{r, fig.width = 9, fig.height = 9}
+data(people)
+
+m = pca(people, 5, scale = T, exclrows = c("Lars", "Federico"), exclcols = "Income")
+
+par(mfrow = c(2, 2))
+plotScores(m, show.labels = TRUE)
+plotScores(m, show.labels = TRUE, show.excluded = TRUE)
+plotResiduals(m, show.labels = TRUE, show.excluded = TRUE)
+plotLoadings(m, show.labels = TRUE, show.excluded = TRUE)
+```
+
+As you can see, the excluded values (or variables in case of loadings plot) are either hidden completely or shown as gray points if `show.excluded` parameter is set to `TRUE`.
+
+Here is the matrix with loadings, note that variable `Income` has zeros for loadings and the matrix has attribute `exclrows` set to 6 (which is a position of the variable):
+
+```{r}
+# show matrix with loadings (look at row Income and attribute "exclrows")
+show(m$loadings)
+```
+
+Such behavior will help to exclude and include rows and columns interactively, some examples will be shown later.
+
+## Residuals and critical limits {-}
+
+### Distance to model and score distance {-}
+
+As it was written in the brief theoretical section about PCA, when data objects are being projected to a principal component space, two distances are calculated and stored as a part of PCA results (`pcares` object). The first is a squared orthogonal Euclidean distance from original position of an object to the PC space, also known as *orthogonal distance* and denoted as *Q* or *q*. The distance shows how well the object is fitted by the PCA model and allows to detect objects that do not follow a commond trend, captured by the PCs.
+
+The second distance shows how far a projection of an object to the PC space is from the origin. This distance is also known as Hotelling T^2^ distance or a *score distance*. To compute T^2^ distance scores should be first normalized by dividing them to corresponding singular values (or eigenvalues if we deal with squared scores). The T^2^ distance allows to see extreme objects — which are far from the origin. In the package as well as in this tutorial we will also use letter $h$ to denote this distance, so $Q$ and $q$ are for orthogonal distance and $T^2$ and $h$ stand for the score distance.
+
+
+In *mdatools* both distances are calculated for all objects in dataset and all possible components. So every distance is represented by $I \times A$ matrix (will remind here that $I$ is number of objects or rows in data matrix and $A$ is number of components in PCA model), the first column contains distances for a model with only one component, second — for model with two components, and so on. The distances can be visialised using method `plotResiduals()` which is available both for PCA results as well as for PCA model. In the case of model the plot shows distances both for calibration set and test set (if available).
+
+Here is an example, where I split People data to calibration and test set as in one of the examples in previous sections and show residuals for model and result objects.
+
+```{r, fig.width = 9, fig.height = 9}
+data(people)
+idx = seq(4, 32, 4)
+Xc = people[-idx, ]
+Xt = people[idx, ]
+
+m = pca(Xc, 4, scale = TRUE, x.test = Xt)
+
+par(mfrow = c(2, 2))
+plotResiduals(m, main = "Residuals for model")
+plotResiduals(m, ncomp = 2, main = "Residuals for model (2 Comp)")
+plotResiduals(m$res$cal, main = "Residuals for calibration set")
+plotResiduals(m$res$test, main = "Residuals for test set")
+```
+
+As it was briefly mentioned before, if residual/distance plot is made for a model, it also shows two critical limits: the dashed line is a limit for extreme objects and the dotted line is a limit for outliers. How they are computed is explained later in this section. If you want to hide them, just use additional parameter `show.limits = FALSE`. You can also change the color, line type and width for the lines by using options `lim.col`, `lim.lty` and `lim.lwd` as it is shown below.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotResiduals(m, show.limits = FALSE)
+plotResiduals(m, lim.col = c("red", "orange"), lim.lwd = c(2, 2), lim.lty = c(1, 2))
+```
+
+It is necessary to provide a vector with two values for each of the argument (first for extreme objects and second for outliers border).
+
+Finally, you can also notice that for model plot the distance values are normalized ($h/h_0$ and $q/q_0$ instead of just $h$ and $q$). This is needed to show the limits correctly and, again, will be explained in detail below. You can switch this option by using logical parameter `norm`. Sometimes, it is also make sense to use log tranform for the values, which can be switched by using parameter `log`. Code below shows example for using these parameters.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+plotResiduals(m, norm = FALSE)
+plotResiduals(m, norm = TRUE)
+plotResiduals(m, norm = TRUE, log = TRUE)
+plotResiduals(m, norm = FALSE, log = TRUE)
+```
+
+### Critical limits {-}
+
+If PCA model is made for dataset taken from the same poulation, the orthogonal and score distances can be used to find outliers and extreme objects. One of the ways to do this is to compute critical limits for the distances assuming that they follow certain theoretical distribution.
+
+Critical limits are also important for SIMCA classification as they are directly used for making decision on class belongings. This package implements several methods to compute the limits, which are explained in this section.
+
+#### Data driven approach {-}
+
+Starting from version 0.10.0, by default the limits are computed using data driven approach  [proposed](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.1147) and then [extended](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.2506) by Pomerantsev and Rodionova.
+
+It was known before, that both distances are well described by chi-square distribution. The distribution in general describes behaviour of sum of squared random values taken from standardized normal distribution, which means, that the distances has to be standardized first. The scaling factor as well as number of degrees of freedom (DoF) can be estimated from the distance values — hence the name (data driven).
+
+Since the estimation procedure is identical for the both distances, we will use a generalized version. Let's say we have a vector of distance values $u$ (where $u$ can be either score distance values, $h$, or orthogonal distance values, $q$) for given number of components. Then the scaling factor, $u_0$ and corresponding DoF, $N_u$ can be found as:
+
+$$u_0 = m_u = \frac{1}{I} \sum_{i = 1}^{I} u$$
+$$N_u = \mathrm{int} \bigg( \frac{2u_0^2}{s_u^2} \bigg)$$
+
+Here $s_u^2$ is a variance of the distances. Then the the normalized distance values will follow chi-square distribution with $N_u$ degrees of freedom (just replace $u$ to $q$ or $h$ to get the formula for particular distance):
+
+$$N_u \frac{u}{u_0} \propto \chi^2(N_u)$$
+
+However, this does not take into account the fact that $h$ and $q$ are, strictly speaking, not independent. It is well known that adding an additional component to PCA model leads to increase of score distance and decrease of residual distance and removing a component has the opposite effect. This relationship can be taken into account by computing a joint or a *full distance*, $f$, as follows:
+
+$$f = N_h \frac{h}{h_0} + N_q \frac{q}{q_0}$$
+
+The full distance, $f$ also follows chi-square distribition with degrees of freedom: $N_f = N_q + N_h$. The critical limits for the full distance are computed using inverse cumulative distribution function (ICDF) also known as quantile function. For extreme objects (shown on distance plot as dashed line) as:
+
+$$f_{crit} = \chi^{-2}(1 - \alpha, N_f)$$
+
+Where $\alpha$ is a significance level — expected number of extreme objects (e.g. for $\alpha = 0.05$ we expect that 5% of objects will be categorized as extreme). Critical limit for outliers is found as:
+
+$$f_{crit} = \chi^{-2}((1 - \gamma)^{1/I}, N_f)$$
+
+Here $\gamma$ is a significance level for outliers, so if it is $0.01$ every object has $1\%$ chance to be detected as outlier. The test for outliers should treat every object independently, so it requires Bonferroni correction, as one can see from the formula.
+
+You can change the significance level both for exreme objects and outliers either when you calibrate the model, by providing parameters `alpha` and `gamma`, or for existent model, by using function `setDistanceLimits()` as shown in the example below.
+
+```{r, fig.width = 9, fig.height = 5}
+# calbrate a model with alpha = 5% and gamma = 5%
+m = pca(people, 4, scale = TRUE, alpha = 0.05, gamma = 0.05)
+
+par(mfrow = c(1, 2))
+plotResiduals(m)
+
+# change both levels to 1%
+m = setDistanceLimits(m, alpha = 0.01, gamma = 0.01)
+plotResiduals(m)
+```
+
+This function also allows to change method for computing the limits, which is discussed in next subsection.
+
+#### Other methods for computing critical limits {-}
+
+The package implements several other methods for computing critical limits for residuals distances. The needed method can be selected by providing additional argument, `lim.type`, both when calibrate PCA model or when adjust the limits for existent model with `setDistanceLimits()` function. By default, `lim.type = "ddmoments"`, which corresponds to the method described above — data driven approach based on classical estimators (statistical moments).
+
+When data is contaminated with outliers, using statistical moments may lead to wrong estimators, in this case it is recommended to use robust version instead by specifying `lim.type = "ddrobust"`. The robust approach utilizes median and inter-quartile range instead of mean and standard deviation (see [the paper](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.2506) for details). The use of robust and classical data driven approaches also helps to identify a proper model complexity, which will be discussed in the next section.
+
+In addition to the data driven method, *mdatools*, also allows to use state-of-art approach, where limits for each distance are computed independently giving rectangular acceptance area on the distance plot. In this case, two methods are available for the orthogonal distance: either based on chi-square distribution but only for $q$ values (`lim.type="chisq"`) or using Jackson-Mudholkar method (`lim.type="jm"`). If one of the two methods is selected, critical limits for the score distances, $h$, will be computed using [Hotelling's T^2^ distribution](https://en.wikipedia.org/wiki/Hotelling%27s_T-squared_distribution). This way of computing critical limits can be found in many popular chemometric software, for example, PLS_Toolbox.
+
+#### Categorization of data rows based on critical limits {-}
+
+It is possible to categorize every row (object, measurement) in a dataset based on the two distances and critical limits computed for given model and limit paramters (method and significance limit). Function `categorize()` is made for that. An example below shows how to categorize new predictions using this function.
+
+```{r}
+data(people)
+
+idx = seq(4, 32, 4)
+Xc = people[-idx, ]
+Xt = people[idx, ]
+
+m = pca(Xc, 4, scale = TRUE)
+r = predict(m, Xt)
+
+c = categorize(m, r)
+print(c)
+```
+
+As one can see, there are two outliers, one extreme and five regulat objects. This can be visualised on distance plot:
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotResiduals(r, cgroup = c)
+plotResiduals(m, res = list("new" = r), cgroup = c)
+```
+
+The first plot is a normal distance/residuals plot for results, while the second plot is made for model with manually specified result list. The last has possibility to show critical limits and see why actually the objects have been categorized like this.
+
+When the plot is made for calibration set, this option can be simplified by providing specific value for parameter `cgroup` as shown below.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotResiduals(m)
+plotResiduals(m, cgroup = "categories")
+```
+
+This option will work only if plot is made for one result object.
+
+## Model complexity {-}
+
+Complexity of PCA model is first of all associated with selection of proper (optimal) number of components. The optimal number should explain the systematic variation of the data points and keep the random variation uncaptured. Traditionally, number of components is selected by investigation of eigenvalues or looking at plot with residual or explained variance. However, this is quite complicated issue and result of selection depends very much on quality of data and purpose PCA model is built for. More details can be found in [this paper]().
+
+In *mdatools* there are several additional instruments both to select proper number of components as well as to see if, for example, new data (test set or new set of measurements) are well fitted by the model.
+
+The first tool is the use of degrees of freedom for orthogonal and score distances, we mentioned earlier. A simple plot, where number of the degrees of freedom is plotted agains number of components in PCA model can often reveal the presence of overfitting very clearly — the DoF value for the orthogonal distance, $N_q$ jumps up significantly.
+
+The code and its outcome below show how to make such plot separately for each distance and for both. The first plot in the figure is conventional plot with variance explained by each component. The model is made for *Simdata*, where it is known that the optimal number of components is two.
+
+```{r, fig.width = 9, fig.height = 9}
+data(simdata)
+Xc = simdata$spectra.c
+Xt = simdata$spectra.t
+m = pca(Xc, 6)
+
+par(mfrow = c(2, 2))
+plotVariance(m, type = "h", show.labels = TRUE)
+plotQDoF(m)
+plotT2DoF(m)
+plotDistDoF(m)
+```
+
+As you can see from the plots, second component explains less than 1% of variance and can be considered as non significant. However, plot for $N_q$ shows a clear break at $A = 3$, indicating that both first and second PCs are important. The $N_h$ values in this case do not provide any useful information.
+
+In case if outliers present it can be useful to investigate the plot for $N_q$ using classical and robust methods for estimation as shown in example below.
+
+```{r}
+m = pca(Xc, 6)
+
+par(mfrow = c(1, 2))
+plotQDoF(m, main = "DoF plot (classic)")
+
+m = setDistanceLimits(m, lim.type = "ddrobust")
+plotQDoF(m, main = "DoF plot (robust)")
+```
+
+In this case both plots demonstrate quite similar behavior, however if they look differently it can be an indicator for a presence of outliers. The DoF plots work only if data driven method is used for computing of critical limits.
+
+Another way to see how many components are optimal in the model, in case if you have a test set or just a new set of measurements you want to use the model with, is to employ the Extreme plot. The plot shows a number of extreme values for different $\alpha$. Imaging that you make several distance plots with different $\alpha$ values and count how many objects model found as extremes. On the other hand you know that the expected value is $\alpha I$. If you plot the number of extreme values vs. the expected number — this is the Extreme plot.
+
+If model captures systematic variation both for calibration and test set the points on this plot will lie within a confidence ellipse shown using light blue color. However, if model is overfitted, the points are getting outside it.
+
+Below you can see two Extreme plots made for the same data as the previous example. The left plot show results for calibration set for number of components in the PCA model equal to 2 and 3. The right plot show the results for the test set.
+
+```{r, fig.width = 9, fig.height = 5}
+Xc = simdata$spectra.c
+Xt = simdata$spectra.t
+m = pca(Xc, 6, x.test = Xt)
+
+par(mfrow = c(1, 2))
+plotExtreme(m, comp = 2:3, main = "Extreme plot (cal)")
+plotExtreme(m, comp = 2:3, res = m$res$test, main = "Extreme plot (test)")
+```
+
+As you can see, in case of calibration set, the points are lying withing confidence ellipse for both $A = 2$ and $A = 3$. However for the test set, the picture is quite different. In case of $A = 2$ most of the points are inside the interval, but for $A = 3$ all of them are clearly outside.
+
+We hope these new tools will make the use of PCA more efficient.
+
+## Randomized PCA algorithms {-}
+
+Both SVD and NIPALS are not very efficient when number of rows in dataset is very large (e.g. hundreds of thousands values or even more). Such datasets can be easily obtained in case of for example hyperspectral images. Direct use of the traditional algorithms with such datasets often leads to a lack of memory and long computational time.
+
+One of the solution here is to use probabilistic algorithms, which allow to reduce the number of values needed for estimation of principal components. Starting from *0.9.0* one of the probabilistic approach is also implemented in *mdatools*. The original idea can be found in [this paper](https://epubs.siam.org/doi/10.1137/090771806) and some examples on using the approach for PCA analysis of hyperspectral images are described [here](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.2966).
+
+The approach is based on calculation of matrix $B$, which has much smaller number of rows comparing to the original data, but captures the action of the data. To produce proper values for $B$, several parameters are used. First of all it is a rank of original data, $k$, if it is known. Second, it is oversampling parameter, $p$, which is important if rank is underestimated. The idea is to use $p$ to overestimate the rank thus making solution more stable. The third parameter, $q$, is a number of iterations needed to make $B$ more robust. Usually using $p = 5$ and $q = 1$ will work well on most of the datasets and, at the same time, will take less time for finding a solution comparing with conventional methods. By default, $k$ is set to number of components, used for PCA decomposition.
+
+The example below uses two methods (classic SVD and randomized SVD) for PCA decomposition of 100 000 x 300 dataset and compares time and main outcomes (loadings and explained variance).
+
+```{r}
+# create a dataset as a linear combination of three sin curves with random "concentrations"
+n = 100000
+X = seq(0, 29.9, by = 0.1)
+S = cbind(sin(X), sin(10 * X), sin(5 * X))
+C = cbind(runif(n, 0, 1), runif(n, 0, 2), runif(n, 0, 3))
+D = C %*% t(S)
+D = D + matrix(runif(300 * n, 0, 0.5), ncol = 300)
+show(dim(D))
+
+# conventional SVD
+t1 = system.time({m1 = pca(D, ncomp = 2)})
+show(t1)
+
+# randomized SVD with p = 5 and q = 1
+t2 = system.time({m2 = pca(D, ncomp = 2, rand = c(5, 1))})
+show(t2)
+
+# compare variances
+summary(m1)
+summary(m2)
+
+# compare loadings
+show(m1$loadings[1:10, ])
+show(m2$loadings[1:10, ])
+
+```
+
+As you can see the explained variance values, eigenvalues and loadings are identical in the two models and the second method is several times faster.
+
+It is possible to make PCA decomposition even faster if only loadings and scores are needed. In this case you can use method `pca.run()` and skip other steps, like calculation of residuals, variances, critical limits and so on. But in this case data matrix must be centered (and scaled if necessary) manually prior to the decomposition. Here is an example using the data generated in previous code.
+
+```{r}
+D = scale(D, center = TRUE, scale = FALSE)
+
+# conventional SVD
+t1 = system.time({m1 = pca.run(D, method = "svd", ncomp = 2)})
+show(t1)
+
+# randomized SVD with p = 5 and q = 1
+t2 = system.time({m2 = pca.run(D, method = "svd", ncomp = 2, rand = c(5, 1))})
+show(t2)
+
+# compare loadings
+show(m1$loadings[1:10, ])
+show(m2$loadings[1:10, ])
+
+```
+
+As you can see the loadings are still the same but the probabilistic algorithm is about 10 times faster. The exact difference depends on computer of course so if you run these examples on your compute you will get a bit different results, however the randomized algorithm will always be a clear winner.
+
+<!--chapter:end:05-00-PCA.Rmd-->
+
+# SIMCA/DD-SIMCA classification {-}
+
+SIMCA (Soft Independent Modelling of Class Analogy) is a simple but efficient one-class classification method mainly based on PCA. The general idea is to create a PCA model using only samples/objects belonging to a class and classify new objects based on how good the model can fit them. The decision is made using the two distances we discussed in detail in the [corresponding PCA chapter][Residuals and critical limits] — orthogonal and score distances and corresponding critical limits.
+
+Critical limits computed for both distances (or their combination) are used to cut-off the strangers (extreme objects) and accept class members with a pre-define expected ratio of false negatives ($\alpha$). If data driven approach (either classic/moments or robust) are used to compute the critical limits, then the method is called **DD-SIMCA** (Data Driven SIMCA). You can find more details about the method in this [paper](https://onlinelibrary.wiley.com/doi/full/10.1002/cem.2506).
+
+The classification performance can be assessed using number of true/false positives and negatives and statistics, showing the ability of a classification model to recognize class members (*sensitivity* or true positive rate) and how good the model is for identifying strangers (*specificity* or true negative rate). In addition to that, model also calculates a percent of misclassified objects. All statistics are calculated for calibration and validation (if any) results, but one must be aware that specificity can not be computed without objects not belonging to the class and, therefore, calibration and cross-validation results in SIMCA do not have specificity values.
+
+```{block, type='caution'}
+You can think that SIMCA is actually a PCA model where functon [`categorize()`][Categorization of data rows based on critical limits] is used to make a decision: if object is categorized as regular, it will be considered as member of the class, otherwise — it is a stranger. Therefore read carefully how PCA [works in general][Principal component analysis] and how critical limits for distances [are computed][Residuals and critical limits] in particular, to understand how SIMCA works.
+```
+
+It must be also noted that any SIMCA model is also a PCA model object and any SIMCA result is also a PCA result object, therefore all plots, methods, statistics, available for PCA, can be used for SIMCA model and result objects as well.
+
+## Calibration and validation {-}
+
+The model calibration is similar to PCA, but there are several additional arguments, which are important for classification. First of all it is a class name, which is a second mandatory argument. Class name is a string, which can be used later e.g. for identifying class members for testing. The second important argument is a level of significance, `alpha`. This parameter is used for calculation of statistical limits and can be considered as probability for false negatives. The default value is 0.05. Finally the parameter `lim.type` allows to select the method for compuring critical limits for the distances, as it is described in the [PCA chapter][Residuals and critical limits]. By default `lim.type = "ddmoments"` as in PCA.
+
+In this chapter as well as for describing other classification methods we will use a famous Iris dataset, available in R. The dataset includes 150 measurements of three Iris species: *Setosa*, *Virginica* and *Versicola*. The measurements are length and width of petals and sepals in cm. Use `?iris` for more details.
+
+Let's get the data and split it to calibration and test sets.
+
+```{r, echo = FALSE, show = FALSE}
+library(mdatools)
+```
+
+```{r}
+data(iris)
+head(iris)
+
+# generate indices for calibration set
+idx = seq(1, nrow(iris), by = 2)
+
+# split the values
+Xc = iris[idx, 1:4]
+cc = iris[idx, 5]
+
+Xt = iris[-idx, 1:4]
+ct = iris[-idx, 5]
+```
+
+Now, because for calibration we need only objects belonging to a class, we will split the `X.c` into three matrices — one for each species. The data is ordered by the species, so it can be done relatively easy by taking every 25 rows.
+
+```{r}
+X.set = Xc[1:25, ]
+X.ver = Xc[26:50, ]
+X.vir = Xc[51:75, ]
+```
+
+Let's start with creating a model for class *Versicolor* and exploring available statistics and plots. In this case default values for method and significance level to compute the critical limits (`lim.type = "ddmoments"` and `alpha = 0.05`) are used.
+
+```{r}
+m = simca(X.ver, "versicolor", ncomp = 3)
+summary(m)
+```
+
+The summary output shows (in addition to explained and cumulative explained variance) number of true positives, false positives, true negatives, false negatives as well as specificity, sensitivity and accuracy of classification. All statistics are shown for each available result object (in this case only calibration) and only for optimal number of components (in this case 3).
+
+The summary plot look very much similar to what we have seen for PCA.
+
+```{r, fig.width = 9, fig.height = 8}
+plot(m)
+```
+
+In addition to standard PCA plots, SIMCA model (as well as any other classification model, e.g. PLS-DA) can show plot for sensitivity and ratio of misclassified values depending on the number of components. Plus a prediction plot, which shows classification results for each object. See the example below.
+
+
+```{r, fig.width = 9, fig.height = 8}
+layout(matrix(c(1, 3, 2, 3), ncol = 2))
+plotSensitivity(m, show.labels = TRUE)
+plotMisclassified(m, show.labels = TRUE)
+plotPredictions(m, show.labels = TRUE)
+```
+
+### Cross-validation {-}
+
+SIMCA model can be also cross-validated. Cross-validation settings are provided using parameter `cv` which can be either a number of a list. If it is a number, segmented cross-validation with random split will be used. The number then defines number of segments with one exception — if `cv = 1` then full cross-validation (leave-one-out) will be used.
+
+Alternatively you can specify the cross-validation settings as a list. There are three options: `cv = list("full")` allows to do full cross-validation. If you specify `cv = list("ven", nseg)` then systematic cross-validation with `nseg` segments will be used (venetian blinds). Finally, `cv = list("rand", nseg, nrep)` will run random cross-validation with `nseg` segments  and `nrep` repetitions/iterations.
+
+```{block, type='caution'}
+When cross-validation is used, only performance statistics will be computed (in this case classification performance). Therefore cross-validated result object will not contain scores, residuals, explained variance etc. and corresponding plots will not be available.
+```
+
+All performance plots are also available for cross-validation results as shown below.
+
+```{r, fig.width = 9, fig.height = 8}
+m = simca(X.ver, "versicolor", ncomp = 3, cv = 1)
+
+par(mfrow = c(2, 2))
+plotSensitivity(m)
+plotMisclassified(m)
+plotPredictions(m$res$cal, main = "Predictions (cal)")
+plotPredictions(m$res$cv, main = "Predictions (cv)")
+```
+
+Although predictions plot available also for classification model it always shows results only for one result object, otherwise it would be overloaded with information. As you can see from the predictions plots above, cross-validation results have 3 false negatives comparing to 2 for calibration results. You can also see this in summary text, where cross-validation results are shown in the second row:
+
+```{r}
+summary(m)
+```
+
+Note, that columns with variance are not available for cross-validation (have `NA` values).
+
+### Predictions and validation with a test set {-}
+
+When model is calibrated and optimized, one can test it using a new test set with know classes. In this case we will use objects from all three species and be able to see how good the model performs on strangers (and calculate the specificity). In order to do that we will provide both matrix with predictors, `Xt`, and a vector with names of the classes for corresponding objects/rows (`ct`). The values with known classes in this case can be:
+
+* a vector with text values (names)
+* a factor using the names as labels (also as a vector)
+* a vector with logical values (`TRUE` for class members and `FALSE` for strangers)
+
+In our case we have a vector with text values, which will be automatically converted to a factor by the function `predict()`. Instead of creating a new model and providing the values as test set we will simply make predictions.
+
+```{r}
+res = predict(m, Xt, ct)
+summary(res)
+```
+
+In this case we can also see the specificity values and corresponding plot can be made, as shown below together with other plots.
+
+```{r, fig.width = 9, fig.height = 8}
+par(mfrow = c(2, 2))
+plotSpecificity(res, show.labels = TRUE)
+plotSensitivity(res, show.labels = TRUE)
+plotMisclassified(res, show.labels = TRUE)
+plotPredictions(res)
+```
+
+As you can see, the prediction plot looks a bit different in this case. Because the test set has objects from several classes and the class belongings is known, this information is shown as color bar legend. For instance, in the example above we can see, that two *Virginica* objects were erroneously classified as members of *Versicolor*.
+
+You can also show the predictions as a matrix with $-1$ and $+1$ using method `showPredictions()` or get the array with predicted class values directly as it is shown in the example below (for 10 rows in the middle of the data, different number of components and the first classification variable).
+
+```{r}
+show(res$c.pred[45:55, 1:3, 1])
+```
+
+You can also get and show the confusion matrix (rows correspond to real classes and columns to the predicted class) for an object with SIMCA results (as well as results obtained with any other classification method, e.g. PLS-DA).
+
+```{r}
+show(getConfusionMatrix(res))
+```
+
+### Class belonging probabilities {-}
+
+In addition to the array with predicted class, the object with SIMCA results also contains an array with class beloning probabilities. The probabilities are calculated depending on how close a particular object is to the the critical limit border.
+
+To compute the probability we use the theoretical distribution for score and orthogonal distances as when computing critical values (defined by the parameter `lim.type`). The distribution is used to calculate a p-value — chance to get object with given distance value or larger. The p-value is then compared with signidicance level, $\alpha$, and the probability, $\pi$ is calculated as follows:
+
+$$\pi = 0.5 (p / \alpha) $$
+
+So if p-value is the same as significance level (which happens when object is lying exactly on the acceptance line) the probability is 0.5. If p-value is e.g. 0.04, $\pi = 0.4$, or 40%, and the object will be rejected as a stranger (here we assume that the $\alpha = 0.05$). If the p-value is e.g. 0.06, $\pi = 0.6$, or 60%, and the object will be accepted as a member of the class. If p-value is larger than $2\times\alpha$ the probability is set to 1.
+
+In case of rectangular acceptance area (`lim.type = 'jm'` or `'chisq'`) the probability is computed separately for $q$ and $h$ values and the smallest of the two is taken. In case of triangular acceptance area (`lim.type = "ddmoments"` or `"ddrobust"`) the probability is calculated for a full distance, $f$.
+
+Here is how to show the probability values, that correspond to the predictions shown in the previous code chunk. I round the probability values to four decimals for better output.
+
+```{r}
+show(round(res$p.pred[45:55, 1:3, 1], 4))
+```
+
+It is also possible to show the probability values as a plot with method `plotProbabilities()`:
+
+```{r, fig.width = 9, fig.height = 8}
+par(mfrow = c(2, 1))
+plotProbabilities(res, cgroup = ct)
+plotProbabilities(res, ncomp = 2, cgroup = ct)
+```
+
+The plot can be shown for any SIMCA results (including e.g. calibration set or cross-validated results).
+
+## Multiclass classification {-}
+
+Several SIMCA models can be combined to a special object `simcam`, which is used to make a multiclass classification. Besides this, it also allows calculating distance between individual models and a *discrimination power* — importance of variables to discriminate between any two classes. Let's see how it works.
+
+First we create three single-class SIMCA models with individual settings, such as number of
+optimal components and alpha.
+
+```{r}
+m.set = simca(X.set, "setosa", 3, alpha = 0.01)
+m.set = selectCompNum(m.set, 1)
+
+m.vir = simca(X.vir, "virginica", 3)
+m.vir = selectCompNum(m.vir, 2)
+
+m.ver = simca(X.ver, "versicolor", 3)
+m.ver = selectCompNum(m.ver, 1)
+```
+
+Then we combine the models into a `simcam` model object. Summary will show the performance on
+calibration set, which is a combination of calibration sets for each of the individual models
+
+```{r}
+mm = simcam(list(m.set, m.vir, m.ver))
+summary(mm)
+```
+
+Now we apply the combined model to the test set and look at the predictions.
+
+```{r, fig.width = 9, fig.height = 6}
+res = predict(mm, Xt, ct)
+plotPredictions(res)
+```
+
+In this case, the predictions are shown only for the number of components each model found optimal. The names of classes along y-axis are the individual models. Similarly we can show the predicted values.
+
+```{r}
+show(res$c.pred[20:30, 1, ])
+```
+
+Method `getConfusionMatrix()` is also available in this case.
+
+```{r}
+show(getConfusionMatrix(res))
+```
+
+There are three additional plots available for multiclass SIMCA model. First of all it is a distance between a selected model and the others.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotModelDistance(mm, 1)
+plotModelDistance(mm, 2)
+```
+The plot shows not a real distance but rather a similarity between a selected model and the others as a ratio of residual variances. You can find more detailed description about how model is calculated in description of the method or in help for `plotModelDistance.simcam` function.
+
+The second plot is a discrimination power, mentioned in the beginning of the section.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotDiscriminationPower(mm, c(1, 3), show.labels = TRUE)
+plotDiscriminationPower(mm, c(2, 3), show.labels = TRUE)
+```
+
+And, finally, a Cooman's plot showing an orthogonal distance, $q$, from objects to two selected classes/models.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotCooman(mm, c(1, 3), show.labels = TRUE)
+plotCooman(mm, c(2, 3), show.labels = TRUE)
+```
+
+The limits, shown as dashed lines, are computed using chi-square distribution but only for $q$ values.
+
+<!--chapter:end:06-00-SIMCA.Rmd-->
+
+# Partial least squares regression {-}
+
+Partial least squares regression (PLS) is a linear regression method, which uses principles similar to PCA: data is decomposed using latent variables. Because in this case we have two datasets, matrix with predictors ($\mathbf{X}$) and matrix with responses ($\mathbf{Y}$) we do decomposition for both, computing scores, loadings and residuals: $\mathbf{X} = \mathbf{TP}^\mathrm{T} + \mathbf{E}_x$, $\mathbf{Y} = \mathbf{UQ}^\mathrm{T} + \mathbf{E}_y$. In addition to that, orientation of latent variables in PLS is selected to maximize the covariance between the X-scores, $\mathbf{T}$, and Y-scores $\mathbf{U}$. This approach makes possible to work with datasets where more traditional Multiple Linear Regression fails — when number of variables exceeds number of observations and when X-variables are mutually correlated. But, at the end, PLS-model is a linear model, where response value is just a linear combination of predictors, so the main outcome is a vector with regression coefficients.
+
+There are two main algorithms for PLS, *NIPALS* and *SIMPLS*, in the *mdatools* only the last one is implemented. PLS model and PLS results objects have a lot of properties and performance statistics, which can be visualized via plots. Besides that, there is also a possibility to compute selectivity ratio (SR) and VIP scores, which can be used for selection of most important variables. Another additional option is a randomization test which helps to select optimal number of components. We will discuss most of the methods in this chapter and you can get the full list using `?pls`.
+
+## Models and results {-}
+
+Like we discussed for [PCA][Principal component analysis], *matools*  creates two types of objects — a model and a result. Every time you build a  PLS model you get a *model object*. Every time you apply the model to a dataset you get a *result object*. For PLS, the objects have classes `pls` and `plsres` correspondingly.
+
+### Model calibration {-}
+
+Let's use the same *People* data and create a PLS-model for prediction of *Shoesize* (column number four) using other 11 variables as predictors. As usual, we start with preparing datasets (we will also split the data into calibration and test subsets):
+
+```{r}
+library(mdatools)
+data(people)
+
+idx = seq(4, 32, 4)
+Xc = people[-idx, -4]
+yc = people[-idx, 4, drop = FALSE]
+Xt = people[idx, -4]
+yt = people[idx, 4, drop = FALSE]
+```
+
+So `Xc` and `yc` are predictors and response values for calibration subset. Now let's calibrate the model and show an information about the model object:
+
+```{r}
+m = pls(Xc, yc, 7, scale = TRUE, info = "Shoesize prediction model")
+```
+You can notice that the calibration succeeded but there is also a warning about lack of validation. For supervised models, which have complexity parameter (in this case — number of components), doing proper validation is important as it helps to find the optimal complexity. When you calibrate PLS model the calibration also tries to find the optimal number (details will be discussed later in this chapter) and this needs some validation. The easiest thing to do is to use cross-validation, we start with its simplest form — the full cross-validation (`cv = 1`):
+
+```{r}
+m = pls(Xc, yc, 7, scale = TRUE, cv = 1, info = "Shoesize prediction model")
+m = selectCompNum(m, 3)
+```
+
+Besides that, the procedure is very similar to PCA, here we use 7 latent variables and select 3 first as an optimal number using the same method, `selectCompNum()`.
+
+Here is an info for the model object:
+
+```{r}
+print(m)
+```
+
+As expected, we see loadings for predictors and responses, matrix with weights, and a special object (`regcoeffs`) for regression coefficients.
+
+#### Regression coefficients {-}
+
+The values for regression coefficients are available in `m.coeffs.values`, it is an array with dimension *nVariables x nComponents x nPredictors*. The reason to use the object instead of just an array is mainly for being able to get and plot regression coefficients for different methods. Besides that, it is possible to calculate confidence intervals and other statistics for the coefficients using Jack-Knife method (will be shown later), which produces extra entities.
+
+The regression coefficients can be shown as plot using either function `plotRegcoeffs()` for the PLS model object or function `plot()` for the object with regression coefficients. You need to specify for which predictor (if you have more than one y-variable) and which number of components you want to see the coefficients for. By default it shows values for the optimal number of components and first y-variable as it is shown on example below.
+
+```{r, fig.width = 9, fig.height = 9}
+
+par(mfrow = c(2, 2))
+plotRegcoeffs(m)
+plotRegcoeffs(m, ncomp = 2)
+plot(m$coeffs, ncomp = 3, type = "b", show.labels = TRUE)
+plot(m$coeffs, ncomp = 2)
+```
+
+The model keeps regression coefficients, calculated for centered and standardized data, without intercept, etc. Here are the values for three PLS components.
+
+```{r}
+show(m$coeffs$values[, 3, 1])
+```
+
+You can see a summary for the regression coefficients object by calling function `summary()` for the object `m$coeffs` like it is show below. By default it shows only estimated regression coefficients for the selected y-variable and number of components. However, if you use cross-validation, [Jack-Knifing](https://en.wikipedia.org/wiki/Jackknife_resampling) method will be used to compute some statistics, including standard error, p-value (for test if the coefficient is equal to zero in population) and confidence interval. All statistics in this case will be shown automatically with `summary()` as you can see below.
+
+```{r}
+summary(m$coeffs)
+```
+
+You can also get the corrected coefficients, which can be applied directly to the raw data (without centering and standardization), by using method `getRegcoeffs()`:
+
+```{r}
+show(getRegcoeffs(m, ncomp = 3))
+```
+
+#### Result object {-}
+
+Similar to PCA, model object contains list with result objects (`res`), obtained using calibration set (`cal`), cross-validation (`cv`) and test set validation (`test`). All three have class `plsres`, here is how `res$cal` looks like:
+
+```{r}
+print(m$res$cal)
+```
+
+The `xdecomp` and `ydecomp` are objects similar to `pcares`, they contain scores, residuals and variances for decomposition of X and Y correspondingly.
+
+```{r}
+print(m$res$cal$xdecomp)
+```
+
+Other fields are mostly various performance statistics, including slope, coefficient of determination (R^2^), bias, and root mean squared error (RMSE). Besides that, the results also include reference y-values and array with predicted y-values. The array has dimension *nObjects x nComponents x nResponses*.
+
+PLS predictions for a new set can be obtained using method `predict`:
+
+```{r}
+res = predict(m, Xt, yt)
+print(res)
+```
+
+If reference y-values are not provided to `predict()` function, then all predictions are computed anyway, but performance statistics (and corresponding plot) will be not be available.
+
+### Model validation {-}
+
+Validation is implemented similar to SIMCA or PCA, the only difference is that you need to provide two datasets for a test set — one for predictors (`x.test`) and one for response (`y.test`) values. Cross-validation is very important for PLS as it helps to find optimal number of PLS components (so test set performance is more fair as in this case you do not use test set for optimization). Therefore, it is always recommended to use cross-validation for this purpose.
+
+You probably have noticed a small warning we got when created the first PLS model in this chapter:
+
+```{r}
+m = pls(Xc, yc, 7, scale = TRUE, info = "Shoesize prediction model")
+```
+
+When you create a model, it tries to select optimal number of components automatically (which, of course, you can always change later). To do that, the method uses RMSE values, calculated for different number of components and cross-validation predictions. So, if we do not use cross-validation, it warns user about this.
+
+There are two different ways/criteria for automatic selection. One is using first local minimum on the RMSE plot and second is so called Wold criterion, based on a ratio between PRESS values for current and next component. You can select which criterion to use by specifying parameter `ncomp.selcrit` (either `'min'` or `'wold'`) as it is shown below.
+
+```{r}
+m1 = pls(Xc, yc, 7, scale = TRUE, cv = 1, ncomp.selcrit = "min")
+show(m1$ncomp.selected)
+
+m2 = pls(Xc, yc, 7, scale = TRUE, cv = 1, ncomp.selcrit = "wold")
+show(m2$ncomp.selected)
+```
+
+And here are the RMSE plots (they are identical of course):
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotRMSE(m1)
+plotRMSE(m2)
+```
+
+Parameter `cv` has the same format as for SIMCA. If it is a number, it will be used as number of segments for random cross-validation, e.g. if `cv = 2` cross-validation with two segments will be carried out. For full cross-validation use `cv = 1` like we did in the example above. For more advanced option you can provide a list with name of cross-validation method, number of segments and number of iterations, e.g. `cv = list("rand", 4, 4)` for running random cross-validation with four segments and four repetitions or `cv = list("ven", 8)` for systematic split into eight segments (*venetian blinds*).
+
+Method `summary()` for model shows performance statistics calculated using optimal number of components for each of the results.
+
+```{r}
+summary(m1)
+```
+
+As you can see, there are no values for cumulative explained variance for cross-validation result, as we discussed in PCA/SIMCA.
+
+If you want more details run `summary()` for one of the result objects.
+
+```{r}
+summary(m1$res$cal)
+```
+
+In this case, the statistics are shown for all available components and explained variance for individual components is added.
+
+## Plotting methods {-}
+
+Plotting methods, again, work similar to PCA, so in this section we will look more detailed at the available methods instead of on how to customize them. PLS has a lot of different results and much  more possible plots. Here is a list of methods, which will work both for a model and for a particular results.
+
+Plotting methods for summary statistics.
+
+----------------------------------------------------------------------------------------------------
+Method                                  Description
+------------------------------------    ------------------------------------------------------------
+`plotRMSE(obj, ny, ...)`                RMSE values vs. number of components in a model
+
+`plotXVariance(obj, ...)`               explained variance for X decomposition for each component
+
+`plotXCumVariance(obj, ...)`            same as above but for cumulative variance
+
+`plotYVariance(obj, ...)`               explained variance for Y decomposition for each component
+
+`plotYCumVariance(obj, ...)`            same as above but for cumulative variance
+
+----------------------------------------------------------------------------------------------------
+
+
+Plotting methods for objects.
+
+----------------------------------------------------------------------------------------------------
+Method                                         Description
+----------------------------------------       -----------------------------------------------------
+`plotPredictions(obj, ny, ncomp, ...)`         plot with predicted vs. measured (reference) y-values
+
+`plotXScores(obj, comp, ...)`                  scores for decomposition of X (similar to PCA plot)
+
+`plotYScores(obj, comp, ...)`                  scores for decomposition of Y (similar to PCA plot)
+
+`plotXResiduals(obj, ncomp, ...)`              residuals for decomposition of X (similar to PCA)
+
+`plotYResiduals(obj, ncomp, ...)`              residuals for decomposition of Y
+
+`plotXYScores(obj, ncomp, ...)`                Y-scores vs. X-scores for a particular PLS component.
+
+----------------------------------------------------------------------------------------------------
+
+Parameter `obj` is either a model or a result object and it is the only mandatory argument for the plots. All other parameters have reasonable default values. Parameter `ny` is used to specify which y-variable you want to see a plot for (if $\mathbf{Y}$ is multivariate). You can also provide any parameter from `mdaplot()` or `mdaplotg()` thus change limits or labels for axis, main title, colors, line and marker style etc.
+
+Parameter `comp` allows to provide a number of selected components (one or several) to show the plot
+for, while parameter `ncomp` assumes that only one number is expected (number of components in a model or particular individual component). So if e.g. you create model for five components and selected three as optimal, you can also see, for example, prediction plot for having only one or for components in your model.
+
+Here is an example for creating prediction plot for `m1` model (left for automatically selected number of components, right for user specified value):
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotPredictions(m1)
+plotPredictions(m1, ncomp = 1)
+```
+
+By the way, when `plotPredictions()` is made for results object, you can show performance statistics on the plot:
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+plotPredictions(m1$res$cal)
+plotPredictions(m1$res$cal, ncomp = 2)
+plotPredictions(m1$res$cal, show.stat = TRUE)
+plotPredictions(m1$res$cal, ncomp = 2, show.stat = TRUE)
+```
+
+The plots for variables are available only for a model object and include:
+
+----------------------------------------------------------------------------------------------------
+Methods                                            Description
+----------------------------------------------     -------------------------------------------------
+`plotXLoadings(obj, comp)`                         loadings plot for decomposition of X
+
+`plotXYLoadings(obj, comp)`                        loadings plot for both X and Y decomposition
+
+`plotWeights(obj, comp)`                           plot with weights (*W*) for PLS decomposition
+
+`plotRegcoeffs(obj, ny, ncomp)`                    plot with regression coefficients
+
+`plotVIPScores(obj, ny)`                           VIP scores plot
+
+`plotSelectivityRatio(obj, ny, ncomp)`             Selectivity ratio plot
+
+----------------------------------------------------------------------------------------------------
+
+And, of course, both model and result objects have method `plot()` for giving an overview.
+
+```{r, fig.width = 9, fig.height = 8}
+plot(m1)
+```
+
+### Excluding rows and columns {-}
+
+PLS, like PCA, also can exclude rows and columns from calculations. The implementation works similar to what was [described][Excluding rows and columns] for PCA. For example, it can be useful if you have some candidates for outliers or do variable selection and do not want to remove rows and columns physically from the data matrix. In this case you can just specify two additional parameters, `exclcols` and `exclrows`, using either numbers or names of rows/columns to be excluded. You can also specify a vector with logical values (all `TRUE`s will be excluded).
+
+The excluded rows are not used for creating a model and calculation of model's and results' performance (e.g. explained variance). However main results (for PLS — scores, predictions, residuals) are calculated for these rows as well and set hidden, so you will not see them on plots. You can always e.g. show scores for excluded objects by using `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* so if you use e.g. *ggplot2* you will see all points.
+
+The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings, weights or regression coefficients) will have zero values for such columns and be also hidden on plots.
+
+## Variable selection {-}
+
+PLS allows to calculate several statistics, which can be used to select most important (or remove least important) variables in order to improve performance and make model simpler. The first two are VIP-scores (variables important for projection) and Selectivity ratio. All details and theory can be found e.g. [here](http://onlinelibrary.wiley.com/store/10.1002/cem.1360/).
+
+Both parameters can be shown as plots and as vector of values for a selected y-variable. Take into account that when you make a plot for VIP scores or Selectivity ratio, the corresponding values should be computed first, which can take some time for large datasets.
+
+Here is an example of corresponding plots.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+plotVIPScores(m1)
+plotVIPScores(m1, ncomp = 2, type = "h", show.labels = TRUE)
+plotSelectivityRatio(m1)
+plotSelectivityRatio(m1, ncomp = 2, type = "h", show.labels = TRUE)
+```
+
+To compute the values without plotting use `vipscores()` and `selratio()` functions.  In the example below, I create two other PLS models by excluding variables with VIP score or selectivity ratio below a threshold (I use 1 and 3 correspondingly) and show the performance for both.
+
+```{r}
+vip = vipscores(m1, ncomp = 2)
+m3 = pls(Xc, yc, 4, scale = T, cv = 1, exclcols = (vip < 0.5))
+summary(m3)
+
+sr = selratio(m1, ncomp = 2)
+m4 = pls(Xc, yc, 4, scale = T, cv = 1, exclcols = (sr < 2))
+summary(m4)
+```
+
+Another way is to make an inference about regression coefficients and calculate confidence intervals and p-values for each variable. This can be done using Jack-Knife approach, when model is cross-validated using efficient number of segments (at least ten) and statistics are calculated using the distribution of regression coefficient values obtained for each step. The statistics are automatically computed when you use full cross-validation.
+
+```{r, fig.width = 9, fig.height = 9}
+mjk = pls(Xc, yc, 7, scale = TRUE, cv = 1)
+```
+
+The statistics are calculated for each y-variable and each available number of components. When you show a plot for regression coefficients, you can show the confidence intervals by using parameter `show.ci = TRUE` as shown in examples below.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+plotRegcoeffs(mjk, type = "h", show.ci = TRUE, show.labels = TRUE)
+plotRegcoeffs(mjk, ncomp = 2, type = "h", show.ci = TRUE, show.labels = TRUE)
+plotRegcoeffs(mjk, type = "l", show.ci = TRUE, show.labels = TRUE)
+plotRegcoeffs(mjk, ncomp = 2, type = "l", show.ci = TRUE, show.labels = TRUE)
+```
+
+Calling function `summary()` for regression coefficients allows to get all calculated statistics.
+
+```{r}
+summary(mjk$coeffs, ncomp = 2)
+summary(mjk$coeffs, ncomp = 2, alpha = 0.01)
+```
+
+Function `getRegcoeffs()` in this case may also return corresponding t-value, standard error, p-value, and confidence interval for each of the coefficient (except intercept) if user specifies a parameter `full`. The standard error and confidence intervals are also computed for raw, undstandardized, variables (similar to coefficients).
+
+```{r}
+show(getRegcoeffs(mjk, ncomp = 2, full = TRUE))
+```
+
+It is also possible to change significance level for confidence intervals.
+
+```{r}
+show(getRegcoeffs(mjk, ncomp = 2, full = TRUE, alpha = 0.01))
+```
+
+The p-values, t-values and standard errors are stored each as a 3-way array similar to regression coefficients. The selection can be made by comparing e.g. p-values with a threshold similar to what we have done with VIP-scores and selectivity ratio.
+
+```{r}
+exclcols = mjk$coeffs$p.values[, 2, 1] > 0.05
+show(exclcols)
+```
+
+Here `p.values[, 2, 1]` means values for all predictors, model with two components, first y-variable.
+
+```{r}
+newm = pls(Xc, yc, 3, scale = TRUE, cv = 1, exclcols = exclcols)
+summary(newm)
+show(getRegcoeffs(newm))
+```
+
+As you can see, the variables *Age*, *Income*, *Region* and *IQ* have been excluded as they are not related to the *Shoesize*, which seems to be correct.
+
+Variable selection as well as all described above can be also carried out for PLS discriminant analysis (PLS-DA), which can be explained later in one of the next chapters.
+
+## Distances and outlier detection {-}
+
+### Residual distance for X-decomposition {-}
+
+For decomposition of X-values the residual distances are computed and treated in the same way as in PCA — via orthogonal and score distances and corresponding critical limits. The `pls()` constructor takes the three arguments for computing the critical limits, similar to PCA (`lim.type`, `alpha`, `gamma`). The default value for `lim.type` is the same as for PCA (`"ddmoments"`). Distance plot can be made using `plotXResiduals()`, it works identical to `plotResiduals()` for PCA.
+
+Below is example on how to use the plot.
+
+```{r, fig.width = 9, fig.height = 9}
+m = pls(Xc, yc, 4, scale = TRUE, cv = 1)
+
+par(mfrow = c(2, 2))
+plotXResiduals(m)
+plotXResiduals(m, ncomp = 2, log = TRUE)
+plotXResiduals(m, ncomp = 2, res = list("cal" = m$res$cal))
+plotXResiduals(m$res$cal)
+```
+
+PLS also has function `categorize()` which allows to identify extreme objects and outliers. However, it works in a different way and takes into account not only residual distances for X-decomposition but also similar measure for decomposition of Y. This is explained in following sections.
+
+### Residual distance for Y-decomposition and total distance {-}
+
+The residual distance for Y-decomposition is calculated in a different way — as a difference between predicted and reference y-values. The difference for selected y-variable is expected to be random and normally distributed. It can be checked visually by using function `plotYResiduals()` as shown in example below. In this plot the difference is plotted against the reference value.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+plotYResiduals(m)
+plotYResiduals(m, ncomp = 2)
+plotYResiduals(m, ncomp = 2, res = list("cal" = m$res$cal))
+plotYResiduals(m$res$cal)
+```
+
+Since predictions are also computed for cross-validation, the plot shows the distance values for cross-validated results.
+
+The distance between reference and predicted values can be used to compute orthogonal squared distance, similar to how it is done for X-decomposition, as it is shown below:
+
+$$ z_i = \sum_{k = 1}^K (y_{ik} - \hat{y}_{ik})^2 $$
+
+Here $y_{ik}$ is a reference value for sample $i$ and y-variable $k$ and $\hat{y}_{ik}$ is the corresponding predicted value, $K$ is the number of y-variables. Apparently, $z$ values also follow chi-square distribution similar to how [it is done in PCA][Critical limits]:
+
+$$N_z \frac{z}{z_0} \propto \chi^2(N_z)$$
+
+In case of PLS1 (when there is only one y-variable), $N_z = 1$. Otherwise, both $z_0$ and $N_z$ are computed using [data driven approach][Data driven approach], similar to $q_0$, $N_q$, $h_0$, $N_h$, using either classical (based on moments) or robust approach.
+
+Full distance for X-decomposition, $f$ and the Y-distance, $z$ can be combined into XY total distance, $g$:
+
+$$g = N_f\frac{f}{f_0} + N_z\frac{z}{z_0} \propto \chi^2(N_g)$$
+
+Here $N_g = N_f + N_z$. This approach was proposed by Rodionova and Pomerantsev and described in [this paper](https://pubs.acs.org/doi/10.1021/acs.analchem.9b04611). The distances and the critical limits can be visualized using function `plotXYResiduals()` as illustrated in the next example.
+
+The example is based on People data (prediction of shoesize), however we will first introduce two outliers. We will change response value for row #9 to 25, which is apparently too small value for shoesize of an adult person. The predictor values will be the same. Then we will change height of first person (row #1) to 125 cm, which is again quite small value. And keep the response value unchanged. After that, we create a PLS model with classic data driven approach for computing critical limits and show the XY-residuals plot. Finally, that we change the method for limits to robust and show the plot again:
+
+```{r, fig.width = 9, fig.height = 5}
+# prepare data
+data(people)
+X = people[, -4]
+y = people[, 4, drop = FALSE]
+
+# add outliers
+y[9] = 25
+X[1, 1] = 125
+
+# create model and show plots
+m = pls(X, y, 4, scale = TRUE, cv = 1, lim.type = "ddmoments")
+
+par(mfrow = c(1, 2))
+plotXYResiduals(m, show.labels = TRUE, labels = "indices")
+
+m = setDistanceLimits(m, lim.type = "ddrobust")
+plotXYResiduals(m, show.labels = TRUE, labels = "indices")
+```
+
+As one can see, both classic and robust approach detect sample number 9 (with wrong y-value) as a clear outlier. Using robust approach helps to identify the second outlier as well. However, you can see that the location of the two samples is different — sample #9 has large Y-distance ($z/z_0$), while sample #1 has large full X-distance ($f/f_0$). Which is in agreement with the way we created the outliers.
+
+The limits shown on the plot are made for the total distance, $g$. For example, to detect outliers we need to compare the total distance, $g$, with critical limit computed for predefined significance level, $\gamma$ (shown as dotted line on the plots):
+
+$$g > \chi^{-2} \big( (1 - \gamma)^{1/I}, N_g \big) $$
+
+The proper procedure for detection and removing outliers can be found in the [paper](https://pubs.acs.org/doi/10.1021/acs.analchem.9b04611) and will be very briefly touched upon here. The detection can be done using function `categorize()` which works similar to the same function for PCA decomposition — returns vector with categories for each measurement, as shown in an example below:
+
+```{r}
+c = categorize(m, m$res$cal)
+print(c)
+```
+
+A simplified description of the recommended procedure proposed in the [mentioned paper](https://pubs.acs.org/doi/10.1021/acs.analchem.9b04611) is following:
+
+1. Make a PLS model with robust estimator of critical limits
+2. Detect outliers if any, remove them and keep the removed objects separately
+3. Repeat steps 1-2 until no outliers are detected
+4. Apply model to the collected outliers (use `predict`)
+5. If any of them appear as regular objects, return them back to the dataset and go to step 1
+6. Repeat all steps until step 5 does not reveal any regular objects
+7. Make a final PLS model using classic estimator for the critical limits
+
+If test set validation is used, the outlier detection should be done for both sets. And it is of course important to use optimal number of components, which can be identified using RMSE plot and plot for explained Y-variance.
+
+The code chunks below show the steps for detection of outliers in the People data used in an example earlier. We start with creating PLS model for the whole data.
+
+```{r, fig.width = 9, fig.height = 5}
+# prepare data
+data(people)
+X = people[, -4]
+y = people[, 4, drop = FALSE]
+
+# add outliers
+y[9] = 25
+X[1, 1] = 125
+
+# compute initial PLS model with all data
+m = pls(X, y, 10, scale = TRUE, cv = 1, lim.type = "ddrobust")
+
+# look at RMSE and XY-residuals plot
+par(mfrow = c(1, 2))
+plotRMSE(m)
+plotXYResiduals(m)
+```
+
+Apparently four components selected automatically is indeed a proper value. The XY-residuals plot shows that we have two outliers, let's find and remove them:
+
+```{r, fig.width = 9, fig.height = 5}
+# get row indices for outliers in calibration set
+outliers = which(categorize(m, m$res$cal) == "outlier")
+
+# keep data for outliers in separate matrices
+Xo = X[outliers, , drop = FALSE]
+yo = X[outliers, drop = FALSE]
+
+# remove the rows with outliers from the data
+X = X[-outliers, , drop = FALSE]
+y = y[-outliers, drop = FALSE]
+
+# make a new model for oulier free data
+m = pls(X, y, 10, scale = TRUE, cv = 1, lim.type = "ddrobust")
+
+# look at RMSE and XY-residuals plot
+par(mfrow = c(1, 2))
+plotRMSE(m)
+plotXYResiduals(m)
+```
+Again, four or three components seem to be optimal and this time no extra outliers are detected. Let's now apply the model to the two outliers found previously and see their status.
+
+```{r, fig.width = 4.5, fig.height = 5}
+res = predict(m, Xo, yo)
+plotXYResiduals(m, res = list("cal" = m$res$cal, "out" = res))
+```
+
+The two objects seem now even more extreme for the model built using the outliers free data, no need to have them back. So we just need to make a final model and look at it:
+
+```{r, fig.width = 9, fig.height = 9}
+# make a new model for oulier free data and explore it
+m = pls(X, y, 10, scale = TRUE, cv = 1, lim.type = "ddmoments")
+summary(m)
+
+par(mfrow = c(2, 2))
+plotXYResiduals(m)
+plotRegcoeffs(m, type = "h", show.labels = TRUE, show.ci = TRUE)
+plotRMSE(m)
+plotPredictions(m)
+```
+
+
+## Randomization test {-}
+
+Another additional option for PLS regression implemented in *mdatools* is randomization test for estimation of optimal number of components. The descirption of the method can be found in [this paper](https://onlinelibrary.wiley.com/doi/10.1002/cem.1086). The basic idea is that for each component from 1 to `ncomp` we compute a statistic $T$, which is a covariance between X-scores and the reference Y values. After that, this procedure is repeated for randomly permuted Y-values and distribution of the statistic is obtained. A parameter `alpha` is computed to show how often the statistic $T$, calculated for permuted Y-values, is the same or higher than the same statistic, calculated for original response values without permutations.
+
+If a component is important, then the covariance for unpermuted data should be larger than the covariance for permuted data and therefore the value for `alpha` will be quie small (there is still a small chance to get similar covariance). This makes `alpha` very similar to p-value in a statistical test.
+
+The function `randtest()` calculates alpha for each component, the values can be observed using `summary()` or `plot()` functions. There are also several functions, allowing e.g. to show distribution of statistics and the critical value for each component.
+
+In example of code below most of the functions are shown.
+
+```{r}
+data(people)
+
+y = people[, 4, drop = FALSE]
+X = people[, -4]
+
+r = randtest(X, y, ncomp = 5, nperm = 1000, silent = TRUE)
+summary(r)
+```
+
+As you can see, `alpha` is very small for components 2–4 and then jumps up.
+
+```{r, fig.width = 9, fig.height = 9}
+par( mfrow = c(2, 2))
+plotHist(r, ncomp = 3)
+plotHist(r, ncomp = 5)
+plotCorr(r, ncomp = 3)
+plotCorr(r, ncomp = 5)
+```
+
+<!--chapter:end:07-00-PLS.Rmd-->
+
+# PLS Discriminant Analysis {-}
+
+PLS Discriminant Analysis (PLS-DA) is a discrimination method based on PLS regression. At some point the idea of PLS-DA is similar to logistic regression — we use PLS for a dummy response variable, *y*, which is equal to +1 for objects belonging to a class, and -1 for those that do not (in some implementations it can also be 1 and 0 correspondingly). Then a conventional PLS regression model is calibrated and validated, which means that all methods and plots, you already used in PLS, can be used for PLS-DA models and results as well.
+
+The extra step in PLS-DA is, actually, classification, which is based on thresholding of predicted y-values. If the predicted value is above 0, a corresponding object is considered as a member of a class and if not — as a stranger. In *mdatools* this is done automatically using methods `plsda()` and `plsdares()`, which inhertit all `pls()` and `plsres()` methods. Plus they have something extra to represent classification results, which you have already read about in the [chapter][SIMCA/DD-SIMCA classification] devoted to SIMCA. If you have not, it makes sense to do this first, to make the understanding of PLS-DA implementation easier.
+
+In this chapter we will describe shortly how PLS-DA implementation works. All examples are based on the well-known Iris dataset, which will be split into two subsets — calibration (75 objects, 25 for each class) and validation (another 75 objects). Two PLS-DA models will be built — one only for *virginica* class and one for all three classes.
+
+## Calibration of PLS-DA model {-}
+
+Calibration of PLS-DA model is very similar to conventional PLS with one difference — you need to provide information about class membership of each object instead of a matrix or a vector with response values. This can be done in two different ways. If you have multiple classes, it is always recommended to provide your class membership data as a *factor* with predefined labels or a vector with class names as text values. The labels/values in this case will be used as class names. It is also acceptable to use numbers as labels but it will make interpretation of results less readable and can possible cause problems with performance statistics calculations. So use names!
+
+It is very important that you use the same labels/names for e.g. calibration and test set, because this is the way model will identify which class an object came from. And if you have e.g. a typo in a label value, model will assume that the corresponding object is a stranger.
+
+So let's prepare our data.
+
+```{r}
+data(iris)
+
+cal.ind = c(1:25, 51:75, 101:125)
+val.ind = c(26:50, 76:100, 126:150)
+
+Xc = iris[cal.ind, 1:4]
+Xv = iris[val.ind, 1:4]
+
+cc.all = iris[cal.ind, 5]
+cv.all = iris[val.ind, 5]
+
+```
+
+In this case, the fifth column of dataset *Iris* is already factor, otherwise we have to make it as a factor explicitely. Lets check if it is indeed correct.
+
+```{r}
+show(cc.all)
+```
+
+However, for the model with just one class, *virginica*, we need to prepare the class variable in a different way. In this case it is enought to provide a vector with logical values, where `TRUE` will correspond to a member and `FALSE` to a non-member of the class. Here is an example how to do it (we will make two — one for calibration and one for validation subsets).
+
+```{r}
+cc.vir = cc.all == "virginica"
+cv.vir = cv.all == "virginica"
+show(cc.vir)
+```
+
+Now we can calibrate the models:
+
+```{r}
+m.all = plsda(Xc, cc.all, 3, cv = 1)
+m.vir = plsda(Xc, cc.vir, 3, cv = 1, classname = "virginica")
+```
+
+You could notice one important difference. In case when parameter `c` is a vector with logical values you also need to provide a name of the class. If you do not do this, a default name will be used, but it may cause problems when you e.g. validate your model using test set where class membership is a factor as we have in this example.
+
+Let's look at the summary for each of the model. As you can see below, summary for multi class PLS-DA simply shows one set of results for each class. The performance statistics include explained X and Y variance (cumulative), values for confusion matrix (true positives, false positives, true negatives, false negatives) as well as specificity, sensitivity and accuracy values.
+
+```{r}
+summary(m.all)
+```
+
+Dealing with the multi-class PLS-DA model is similar to dealing with PLS2 models, when you have several y-variables. Every time you want to show a plot or results for a particular class, just provide the class number using parameter `nc`. For example this is how to show summary only for the third class (*virginica*).
+
+```{r}
+ summary(m.all, nc = 3)
+```
+
+You can also show statistics only for calibration or only for cross-validation parts, in this case you will see details about contribution of every component to the model.
+
+```{r}
+ summary(m.all$calres, nc = 3)
+```
+
+For one class models, the behaviour is actually similar, but there will be always one set of results — for the corresponding class. Here is the summary.
+
+```{r}
+summary(m.vir)
+```
+
+Like in SIMCA you can also get a confusion matrix for particular result. Here is an example for multiple classes model.
+
+```{r}
+getConfusionMatrix(m.all$calres)
+```
+
+And for the one-class model.
+
+```{r}
+getConfusionMatrix(m.vir$calres)
+```
+
+## Classification plots {-}
+
+Most of the plots for visualisation of classification results described in SIMCA chapter can be also used for PLS-DA models and results. Let's start with classification plots. By default it is shown for cross-validation results (we change position of the legend so it does not hide the points). You can clearly spot for example three false positives and one false negatives in the one-class PLS-DA model for virginica.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotPredictions(m.all)
+plotPredictions(m.vir)
+```
+
+In case of multiple classes model you can select which class to show the predictions for.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotPredictions(m.all, nc = 1)
+plotPredictions(m.all, nc = 3)
+```
+
+## Performance plots {-}
+
+As in SIMCA you can show how sensitivity, specificity and total amount of misclassified samples depending on number of components by using corresponding plots. In case of multiple-classes model you can also provide a class number to show the plot for (by default package will show the plot for overall statistic computed for all classes).
+
+
+```{r, fig.width = 9, fig.height = 12}
+par(mfrow = c(3, 2))
+plotMisclassified(m.all, nc = 2)
+plotMisclassified(m.vir)
+plotSensitivity(m.all, nc = 2)
+plotSensitivity(m.vir)
+plotSpecificity(m.all, nc = 2)
+plotSpecificity(m.vir)
+```
+
+As usual, you can also change type of plot to line or scatter-line, change colors, etc. All PLS regression plots, including RMSE, X and Y variance, etc. will also work smoothly with PLS-DA models or results. You can also show regression coefficients like in the example below. To show regression coefficients for particular class you need to provide its number using parameter `ny` (the reason we use `ny` and not `nc` here is that this plot is inherited from PLS model). So in our example both plots show regression coefficients for prediction of virginica objects (left obtained using multiple class model and right — using one class model).
+
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotRegcoeffs(m.all, ncomp = 3, ny = 3)
+plotRegcoeffs(m.vir, ncomp = 1, show.ci = TRUE)
+```
+
+## Predictions for a new data {-}
+
+Again very similar to PLS — just use method `predict()` and provide at least matrix or data frame with predictors (which should contain the same number of variables/columns). For test set validation you can also provide class reference information similar to what you have used for calibration of PLS-DA models.
+
+In case of multiple class model, the reference values should be provided as a factor or vector with class names as text values. Here is an example.
+
+```{r}
+res = predict(m.all, Xv, cv.all)
+summary(res)
+```
+
+And the corresponding plot with predictions.
+
+```{r, fig.width=9, fig.height=5}
+par(mfrow = c(1, 1))
+plotPredictions(res)
+```
+
+If vector with reference class values contains names of classes model knows nothing about, they will simply be considered as members of non of the known clases ("None").
+
+In case of one-class model, the reference values can be either factor/vector with names or logical values, like the ones used for calibration of the model. Here is an example for each of the cases.
+
+```{r}
+res21 = predict(m.vir, Xv, cv.all)
+summary(res21)
+
+res22 = predict(m.vir, Xv, cv.vir)
+summary(res22)
+```
+
+As you can see, statistically results are identical. However, predictions plot will look a bit different for these two cases, as you can see below.
+
+```{r, fig.width=9, fig.height=8}
+par(mfrow = c(2, 1))
+plotPredictions(res21)
+plotPredictions(res22)
+```
+
+And because `predict()` returns an object with results you can also use most of the plots available for PLS regression results. In the last example below you will find plots for X-residuals and Y-variance.
+
+```{r, fig.width=9, fig.height=5}
+par(mfrow = c(1, 2))
+plotXResiduals(res21)
+plotYVariance(res22)
+```
+
+<!--chapter:end:08-00-PLS-DA.Rmd-->
+
+# Interval PLS  {-}
+
+Interval PLS (iPLS) is a variable selection method used mostly for spectroscopic data [proposed](https://doi.org/10.1366/0003702001949500) by Lars Noergaard *at al* in 2000. The main idea is try different parts (or intervals — hence the name) of spectra and their combinations to find the most relevant for prediction of a response variable. There are two algorithms — forward and backward.
+
+### Forward iPLS {-}
+
+The forward approach works as follows
+
+1. Split spectral data into $N$ intervals
+2. Create an empty vector with selected intervals
+3. Create a model where intervals in the vector (already slected) are combined with one of the rest. If combination improves the model, add this new interval to the vector.
+4. Repeat previous step until there is no improvements.
+
+Apparently, when nothing is selected, on step 3 the algorithm simply create model for every interval available. As you can see, iPLS is based on iterative procedure. If you have 20 intervals you need to create 20 models on the first step, 19 models on the second step and so on.
+
+In *mdatools*, you can run iPLS selection by using function `ipls()`. You have to specify matrix with predictors (`x`) and responses (`y`), number of components in global model (`glob.ncomp`), and define the intervals. In addition to that, you can also specify parameters of cross-validation (`cv`) as well as criterion for selection of optimal number of components (`ncomp.selcrit`) for local models similar to PLS. Forward iPLS is used as a default algorithm.
+
+Intervals can be defined using one of the following three parameters: number of intervals (`int.num`), width of an interval (`int.width`) or specify start and end of each interval as a two-column matrix with variable indices (`int.limits`). In addition to that, you can specify maximum number of component for local models (`int.ncomp`) and maximum number of iterations — so method will stop regardless if you have improvements or not (`int.niter`). By default the maximum number of iterations is limited to 30.
+
+Here is an example of applying iPLS for Simdata (for concentration of second chemical component, C2) using 15 intervals.
+
+```{r}
+data(simdata)
+X = simdata$spectra.c
+y = simdata$conc.c[, 2, drop = FALSE]
+
+m = ipls(X, y, glob.ncomp = 4, int.num = 15)
+```
+
+As you can see, by default method shows information for every step in the console. Use parameter `silent = TRUE` to change this behaviour. From the example above we can see that the global model had RMSECV = 0.027572 with 3 components. Creating local models with individual intervals gave the best performance with RMSECV = 0.030405 (interval #6). Combination of the interval #6 with interval #11 (next step) gave RMSECV = 0.0027882. The small improvement was obtained for adding 4 more intervals giving final result with RMSECV = 0.027201.
+
+There are several ways to explore the iPLS results both graphically and numerically. First of all, summary will show full information about the selected interval, including number of variables on both ends:
+
+```{r}
+summary(m)
+```
+
+Also you can see the first step (performance of individual models) and the selected interval by using function `plot()` for the whole model:
+
+```{r, fig.width = 9, fig.height = 6}
+plot(m)
+```
+
+The red curve here is an average spectrum. Bars are intervals, height of each bar corresponds to RMSECV value for local model made using variables from this interval as predictors (first iteration). Number inside each bar is number of PLS components used in the local model. Green color shows intervals which have been selected at the end and dashed line shows error for the global model
+
+You can also see the improvements of RMSECV graphically:
+
+```{r, fig.width = 9, fig.height = 5}
+plotRMSE(m)
+```
+
+Dashed line in this case shows RMSECV value for the global model with all intervals included.
+
+Fnally, you can get both seleced intervals and corresponding indices of variables (all of them not just interval limits) as follows:
+
+```{r}
+show(m$int.selected)
+show(m$var.selected)
+```
+
+Also the model object contains the initial global model for full data (`m$gm`) and final PLS model made for the all selected data, `m$om`. In the following example I compare RMSE plots for both:
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotRMSE(m$gm)
+plotRMSE(m$om)
+```
+
+### Backward iPLS {-}
+
+In backward iPLS, instead of selecting best intervals we do the opposite — get rid of the worst. So, at the first step, we try to remove every interval from the data to see if it gives any improvement. If it does, we keep it as exluded and then try to remove another one. The process continues until no improvement is observed.
+
+To use the backward method simply specify parameter `method = "backward"` when call `ipls()`. The rest, including plots and statistics, is the same.
+
+<!--chapter:end:09-00-iPLS.Rmd-->
+
