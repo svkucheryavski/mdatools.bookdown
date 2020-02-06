@@ -2,7 +2,7 @@
 
 In this chapter we will discuss how to use PCA method implemented in the *mdatools*. Besides that, we will use PCA examples to introduce some principles, which are common for most of the other methods (e.g. PLS, SIMCA, PLS-DA, etc.) available in this package. This includes such things as model and result objects, getting and visualization of performance statistics, validation, use of different kinds of plots, and so on.
 
-Principal component analysis is one of the methods that decompose a data matrix $\mathbf{X}$ into a combination of three matrices: $\mathbf{X} = \mathbf{TP}^\mathrm{T} + \mathbf{E}$. Here $\mathbf{P}$ is a matrix with unit vectors, defined in the original variables space. The unit vectors, also knwon as *loadings*, form a new basis — *principal components*. The components are mutually orthogonal and oriented in variable space to capture direction of maximum variation of data points.
+Principal component analysis is one of the methods that decompose a data matrix $\mathbf{X}$ into a combination of three matrices: $\mathbf{X} = \mathbf{TP}^\mathrm{T} + \mathbf{E}$. Here $\mathbf{P}$ is a matrix with unit vectors, defined in the original variables space. The unit vectors, also known as *loadings*, form a new basis — *principal components*. The components are mutually orthogonal and oriented in variable space to capture direction of maximum variation of data points.
 
 The data points are being projected to the principal components. Coordinates of these projections in principal component space, known as *scores*, forming matrix  $\mathbf{T} = \mathbf{XP}$. Product of scores and loadings, $\mathbf{TP}^\mathrm{T}$ gives coordinates of the projections in the original variable space. Matrix $\mathbf{E}$ contains residuals — difference between position of projected data points and their original locations. This diffence is a part of data variation, which PCA model does not capture, hence the name.
 
@@ -57,7 +57,7 @@ m = selectCompNum(m, 5)
 
 Here `pca` is a function that builds (calibrates) a PCA model and returns the model object. In terms of programming we can call function `pca()` a constructor of pca model object. The constructor has one mandatory argument — matrix or data frame with data values. Other arguments are optional as they all have default values. In this case we use three additional: `7` is maximum number of components, `scale = TRUE` tells that data values should be standardized (centering is a default option) and `info` allows to add a short text with information about the model which can be shown later.
 
-Function `selectCompNum()` allows to select an “optimal” number of components for the model. In our case we calibrate model with 7 principal components however, e.g. after investigation of explained variance, we found out that 5 components is optimal. In this case we have two choices. Either recalibrate the model using 5 components or use the model that is calibrated already but “tell” the model that 5 components is the optimal number. In this case the model will keep all results calculated for 7 components but will use optimal number of components when necessary. For example, when showing residuals plot for the model. Or when PCA model is used in SIMCA classification.
+Function `selectCompNum()` allows to select an “optimal” number of components for the model. In our case we calibrate model with 7 principal components however, e.g. after investigation of explained variance, we found out that 5 components is optimal. In this case we have two choices. Either recalibrate the model using 5 components or use the model that is calibrated already but “tell” the model that 5 components is the optimal number. In this case the model will keep all results calculated for 7 components but will use optimal number of components when necessary. For example, when showing distance plot for the model. Or when PCA model is used in SIMCA classification.
 
 Function `print` prints the model object info:
 
@@ -65,7 +65,7 @@ Function `print` prints the model object info:
 print(m)
 ```
 
-As you can see, there are no scores, explained variance values, residuals and so on. Because they actually are not part of a PCA model, they are results of applying the model to a calibration set. But loadings, eigenvalues, number of calculated and selected principal components, vectors for centering and scaling the data, significance levels and corresponding critical limits for distances — all are parameters of the model.
+As you can see, there are no scores, explained variance values, distances and so on. Because they actually are not part of a PCA model, they are results of applying the model to a calibration set. But loadings, eigenvalues, number of calculated and selected principal components, vectors for centering and scaling the data, significance levels and corresponding critical limits for distances — all are parameters of the model.
 
 Here is an example how to get values from loading matrix having the model object:
 
@@ -172,7 +172,7 @@ plotScores(m$res$cal, show.labels = TRUE, cgroup = Xc[, "Height"])
 p = plotScores(m$res$cal, c(1, 2), cgroup = g)
 plotConfidenceEllipse(p)
 
-# residuals plot for calibration results with labels
+# distance plot for calibration results with labels
 plotResiduals(m$res$cal, show.labels = TRUE)
 
 # variance plot for calibration results with values as labels
@@ -191,9 +191,9 @@ plotResiduals(m, show.labels = TRUE, col = c("green", "red"))
 plotVariance(m, type = "h", show.labels = TRUE, labels = "values")
 ```
 
-As you can see, for in case of model, residual distance plot also shows some lines. These are critical limits, all details about them as well as how to use the distance/residuals plot will be given in the next section.
+As you can see, for in case of model, the distance plot also shows some lines. These are critical limits, all details about them as well as how to use the distance/residuals plot will be given in the next section.
 
-If model plot show values from calibration and validation objects (e.g. scores, residuals, etc), you can specify which result to show. In the example below left plot is made using default settings, for the right plot we specified list with results explicitly. Note, that the results should be specified as a named list.
+If model plot show values from calibration and validation objects (e.g. scores, distances, etc), you can specify which result to show. In the example below left plot is made using default settings, for the right plot we specified list with results explicitly. Note, that the results should be specified as a named list.
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
@@ -211,7 +211,7 @@ You do not have to care about labels, names, legend and so on, however if necess
 
 ### Support for images {-}
 
-As it was described before, images can be used as a source of data for any methods. In this case the results, related to objects/pixels will inherit all necessary attributes and can be show as images as well. In the example below we make a PCA model for the image data from the package and show scores and residuals.
+As it was described before, images can be used as a source of data for any methods. In this case the results, related to objects/pixels will inherit all necessary attributes and can be show as images as well. In the example below we make a PCA model for the image data from the package and show scores and distances.
 
 ```{r, fig.width = 9, fig.height = 9}
 data(pellets)
@@ -246,7 +246,7 @@ plotLoadings(m, 1:2, type = "l")
 
 PCA as well as any other method in `mdatools` can exclude rows and columns from calculations. For example, it can be useful if you have some candidates for outliers or do variable selection and do not want to remove rows and columns from the data matrix. In this case you can just specify two additional parameters, `exclcols` and `exclrows`, using either numbers or names of rows/columns to be excluded. You can also specify a vector with logical values (all `TRUE`s will be excluded).
 
-The excluded rows are not used for creating a model and calculaiton of model's and results' performance (e.g. explained variance). However main results (for PCA — scores and residual distances) are calculated for these rows as well and set hidden, so you will not see them on plots. You can always show values for excluded objects by using parameter `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* so if you use e.g. *ggplot2* you will see all points.
+The excluded rows are not used for creating a model and calculation of model's and results' performance (e.g. explained variance). However main results (for PCA — scores and residual distances) are calculated for these rows as well and set hidden, so you will not see them on plots. You can always show values for excluded objects by using parameter `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* so if you use e.g. *ggplot2* you will see all points.
 
 The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings or regression coefficients) will have zero values for such columns and be also hidden on plots. Here is a simple example.
 
@@ -273,18 +273,21 @@ show(m$loadings)
 
 Such behavior will help to exclude and include rows and columns interactively, some examples will be shown later.
 
-## Residuals and critical limits {-}
+## Distances and critical limits {-}
 
 ### Distance to model and score distance {-}
 
-As it was written in the brief theoretical section about PCA, when data objects are being projected to a principal component space, two distances are calculated and stored as a part of PCA results (`pcares` object). The first is a squared orthogonal Euclidean distance from original position of an object to the PC space, also known as *orthogonal distance* and denoted as *Q* or *q*. The distance shows how well the object is fitted by the PCA model and allows to detect objects that do not follow a commond trend, captured by the PCs.
+As it was written in the brief theoretical section about PCA, when data objects are being projected to a principal component space, two distances are calculated and stored as a part of PCA results (`pcares` object). The first is a squared orthogonal Euclidean distance from original position of an object to the PC space, also known as *orthogonal distance* and denoted as *Q* or *q*. The distance shows how well the object is fitted by the PCA model and allows to detect objects that do not follow a common trend, captured by the PCs.
 
 The second distance shows how far a projection of an object to the PC space is from the origin. This distance is also known as Hotelling T^2^ distance or a *score distance*. To compute T^2^ distance scores should be first normalized by dividing them to corresponding singular values (or eigenvalues if we deal with squared scores). The T^2^ distance allows to see extreme objects — which are far from the origin. In the package as well as in this tutorial we will also use letter $h$ to denote this distance, so $Q$ and $q$ are for orthogonal distance and $T^2$ and $h$ stand for the score distance.
 
+```{block, type='caution'}
+Historically, the distances are called in this package and also in some other software as *Residual distances* or just *residuals*, which is not fully correct. Therefore functions, which visualize the corresponding distances, are called `plotResiduals()` (`plotXResiduals()`, `plotYResiduals()`, `plotXYResiduals()` in PLS based methods). However in the text of the tutorial we will refer to them as distances most of the time.
+```
 
-In *mdatools* both distances are calculated for all objects in dataset and all possible components. So every distance is represented by $I \times A$ matrix (will remind here that $I$ is number of objects or rows in data matrix and $A$ is number of components in PCA model), the first column contains distances for a model with only one component, second — for model with two components, and so on. The distances can be visialised using method `plotResiduals()` which is available both for PCA results as well as for PCA model. In the case of model the plot shows distances both for calibration set and test set (if available).
+In *mdatools* both distances are calculated for all objects in dataset and all possible components. So every distance is represented by $I \times A$ matrix (will remind here that $I$ is number of objects or rows in data matrix and $A$ is number of components in PCA model), the first column contains distances for a model with only one component, second — for model with two components, and so on. The distances can be visualized using method `plotResiduals()` which is available both for PCA results as well as for PCA model. In the case of model the plot shows distances both for calibration set and test set (if available).
 
-Here is an example, where I split People data to calibration and test set as in one of the examples in previous sections and show residuals for model and result objects.
+Here is an example, where I split People data to calibration and test set as in one of the examples in previous sections and show distance plot for model and result objects.
 
 ```{r, fig.width = 9, fig.height = 9}
 data(people)
@@ -295,10 +298,10 @@ Xt = people[idx, ]
 m = pca(Xc, 4, scale = TRUE, x.test = Xt)
 
 par(mfrow = c(2, 2))
-plotResiduals(m, main = "Residuals for model")
-plotResiduals(m, ncomp = 2, main = "Residuals for model (2 Comp)")
-plotResiduals(m$res$cal, main = "Residuals for calibration set")
-plotResiduals(m$res$test, main = "Residuals for test set")
+plotResiduals(m, main = "Distances for model")
+plotResiduals(m, ncomp = 2, main = "Distances for model (2 Comp)")
+plotResiduals(m$res$cal, main = "Distances for calibration set")
+plotResiduals(m$res$test, main = "Distances for test set")
 ```
 
 As it was briefly mentioned before, if residual/distance plot is made for a model, it also shows two critical limits: the dashed line is a limit for extreme objects and the dotted line is a limit for outliers. How they are computed is explained later in this section. If you want to hide them, just use additional parameter `show.limits = FALSE`. You can also change the color, line type and width for the lines by using options `lim.col`, `lim.lty` and `lim.lwd` as it is shown below.
@@ -311,7 +314,7 @@ plotResiduals(m, lim.col = c("red", "orange"), lim.lwd = c(2, 2), lim.lty = c(1,
 
 It is necessary to provide a vector with two values for each of the argument (first for extreme objects and second for outliers border).
 
-Finally, you can also notice that for model plot the distance values are normalized ($h/h_0$ and $q/q_0$ instead of just $h$ and $q$). This is needed to show the limits correctly and, again, will be explained in detail below. You can switch this option by using logical parameter `norm`. Sometimes, it is also make sense to use log tranform for the values, which can be switched by using parameter `log`. Code below shows example for using these parameters.
+Finally, you can also notice that for model plot the distance values are normalized ($h/h_0$ and $q/q_0$ instead of just $h$ and $q$). This is needed to show the limits correctly and, again, will be explained in detail below. You can switch this option by using logical parameter `norm`. Sometimes, it is also make sense to use log transform for the values, which can be switched by using parameter `log`. Code below shows example for using these parameters.
 
 ```{r, fig.width = 9, fig.height = 9}
 par(mfrow = c(2, 2))
@@ -323,7 +326,7 @@ plotResiduals(m, norm = FALSE, log = TRUE)
 
 ### Critical limits {-}
 
-If PCA model is made for dataset taken from the same poulation, the orthogonal and score distances can be used to find outliers and extreme objects. One of the ways to do this is to compute critical limits for the distances assuming that they follow certain theoretical distribution.
+If PCA model is made for dataset taken from the same population, the orthogonal and score distances can be used to find outliers and extreme objects. One of the ways to do this is to compute critical limits for the distances assuming that they follow certain theoretical distribution.
 
 Critical limits are also important for SIMCA classification as they are directly used for making decision on class belongings. This package implements several methods to compute the limits, which are explained in this section.
 
@@ -331,7 +334,7 @@ Critical limits are also important for SIMCA classification as they are directly
 
 Starting from version 0.10.0, by default the limits are computed using data driven approach  [proposed](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.1147) and then [extended](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.2506) by Pomerantsev and Rodionova.
 
-It was known before, that both distances are well described by chi-square distribution. The distribution in general describes behaviour of sum of squared random values taken from standardized normal distribution, which means, that the distances has to be standardized first. The scaling factor as well as number of degrees of freedom (DoF) can be estimated from the distance values — hence the name (data driven).
+It was known before, that both distances are well described by chi-square distribution. The distribution in general describes behavior of sum of squared random values taken from standardized normal distribution, which means, that the distances has to be standardized first. The scaling factor as well as number of degrees of freedom (DoF) can be estimated from the distance values — hence the name (data driven).
 
 Since the estimation procedure is identical for the both distances, we will use a generalized version. Let's say we have a vector of distance values $u$ (where $u$ can be either score distance values, $h$, or orthogonal distance values, $q$) for given number of components. Then the scaling factor, $u_0$ and corresponding DoF, $N_u$ can be found as:
 
@@ -342,11 +345,11 @@ Here $s_u^2$ is a variance of the distances. Then the the normalized distance va
 
 $$N_u \frac{u}{u_0} \propto \chi^2(N_u)$$
 
-However, this does not take into account the fact that $h$ and $q$ are, strictly speaking, not independent. It is well known that adding an additional component to PCA model leads to increase of score distance and decrease of residual distance and removing a component has the opposite effect. This relationship can be taken into account by computing a joint or a *full distance*, $f$, as follows:
+However, this does not take into account the fact that $h$ and $q$ are, strictly speaking, not independent. It is well known that adding an additional component to PCA model leads to increase of score distance and decrease of orthogonal distance and removing a component has the opposite effect. This relationship can be taken into account by computing a joint or a *full distance*, $f$, as follows:
 
 $$f = N_h \frac{h}{h_0} + N_q \frac{q}{q_0}$$
 
-The full distance, $f$ also follows chi-square distribition with degrees of freedom: $N_f = N_q + N_h$. The critical limits for the full distance are computed using inverse cumulative distribution function (ICDF) also known as quantile function. For extreme objects (shown on distance plot as dashed line) as:
+The full distance, $f$ also follows chi-square distribution with degrees of freedom: $N_f = N_q + N_h$. The critical limits for the full distance are computed using inverse cumulative distribution function (ICDF) also known as quantile function. For extreme objects (shown on distance plot as dashed line) as:
 
 $$f_{crit} = \chi^{-2}(1 - \alpha, N_f)$$
 
@@ -356,10 +359,10 @@ $$f_{crit} = \chi^{-2}((1 - \gamma)^{1/I}, N_f)$$
 
 Here $\gamma$ is a significance level for outliers, so if it is $0.01$ every object has $1\%$ chance to be detected as outlier. The test for outliers should treat every object independently, so it requires Bonferroni correction, as one can see from the formula.
 
-You can change the significance level both for exreme objects and outliers either when you calibrate the model, by providing parameters `alpha` and `gamma`, or for existent model, by using function `setDistanceLimits()` as shown in the example below.
+You can change the significance level both for extreme objects and outliers either when you calibrate the model, by providing parameters `alpha` and `gamma`, or for existent model, by using function `setDistanceLimits()` as shown in the example below.
 
 ```{r, fig.width = 9, fig.height = 5}
-# calbrate a model with alpha = 5% and gamma = 5%
+# calibrate a model with alpha = 5% and gamma = 5%
 m = pca(people, 4, scale = TRUE, alpha = 0.05, gamma = 0.05)
 
 par(mfrow = c(1, 2))
@@ -382,7 +385,7 @@ In addition to the data driven method, *mdatools*, also allows to use state-of-a
 
 #### Categorization of data rows based on critical limits {-}
 
-It is possible to categorize every row (object, measurement) in a dataset based on the two distances and critical limits computed for given model and limit paramters (method and significance limit). Function `categorize()` is made for that. An example below shows how to categorize new predictions using this function.
+It is possible to categorize every row (object, measurement) in a dataset based on the two distances and critical limits computed for given model and limit parameters (method and significance limit). Function `categorize()` is made for that. An example below shows how to categorize new predictions using this function.
 
 ```{r}
 data(people)
@@ -398,7 +401,7 @@ c = categorize(m, r)
 print(c)
 ```
 
-As one can see, there are two outliers, one extreme and five regulat objects. This can be visualised on distance plot:
+As one can see, there are two outliers, one extreme and five regular objects. This can be visualized on distance plot:
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
@@ -424,7 +427,7 @@ Complexity of PCA model is first of all associated with selection of proper (opt
 
 In *mdatools* there are several additional instruments both to select proper number of components as well as to see if, for example, new data (test set or new set of measurements) are well fitted by the model.
 
-The first tool is the use of degrees of freedom for orthogonal and score distances, we mentioned earlier. A simple plot, where number of the degrees of freedom is plotted agains number of components in PCA model can often reveal the presence of overfitting very clearly — the DoF value for the orthogonal distance, $N_q$ jumps up significantly.
+The first tool is the use of degrees of freedom for orthogonal and score distances, we mentioned earlier. A simple plot, where number of the degrees of freedom is plotted against number of components in PCA model can often reveal the presence of overfitting very clearly — the DoF value for the orthogonal distance, $N_q$ jumps up significantly.
 
 The code and its outcome below show how to make such plot separately for each distance and for both. The first plot in the figure is conventional plot with variance explained by each component. The model is made for *Simdata*, where it is known that the optimal number of components is two.
 
@@ -517,7 +520,7 @@ show(m2$loadings[1:10, ])
 
 As you can see the explained variance values, eigenvalues and loadings are identical in the two models and the second method is several times faster.
 
-It is possible to make PCA decomposition even faster if only loadings and scores are needed. In this case you can use method `pca.run()` and skip other steps, like calculation of residuals, variances, critical limits and so on. But in this case data matrix must be centered (and scaled if necessary) manually prior to the decomposition. Here is an example using the data generated in previous code.
+It is possible to make PCA decomposition even faster if only loadings and scores are needed. In this case you can use method `pca.run()` and skip other steps, like calculation of distances, variances, critical limits and so on. But in this case data matrix must be centered (and scaled if necessary) manually prior to the decomposition. Here is an example using the data generated in previous code.
 
 ```{r}
 D = scale(D, center = TRUE, scale = FALSE)

@@ -167,7 +167,7 @@ plotPredictions(res21)
 plotPredictions(res22)
 ```
 
-And because `predict()` returns an object with results you can also use most of the plots available for PLS regression results. In the last example below you will find plots for X-residuals and Y-variance.
+And because `predict()` returns an object with results you can also use most of the plots available for PLS regression results. In the last example below you will find plots for X-distance and Y-variance.
 
 ```{r, fig.width=9, fig.height=5}
 par(mfrow = c(1, 2))

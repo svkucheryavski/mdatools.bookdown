@@ -47,7 +47,7 @@ As expected, we see loadings for predictors and responses, matrix with weights, 
 
 #### Regression coefficients {-}
 
-The values for regression coefficients are available in `m.coeffs.values`, it is an array with dimension *nVariables x nComponents x nPredictors*. The reason to use the object instead of just an array is mainly for being able to get and plot regression coefficients for different methods. Besides that, it is possible to calculate confidence intervals and other statistics for the coefficients using Jack-Knife method (will be shown later), which produces extra entities.
+The values for regression coefficients are available in `m$coeffs$values`, it is an array with dimension *nVariables x nComponents x nPredictors*. The reason to use the object instead of just an array is mainly for being able to get and plot regression coefficients for different methods. Besides that, it is possible to calculate confidence intervals and other statistics for the coefficients using Jack-Knife method (will be shown later), which produces extra entities.
 
 The regression coefficients can be shown as plot using either function `plotRegcoeffs()` for the PLS model object or function `plot()` for the object with regression coefficients. You need to specify for which predictor (if you have more than one y-variable) and which number of components you want to see the coefficients for. By default it shows values for the optimal number of components and first y-variable as it is shown on example below.
 
@@ -184,9 +184,11 @@ Method                                         Description
 
 `plotYScores(obj, comp, ...)`                  scores for decomposition of Y (similar to PCA plot)
 
-`plotXResiduals(obj, ncomp, ...)`              residuals for decomposition of X (similar to PCA)
+`plotXResiduals(obj, ncomp, ...)`              distance plot for decomposition of X (similar to PCA)
 
-`plotYResiduals(obj, ncomp, ...)`              residuals for decomposition of Y
+`plotYResiduals(obj, ncomp, ...)`              distance plot for decomposition of Y
+
+`plotXYResiduals(obj, ncomp, ...)`             distance plot for both X and Y decomposition
 
 `plotXYScores(obj, ncomp, ...)`                Y-scores vs. X-scores for a particular PLS component.
 
@@ -244,7 +246,7 @@ plot(m1)
 
 PLS, like PCA, also can exclude rows and columns from calculations. The implementation works similar to what was [described][Excluding rows and columns] for PCA. For example, it can be useful if you have some candidates for outliers or do variable selection and do not want to remove rows and columns physically from the data matrix. In this case you can just specify two additional parameters, `exclcols` and `exclrows`, using either numbers or names of rows/columns to be excluded. You can also specify a vector with logical values (all `TRUE`s will be excluded).
 
-The excluded rows are not used for creating a model and calculation of model's and results' performance (e.g. explained variance). However main results (for PLS — scores, predictions, residuals) are calculated for these rows as well and set hidden, so you will not see them on plots. You can always e.g. show scores for excluded objects by using `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* so if you use e.g. *ggplot2* you will see all points.
+The excluded rows are not used for creating a model and calculation of model's and results' performance (e.g. explained variance). However main results (for PLS — scores, predictions, distances) are calculated for these rows as well and set hidden, so you will not see them on plots. You can always e.g. show scores for excluded objects by using `show.excluded = TRUE`. It is implemented via attributes "known" for plotting methods from *mdatools* so if you use e.g. *ggplot2* you will see all points.
 
 The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings, weights or regression coefficients) will have zero values for such columns and be also hidden on plots.
 
@@ -299,7 +301,7 @@ summary(mjk$coeffs, ncomp = 2)
 summary(mjk$coeffs, ncomp = 2, alpha = 0.01)
 ```
 
-Function `getRegcoeffs()` in this case may also return corresponding t-value, standard error, p-value, and confidence interval for each of the coefficient (except intercept) if user specifies a parameter `full`. The standard error and confidence intervals are also computed for raw, undstandardized, variables (similar to coefficients).
+Function `getRegcoeffs()` in this case may also return corresponding t-value, standard error, p-value, and confidence interval for each of the coefficient (except intercept) if user specifies a parameter `full`. The standard error and confidence intervals are also computed for raw, non-standardized, variables (similar to coefficients).
 
 ```{r}
 show(getRegcoeffs(mjk, ncomp = 2, full = TRUE))
@@ -332,9 +334,9 @@ Variable selection as well as all described above can be also carried out for PL
 
 ## Distances and outlier detection {-}
 
-### Residual distance for X-decomposition {-}
+### Distance plot for X-decomposition {-}
 
-For decomposition of X-values the residual distances are computed and treated in the same way as in PCA — via orthogonal and score distances and corresponding critical limits. The `pls()` constructor takes the three arguments for computing the critical limits, similar to PCA (`lim.type`, `alpha`, `gamma`). The default value for `lim.type` is the same as for PCA (`"ddmoments"`). Distance plot can be made using `plotXResiduals()`, it works identical to `plotResiduals()` for PCA.
+For decomposition of X-values the orthogonal and score distances are computed and treated in the same way as in PCA. The `pls()` constructor takes the three arguments for computing the critical limits, similar to PCA (`lim.type`, `alpha`, `gamma`). The default value for `lim.type` is the same as for PCA (`"ddmoments"`). Distance plot can be made using `plotXResiduals()`, it works identical to `plotResiduals()` for PCA.
 
 Below is example on how to use the plot.
 
@@ -348,11 +350,11 @@ plotXResiduals(m, ncomp = 2, res = list("cal" = m$res$cal))
 plotXResiduals(m$res$cal)
 ```
 
-PLS also has function `categorize()` which allows to identify extreme objects and outliers. However, it works in a different way and takes into account not only residual distances for X-decomposition but also similar measure for decomposition of Y. This is explained in following sections.
+PLS also has function `categorize()` which allows to identify extreme objects and outliers. However, it works in a different way and takes into account not only total distances for X-decomposition but also similar measure for decomposition of Y. This is explained in following sections.
 
-### Residual distance for Y-decomposition and total distance {-}
+### Distance plot for Y-decomposition and total distance {-}
 
-The residual distance for Y-decomposition is calculated in a different way — as a difference between predicted and reference y-values. The difference for selected y-variable is expected to be random and normally distributed. It can be checked visually by using function `plotYResiduals()` as shown in example below. In this plot the difference is plotted against the reference value.
+The distance for Y-decomposition is calculated in a different way — as a difference between predicted and reference y-values. The difference for selected y-variable is expected to be random and normally distributed. It can be checked visually by using function `plotYResiduals()` as shown in example below. In this plot the difference is plotted against the reference value.
 
 ```{r, fig.width = 9, fig.height = 9}
 par(mfrow = c(2, 2))
@@ -380,7 +382,7 @@ $$g = N_f\frac{f}{f_0} + N_z\frac{z}{z_0} \propto \chi^2(N_g)$$
 
 Here $N_g = N_f + N_z$. This approach was proposed by Rodionova and Pomerantsev and described in [this paper](https://pubs.acs.org/doi/10.1021/acs.analchem.9b04611). The distances and the critical limits can be visualized using function `plotXYResiduals()` as illustrated in the next example.
 
-The example is based on People data (prediction of shoesize), however we will first introduce two outliers. We will change response value for row #9 to 25, which is apparently too small value for shoesize of an adult person. The predictor values will be the same. Then we will change height of first person (row #1) to 125 cm, which is again quite small value. And keep the response value unchanged. After that, we create a PLS model with classic data driven approach for computing critical limits and show the XY-residuals plot. Finally, that we change the method for limits to robust and show the plot again:
+The example is based on People data (prediction of shoesize), however we will first introduce two outliers. We will change response value for row #9 to 25, which is apparently too small value for shoesize of an adult person. The predictor values will be the same. Then we will change height of first person (row #1) to 125 cm, which is again quite small value. And keep the response value unchanged. After that, we create a PLS model with classic data driven approach for computing critical limits and show the XY-distance plot. Finally, that we change the method for limits to robust and show the plot again:
 
 ```{r, fig.width = 9, fig.height = 5}
 # prepare data
@@ -448,7 +450,7 @@ plotRMSE(m)
 plotXYResiduals(m)
 ```
 
-Apparently four components selected automatically is indeed a proper value. The XY-residuals plot shows that we have two outliers, let's find and remove them:
+Apparently four components selected automatically is indeed a proper value. The XY-distance plot shows that we have two outliers, let's find and remove them:
 
 ```{r, fig.width = 9, fig.height = 5}
 # get row indices for outliers in calibration set
@@ -465,7 +467,7 @@ y = y[-outliers, drop = FALSE]
 # make a new model for oulier free data
 m = pls(X, y, 10, scale = TRUE, cv = 1, lim.type = "ddrobust")
 
-# look at RMSE and XY-residuals plot
+# look at RMSE and XY-distance plot
 par(mfrow = c(1, 2))
 plotRMSE(m)
 plotXYResiduals(m)
@@ -494,9 +496,9 @@ plotPredictions(m)
 
 ## Randomization test {-}
 
-Another additional option for PLS regression implemented in *mdatools* is randomization test for estimation of optimal number of components. The descirption of the method can be found in [this paper](https://onlinelibrary.wiley.com/doi/10.1002/cem.1086). The basic idea is that for each component from 1 to `ncomp` we compute a statistic $T$, which is a covariance between X-scores and the reference Y values. After that, this procedure is repeated for randomly permuted Y-values and distribution of the statistic is obtained. A parameter `alpha` is computed to show how often the statistic $T$, calculated for permuted Y-values, is the same or higher than the same statistic, calculated for original response values without permutations.
+Another additional option for PLS regression implemented in *mdatools* is randomization test for estimation of optimal number of components. The description of the method can be found in [this paper](https://onlinelibrary.wiley.com/doi/10.1002/cem.1086). The basic idea is that for each component from 1 to `ncomp` we compute a statistic $T$, which is a covariance between X-scores and the reference Y values. After that, this procedure is repeated for randomly permuted Y-values and distribution of the statistic is obtained. A parameter `alpha` is computed to show how often the statistic $T$, calculated for permuted Y-values, is the same or higher than the same statistic, calculated for original response values without permutations.
 
-If a component is important, then the covariance for unpermuted data should be larger than the covariance for permuted data and therefore the value for `alpha` will be quie small (there is still a small chance to get similar covariance). This makes `alpha` very similar to p-value in a statistical test.
+If a component is important, then the covariance for unpermuted data should be larger than the covariance for permuted data and therefore the value for `alpha` will be quite small (there is still a small chance to get similar covariance). This makes `alpha` very similar to p-value in a statistical test.
 
 The function `randtest()` calculates alpha for each component, the values can be observed using `summary()` or `plot()` functions. There are also several functions, allowing e.g. to show distribution of statistics and the critical value for each component.
 
