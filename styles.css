@@ -23,3 +23,8 @@ div.caution::before {
    color: #aa8800;
    padding: 0;
 }
+
+div.caution p code{
+   background: #f8f8ea;
+   color: #404020;
+}
