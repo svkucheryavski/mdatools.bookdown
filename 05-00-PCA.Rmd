@@ -179,6 +179,31 @@ plotResiduals(m$res$cal, show.labels = TRUE)
 plotVariance(m$res$cal, type = "h", show.labels = TRUE, labels = "values")
 ```
 
+Scores plot can be also used together with `plotHotellingEllipse()` function. It works similar to `plotConfidenceEllipse()` or `plotConvexHull()` however does not require grouping of the values. You can add the ellipse both to score plot for results and score plot for model. In case of model, if you have e.g. both calibration and test set results you need to specify which one you want to use for the creating the ellipse. Code below shows several examples.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+
+# default options for calibration results
+p = plotScores(m$res$cal, xlim = c(-8, 8), ylim = c(-8, 8))
+plotHotellingEllipse(p)
+
+# also for calibration results but with specific significance limit and color
+p = plotScores(m$res$cal, xlim = c(-8, 8), ylim = c(-8, 8))
+plotHotellingEllipse(p, conf.lim = 0.9, col = "red")
+
+# in case if several results objects are available, specify which plot series to use
+# for creating the ellipse, in the example below we take the first plot series which
+# corresponds to calibration set
+p = plotScores(m, xlim = c(-8, 8), ylim = c(-8, 8))
+plotHotellingEllipse(p[[1]])
+
+# same but with specific settings for color and line
+p = plotScores(m, xlim = c(-8, 8), ylim = c(-8, 8))
+plotHotellingEllipse(p[[1]], col = "red", lty = 1, lwd = 0.5)
+
+```
+
 The color grouping option is not available for the group (model) plots as colors are used there to underline the groups.
 
 Now let's look at similar plots (plus loadings) for a model.
