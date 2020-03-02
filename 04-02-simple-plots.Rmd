@@ -187,6 +187,22 @@ p = mdaplot(people, cgroup = g)
 plotConfidenceEllipse(p, conf.level = 0.90)
 ```
 
+In case when number of data points is large (e.g. when dealing with images, where every pixel is a data point), using density plot is a good alternative to conventional scatter plots. The plot does not show all data points but instead split the whole plot space into small hexagonal regions and use color gradient for illustration a density of the points in each region. This approach is known as *hexagonal binning*. To create a density plot simply use `type="d"`. You can also specify color map and number of bins along each axes (`nbins`).
+
+The code below show an example of using density plots for 100000 data points with x and y values taken from normally distributed population.
+
+```{r, fig.width = 9, fig.height = 9}
+x = rnorm(100000)
+y = rnorm(100000)
+d = cbind(x, y)
+
+par(mfrow = c(2, 2))
+mdaplot(d, type = "d")
+mdaplot(d, type = "d", nbins = 80)
+mdaplot(d, type = "d", colmap = "gray")
+mdaplot(d, type = "d", nbins = 80, colmap = c("blue", "red"))
+```
+
 ### Line plots {-}
 
 When line plot is created, the `mdatools()` shows a line plot for every row. So if data set has more than one row, the plot will show a banch of lines having same properties (color, type, etc). This is particularly useful when working with signals and spectroscopic data. In this subsection we will use simulated UV/Vis spectra from `simdata`.

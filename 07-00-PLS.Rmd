@@ -458,7 +458,7 @@ outliers = which(categorize(m, m$res$cal) == "outlier")
 
 # keep data for outliers in separate matrices
 Xo = X[outliers, , drop = FALSE]
-yo = X[outliers, drop = FALSE]
+yo = y[outliers, drop = FALSE]
 
 # remove the rows with outliers from the data
 X = X[-outliers, , drop = FALSE]

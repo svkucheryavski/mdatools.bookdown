@@ -1,11 +1,15 @@
 # What is new {-}
 
-**29.02.2020**
+**02.03.2020**
+
+* fixed a code typo in chapter about outlier detection in PLS.
+
+**01.03.2020**
 
 Small changes related to v. 0.10.1:
 
+* added description of density plots
 * added description of `plotHotellingEllipse()` method to PCA chapter
-
 
 
 **29.01.2020**
