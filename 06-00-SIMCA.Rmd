@@ -1,20 +1,20 @@
-# SIMCA/DD-SIMCA classification {-}
+# SIMCA/DD-SIMCA classification {-#simca}
 
-SIMCA (Soft Independent Modelling of Class Analogy) is a simple but efficient one-class classification method mainly based on PCA. The general idea is to create a PCA model using only samples/objects belonging to a class and classify new objects based on how good the model can fit them. The decision is made using the two distances we discussed in detail in the [corresponding PCA chapter][Distances and critical limits] — orthogonal and score distances and corresponding critical limits.
+SIMCA (Soft Independent Modelling of Class Analogy) is a simple but efficient one-class classification method mainly based on PCA. The general idea is to create a PCA model using only samples/objects belonging to a class and classify new objects based on how good the model can fit them. The decision is made using the two distances we discussed in detail in the [corresponding PCA chapter](#pca--distances-and-limits) — orthogonal and score distances and corresponding critical limits.
 
 Critical limits computed for both distances (or their combination) are used to cut-off the strangers (extreme objects) and accept class members with a pre-define expected ratio of false negatives ($\alpha$). If data driven approach (either classic/moments or robust) are used to compute the critical limits, then the method is called **DD-SIMCA** (Data Driven SIMCA). You can find more details about the method in this [paper](https://onlinelibrary.wiley.com/doi/full/10.1002/cem.2506).
 
 The classification performance can be assessed using number of true/false positives and negatives and statistics, showing the ability of a classification model to recognize class members (*sensitivity* or true positive rate) and how good the model is for identifying strangers (*specificity* or true negative rate). In addition to that, model also calculates a percent of misclassified objects. All statistics are calculated for calibration and validation (if any) results, but one must be aware that specificity can not be computed without objects not belonging to the class and, therefore, calibration and cross-validation results in SIMCA do not have specificity values.
 
 ```{block, type='caution'}
-You can think that SIMCA is actually a PCA model where function [`categorize()`][Categorization of data rows based on critical limits] is used to make a decision: if object is categorized as regular, it will be considered as member of the class, otherwise — it is a stranger. Therefore read carefully how PCA [works in general][Principal component analysis] and how critical limits for distances [are computed][Distances and critical limits] in particular, to understand how SIMCA works.
+You can think that SIMCA is actually a PCA model where function [`categorize()`](#pca-distances-categorize) is used to make a decision: if object is categorized as regular, it will be considered as member of the class, otherwise — it is a stranger. Therefore read carefully how PCA [works in general](#pca) and how critical limits for distances [are computed](#pca--distances-and-limits) in particular, to understand how SIMCA works.
 ```
 
 It must be also noted that any SIMCA model is also a PCA model object and any SIMCA result is also a PCA result object, therefore all plots, methods, statistics, available for PCA, can be used for SIMCA model and result objects as well.
 
-## Calibration and validation {-}
+## Calibration and validation {-#simca--calibration-and-validation}
 
-The model calibration is similar to PCA, but there are several additional arguments, which are important for classification. First of all it is a class name, which is a second mandatory argument. Class name is a string, which can be used later e.g. for identifying class members for testing. The second important argument is a level of significance, `alpha`. This parameter is used for calculation of statistical limits and can be considered as probability for false negatives. The default value is 0.05. Finally the parameter `lim.type` allows to select the method for computing critical limits for the distances, as it is described in the [PCA chapter][Distances and critical limits]. By default `lim.type = "ddmoments"` as in PCA.
+The model calibration is similar to PCA, but there are several additional arguments, which are important for classification. First of all it is a class name, which is a second mandatory argument. Class name is a string, which can be used later e.g. for identifying class members for testing. The second important argument is a level of significance, `alpha`. This parameter is used for calculation of statistical limits and can be considered as probability for false negatives. The default value is 0.05. Finally the parameter `lim.type` allows to select the method for computing critical limits for the distances, as it is described in the [PCA chapter](#pca--distances-and-limits). By default `lim.type = "ddmoments"` as in PCA.
 
 In this chapter as well as for describing other classification methods we will use a famous Iris dataset, available in R. The dataset includes 150 measurements of three Iris species: *Setosa*, *Virginica* and *Versicola*. The measurements are length and width of petals and sepals in cm. Use `?iris` for more details.
 
@@ -169,7 +169,7 @@ plotProbabilities(res, ncomp = 2, cgroup = ct)
 
 The plot can be shown for any SIMCA results (including e.g. calibration set or cross-validated results).
 
-## Multiclass classification {-}
+## Multiclass classification {-#simca--multiclass-classification}
 
 Several SIMCA models can be combined to a special object `simcam`, which is used to make a multiclass classification. Besides this, it also allows calculating distance between individual models and a *discrimination power* — importance of variables to discriminate between any two classes. Let's see how it works.
 

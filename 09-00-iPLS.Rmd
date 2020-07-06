@@ -1,4 +1,4 @@
-# Interval PLS  {-}
+# Interval PLS  {-#ipls}
 
 Interval PLS (iPLS) is a variable selection method used mostly for spectroscopic data [proposed](https://doi.org/10.1366/0003702001949500) by Lars Noergaard *at al* in 2000. The main idea is try different parts (or intervals — hence the name) of spectra and their combinations to find the most relevant for prediction of a response variable. There are two algorithms — forward and backward.
 

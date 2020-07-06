@@ -1,4 +1,8 @@
-# What is new {-}
+# What is new {-#news}
+
+**10.07.2020**
+
+* added chapters about MCR methods implemented in v. 0.11.0.
 
 **02.03.2020**
 
@@ -15,23 +19,23 @@ Small changes related to v. 0.10.1:
 **29.01.2020**
 
 The new version of the package (0.10.0) has a lot of changes and improvements, so it was decided
-to update the book to a large degree. In addition to that, chapters about [iPLS][Interval PLS] and [randomization tests][Randomization test] have been added as well as information on new tools. See [list of changes](https://github.com/svkucheryavski/mdatools/blob/master/NEWS.md) in the package for more details.
+to update the book to a large degree. In addition to that, chapters about [iPLS](#ipls) and [randomization tests](#pls--randomization-test) have been added as well as information on new tools. See [list of changes](https://github.com/svkucheryavski/mdatools/blob/master/NEWS.md) in the package for more details.
 
 **9.11.2018**
 
 * new minor version (0.9.2) of package is available via GitHub with several bug fixes
-* added text about `max.cov` parameter in [Preprocessing][Preprocessing] chapter.
+* added text about `max.cov` parameter in [Preprocessing](#datasets--preprocessing) chapter.
 
 **5.07.2018**
 
-* new chapter about [PLS-DA][PLS Discriminant Analysis]
+* new chapter about [PLS-DA](#plsda)
 * small improvements and corrections to text of other chapters
 * added a short description if new `opacity` parameter for `mdaplot()` method
 
 **3.04.2018**
 
-* new chapter about [randomized PCA algorithms][Randomized PCA algorithms]
-* new chapter about [critical limits for residuals in PCA/SIMCA][Residuals and critical limits]
+* new chapter about [randomized PCA algorithms](#pca--randomized-algorithm)
+* new chapter about [critical limits for distances in PCA/SIMCA](#pca--distances-and-limits)
 * chapter for SIMCA has been updated with description of new methods
 * added a short text about new properties for `plotPredictions()` method in PLS
 * small corrections and improvements
@@ -72,4 +76,3 @@ The use of plotting tools became much simpler and more efficient. The main chang
 * cross-validation procedures were optimized for most of the methods and now takes less time
 * several bug fixes and small improvements
 
-Besides that, the tutorial is now available in `docs` folder of the package repository in GitHub. The tutorial is a static HTML site, which can be used locally without internet connection (start with `index.html`). However, it is not available from CRAN repository due to CRAN limitations. You can also access the tutorial via [GitHub Pages](https://svkucheryavski.github.io/mdatools)

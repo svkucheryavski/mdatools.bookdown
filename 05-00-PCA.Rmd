@@ -1,4 +1,4 @@
-# Principal component analysis {-}
+# Principal component analysis {-#pca}
 
 In this chapter we will discuss how to use PCA method implemented in the *mdatools*. Besides that, we will use PCA examples to introduce some principles, which are common for most of the other methods (e.g. PLS, SIMCA, PLS-DA, etc.) available in this package. This includes such things as model and result objects, getting and visualization of performance statistics, validation, use of different kinds of plots, and so on.
 
@@ -28,7 +28,7 @@ There are several other methods, which can be used for decomposition of data sim
 
 There are several methods to compute PCA loadings, including Singular Values Decomposition (SVD) and Non-linear Iterative Partial Least Squares (NIPALS). Both methods are implemented in this package and can be selected using `method` argument of main class `pca`. By default SVD is used. In addition, one can use randomized version of the two methods, which can be efficient if data matrix contains large amount of rows. This is explained in the last part of this chapter.
 
-## Models and results {-}
+## Models and results {-#pca--models-and-results}
 
 In *mdatools*, any method for data analysis, such as PCA, PLS regression, SIMCA classification and so on, can create two types of objects — a model and a result. Every time you build a model you get a *model object*. Every time you apply the model to a dataset you get a *result object*. Thus for PCA, the objects have classes `pca` and `pcares` correspondingly.
 
@@ -138,7 +138,7 @@ summary(m$res$cal)
 
 The same methodology is used for any other method, e.g. PLS or SIMCA. In the next section we will look at how to use plotting functions for models and results.
 
-## Plotting methods {-}
+## Plotting methods {-#pca--plots}
 
 First of all you can use the methods `mdaplot()` and `mdaplotg()` (or any others, e.g. `ggplot2`) for easy visualisation of the results as they are all available as matrices with proper names, attributes, etc. In the example below I create scores and loadings plots for PC1 vs PC2. Here I assume that the last model you have created was the one with test set validation, however scores are shown only for calibration set.
 
@@ -298,7 +298,7 @@ show(m$loadings)
 
 Such behavior will help to exclude and include rows and columns interactively, some examples will be shown later.
 
-## Distances and critical limits {-}
+## Distances and critical limits {-#pca--distances-and-limits}
 
 ### Distance to model and score distance {-}
 
@@ -408,7 +408,7 @@ When data is contaminated with outliers, using statistical moments may lead to w
 
 In addition to the data driven method, *mdatools*, also allows to use state-of-art approach, where limits for each distance are computed independently giving rectangular acceptance area on the distance plot. In this case, two methods are available for the orthogonal distance: either based on chi-square distribution but only for $q$ values (`lim.type="chisq"`) or using Jackson-Mudholkar method (`lim.type="jm"`). If one of the two methods is selected, critical limits for the score distances, $h$, will be computed using [Hotelling's T^2^ distribution](https://en.wikipedia.org/wiki/Hotelling%27s_T-squared_distribution). This way of computing critical limits can be found in many popular chemometric software, for example, PLS_Toolbox.
 
-#### Categorization of data rows based on critical limits {-}
+#### Categorization of data rows based on critical limits {-#pca-distances-categorize}
 
 It is possible to categorize every row (object, measurement) in a dataset based on the two distances and critical limits computed for given model and limit parameters (method and significance limit). Function `categorize()` is made for that. An example below shows how to categorize new predictions using this function.
 
@@ -446,7 +446,7 @@ plotResiduals(m, cgroup = "categories")
 
 This option will work only if plot is made for one result object.
 
-## Model complexity {-}
+## Model complexity {-#pca--model-complexity}
 
 Complexity of PCA model is first of all associated with selection of proper (optimal) number of components. The optimal number should explain the systematic variation of the data points and keep the random variation uncaptured. Traditionally, number of components is selected by investigation of eigenvalues or looking at plot with residual or explained variance. However, this is quite complicated issue and result of selection depends very much on quality of data and purpose PCA model is built for. More details can be found in [this paper]().
 
@@ -505,7 +505,7 @@ As you can see, in case of calibration set, the points are lying withing confide
 
 We hope these new tools will make the use of PCA more efficient.
 
-## Randomized PCA algorithms {-}
+## Randomized PCA algorithms {-#pca--randomized-algorithm}
 
 Both SVD and NIPALS are not very efficient when number of rows in dataset is very large (e.g. hundreds of thousands values or even more). Such datasets can be easily obtained in case of for example hyperspectral images. Direct use of the traditional algorithms with such datasets often leads to a lack of memory and long computational time.
 

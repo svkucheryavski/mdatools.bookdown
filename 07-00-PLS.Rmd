@@ -1,12 +1,12 @@
-# Partial least squares regression {-}
+# Partial least squares regression {-#pls}
 
 Partial least squares regression (PLS) is a linear regression method, which uses principles similar to PCA: data is decomposed using latent variables. Because in this case we have two datasets, matrix with predictors ($\mathbf{X}$) and matrix with responses ($\mathbf{Y}$) we do decomposition for both, computing scores, loadings and residuals: $\mathbf{X} = \mathbf{TP}^\mathrm{T} + \mathbf{E}_x$, $\mathbf{Y} = \mathbf{UQ}^\mathrm{T} + \mathbf{E}_y$. In addition to that, orientation of latent variables in PLS is selected to maximize the covariance between the X-scores, $\mathbf{T}$, and Y-scores $\mathbf{U}$. This approach makes possible to work with datasets where more traditional Multiple Linear Regression fails — when number of variables exceeds number of observations and when X-variables are mutually correlated. But, at the end, PLS-model is a linear model, where response value is just a linear combination of predictors, so the main outcome is a vector with regression coefficients.
 
 There are two main algorithms for PLS, *NIPALS* and *SIMPLS*, in the *mdatools* only the last one is implemented. PLS model and PLS results objects have a lot of properties and performance statistics, which can be visualized via plots. Besides that, there is also a possibility to compute selectivity ratio (SR) and VIP scores, which can be used for selection of most important variables. Another additional option is a randomization test which helps to select optimal number of components. We will discuss most of the methods in this chapter and you can get the full list using `?pls`.
 
-## Models and results {-}
+## Models and results {-#pls--models-and-results}
 
-Like we discussed for [PCA][Principal component analysis], *matools*  creates two types of objects — a model and a result. Every time you build a  PLS model you get a *model object*. Every time you apply the model to a dataset you get a *result object*. For PLS, the objects have classes `pls` and `plsres` correspondingly.
+Like we discussed for [PCA](#pca), *matools*  creates two types of objects — a model and a result. Every time you build a  PLS model you get a *model object*. Every time you apply the model to a dataset you get a *result object*. For PLS, the objects have classes `pls` and `plsres` correspondingly.
 
 ### Model calibration {-}
 
@@ -151,7 +151,7 @@ summary(m1$res$cal)
 
 In this case, the statistics are shown for all available components and explained variance for individual components is added.
 
-## Plotting methods {-}
+## Plotting methods {-#pls--plotting-methods}
 
 Plotting methods, again, work similar to PCA, so in this section we will look more detailed at the available methods instead of on how to customize them. PLS has a lot of different results and much  more possible plots. Here is a list of methods, which will work both for a model and for a particular results.
 
@@ -250,7 +250,7 @@ The excluded rows are not used for creating a model and calculation of model's a
 
 The excluded columns are not used for any calculations either, the corresponding results (e.g. loadings, weights or regression coefficients) will have zero values for such columns and be also hidden on plots.
 
-## Variable selection {-}
+## Variable selection {-#pls--variable-selection}
 
 PLS allows to calculate several statistics, which can be used to select most important (or remove least important) variables in order to improve performance and make model simpler. The first two are VIP-scores (variables important for projection) and Selectivity ratio. All details and theory can be found e.g. [here](http://onlinelibrary.wiley.com/store/10.1002/cem.1360/).
 
@@ -332,7 +332,7 @@ As you can see, the variables *Age*, *Income*, *Region* and *IQ* have been exclu
 
 Variable selection as well as all described above can be also carried out for PLS discriminant analysis (PLS-DA), which can be explained later in one of the next chapters.
 
-## Distances and outlier detection {-}
+## Distances and outlier detection {-#pls--distances-and-outliers}
 
 ### Distance plot for X-decomposition {-}
 
@@ -494,7 +494,7 @@ plotPredictions(m)
 ```
 
 
-## Randomization test {-}
+## Randomization test {-#pls--randomization-test}
 
 Another additional option for PLS regression implemented in *mdatools* is randomization test for estimation of optimal number of components. The description of the method can be found in [this paper](https://onlinelibrary.wiley.com/doi/10.1002/cem.1086). The basic idea is that for each component from 1 to `ncomp` we compute a statistic $T$, which is a covariance between X-scores and the reference Y values. After that, this procedure is repeated for randomly permuted Y-values and distribution of the statistic is obtained. A parameter `alpha` is computed to show how often the statistic $T$, calculated for permuted Y-values, is the same or higher than the same statistic, calculated for original response values without permutations.
 

@@ -1,4 +1,4 @@
-# Datasets and plots {-}
+# Datasets and plots {-#datasets}
 
 The package uses standard representation of the data in R: data frames, matrices and vectors. However, there are several additional methods and attributes, which makes the use of the datasets a bit more more efficient. There is also a support for images. But if you are used to simple datasets and standard procedures and do not want any complications, you can simply skip this chapter.
 
@@ -13,4 +13,673 @@ The package also uses its own set of plotting tools, which is a sort of an add-o
 7. Much more!
 
 This chapter explains most of the details.
+
+## Attributes and factors {-#datasets--attributes-and-factors}
+
+This section tells how to extend the functionality of the package by using attributes assigned to datasets and how methods implemented in the package deal with factors.
+
+### Package specific attributes  {-}
+
+There are several groups of attributes, which allow to assign names and manual x-values to the datasets, exclude columns and rows from calculations without removing them physically as well as working with images. We will illustrate how to work with most of the attributes by using a simple dataset defined below. It consists of three variables `Height`, `Weight`, `Shoesize` and four objects/rows.
+
+```{r}
+d = matrix(c(190, 180, 170, 175, 85, 88, 70, 75, 44, 45, 38, 40), ncol = 3)
+colnames(d) = c("Height", "Weight", "Shoesize")
+rownames(d) = c("Bob", "Peter", "Lisa", "Lena")
+d = as.data.frame(d)
+show(d)
+```
+
+### Attributes for plots  {-}
+
+These attributes will be explained very briefly here, you can find much more details in the next two sections. The idea is to provide some names and values to the data, which can be used later e.g. for making labels and titles on the plots. When dataset is used to create a model (e.g. PCA) all results representing objects (e.g. scores, distances, etc.) will inherit the row specific attributes and all results related to variables (e.g. loadings) will inherit column specific attributes.
+
+The attributes are following:
+
+----------------------------------------------------------------------------
+Attribute         Meaning
+----------        ----------------------------------------------------------
+ `name`           name of a dataset (used for plot parameter `main`).
+
+ `xaxis.name`     name for all data columns (used for plot parameter `xlab`)
+
+ `yaxis.name`     name for all data rows (used for plot parameter `ylab`).
+
+ `xaxis.values`   a vector of values, which correspond to the columns (e.g. for
+                  spectroscopic data it can be wavelength or wavenumbers).
+
+ `yaxis.values`   a vector of values, which correspond to the rows (e.g. for
+                  kinetic data it can be time or temperature of reaction).
+
+----------------------------------------------------------------------------
+
+
+Here is a very simple example.
+
+```{r, fig.width = 9, fig.height = 5}
+attr(d, "name") = "People"
+attr(d, "xaxis.name") = "Parameters"
+attr(d, "yaxis.name") = "Persons"
+
+par(mfrow = c(1, 2))
+mdaplot(d, type = "p")
+mdaplot(d, type = "l")
+```
+
+See more details in the [section][Simple plots] about plots.
+
+### Special methods for data transformations {-}
+
+Since data objects in R loose all user specified attributes when e.g. we transpose them or taking a subset, it was decided to write several methods, which would process attributes correctly. They also adjust indices of excluded rows and columns when user takes a subset or merge two data objects together. When data matrix is transposed the corresponding method will switch the x- and y- attributes. All methods with a brief description are listed in the table below (including the ones already introduces).
+
+-------------------------------------------------------------------------------------------------
+Method                                Description
+----------------                      -----------------------------------------------------------
+`mda.show(data)`                      Show data object without excluded elements
+
+`mda.t(data)`                         Transpose data object
+
+`mda.cbind(data1, data2, ...)`        Merge several datasets by columns
+
+`mda.rbind(data1, data2, ...)`        Merge several datasets by rows
+
+`mda.subset(data1, subset, select)`   Take a subset of data object (`subset` is numeric indices,                                          names or logical values for rows, `select` — the same
+                                      for columns)
+
+`attrs = mda.getattr(data)`           Return all user specific attributes from an object
+
+`data = mda.setattr(data, attrs)`     Assign user specific attributes to an object
+
+------------------------------------------------------------------------------------------------
+
+
+### Data frames with factors  {-}
+
+All methods, implemented in the package, work with matrices, therefore, if a user provides data values as data frame, it is converted to matrix. From version _0.8.0_ it is also possible to provide data frames with one or several factor columns. In this case all factors will be converted to dummy variables with values 0 and 1. You can also do it manually, by using function `prep.df2mat()` as this is shown in an example below.
+
+Let us first crate a simple data with a factor column.
+
+```{r}
+h = c(180, 175, 165, 190, 188)
+c = as.factor(c("Gray", "Green", "Gray", "Green", "Blue"))
+d = data.frame(Height = h, Eye.color = c)
+show(d)
+```
+
+And this is the result of converting it to a matrix.
+
+```{r}
+d.mat = mda.df2mat(d)
+show(d.mat)
+```
+
+The number of dummy variables by default is the number of levels minus one. You can change this by using argument `full = TRUE` is it is shown in the example below.
+
+```{r}
+d.mat = mda.df2mat(d, full = TRUE)
+show(d.mat)
+```
+
+It is important to have level labels in all factor columns of the same data frame unique, as they are used for names of the dummy variables (e.g. you should not have two factors with the same level name). If a factor is hidden it will be just converted to numeric values and remain excluded from modelling.
+
+## Simple plots {-#datasets--simple-plots}
+
+As it was already mentioned, *mdatools* has its own functions for plotting with several extra options not available in basic plot tools. These functions are used to make all plots in the models and results (e.g. scores, loadings, predictions, etc.) therefore it can be useful to spend some time and learn the new features (e.g. coloring data points with a vector of values or using manual ticks for axes). But if you are going to make all plots manually (e.g. using *ggplot2*) you can skip this and the next sections.
+
+In this section we will look at how to make simple plots from your data objects. Simple plots are scatter (`type = "p"`), density-scatter (`type = "d"`), line (`type = "l"`), line-scatter (`type = "b"`), bar (`type = "h"`) or errorbar (`type = "e"`) plots made for a one set of objects. All plots can be created using the same method `mdaplot()` by providing a whole dataset as a main argument. Depending on a plot type, the method "treats" the data values differently.
+
+This table below contains a list of parameters for `mdaplot()`, which are not available for traditional R plots. In this section we will describe most of the details using simple examples.
+
+--------------------------------------------------------------------------------
+Parameter            Description
+------------         -----------------------------------------------------------
+`cgroup`             a vector of values (same as number of rows in data) used to colorize plot
+                     objects with a color gradient.
+
+`colmap`             color map for the color gradient (possible values are `'default'`, `'gray'`
+                     or a vector with colors).
+
+`show.colorbar`      when color grouping is used, `mdaplot()` shows a color bar legend, this
+                     parameter allows to turn it off.
+
+`show.labels`        logical parameter showing labels beside plot objects (points, lines, etc).
+                     Size and color of labels can be adjusted using parameters `lab.cex` and `lab.col`.
+
+`labels`             parameter telling what to use as labels (by default row names, but can also
+                     be indices or manual values).
+
+`lab.col`            color for the labels.
+
+`lab.cex`            font size for the labels (as a scale factor).
+
+`xticks`             vector with numeric values to show the x-axis ticks at.
+
+`yticks`             vector with numeric values to show the y-axis ticks at.
+
+`xticklabels`        vector with labels (numbers or text) for the x-ticks.
+
+`yticklabels`        vector with labels (numbers or text) for the y-ticks.
+
+`xlas`               an integer between 0 and 3 telling at which angle the x-tick labels
+                     have to be shown.
+
+`ylas`               an integer between 0 and 3 telling at which angle the y-tick labels have
+                     to be shown.
+
+`show.axes`          logical, if `TRUE`, function will make a new plot, if `FALSE`, add the plot
+                     objects to a previous one.
+
+`show.lines`         a vector with two numbers — position of horizontal and vertical lines on a
+                     plot (e.g. coordinate axes).
+
+`show.grid`          logical, show or not a grid. It places grid behind the plot object in contrast
+                     to conventional `grid()` method. Use `grid.lwd` and `grid.col` parameters to
+                     adjust the grid look.
+
+`show.excluded`      logical, show or not points or lines corresponded to the excluded rows.
+
+`opacity`            opacity of colors in range 0...1 (applied to all colors of current plot).
+
+--------------------------------------------------------------------------------
+
+### Scatter plots {-}
+
+We will use `people` dataset for illustration how scatter plots work (see `?people` for details).
+
+```{r}
+data(people)
+attr(people, "name") <- "People"
+attr(people, "xaxis.name") <- "Variables"
+attr(people, "yaxis.name") <- "Persons"
+```
+
+For scatter plots the method takes first two columns of a dataset as x and y vectors. If only one column is available `mdaplot()` uses it for y-values and generate x-values as an index for each value.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(people, type = "p")
+mdaplot(mda.subset(people, select = c(6, 7)), type = "p")
+```
+
+All parameters, available for the standard `points()` method will work with `mdaplot()` as well. Besides that, you can colorize points according to some values using a color gradient. By default, the gradient is generated using one of the diverging color schemes from [colorbrewer2.org](http://colorbrewer2.org), but this can be changed using parameter `colmap` as it is shown below.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+mdaplot(people, type = "p", cgroup = people[, "Beer"])
+mdaplot(people, type = "p", cgroup = people[, "Beer"], show.colorbar = FALSE)
+mdaplot(people, type = "p", cgroup = people[, "Beer"], colmap = "gray")
+mdaplot(people, type = "p", cgroup = people[, "Beer"], colmap = c("red", "yellow", "green"))
+```
+
+If the vector with values for color grouping is a factor, level labels will be shown on a colorbar legend and there will be a small margin between bars.
+
+```{r, fig.width = 9, fig.height = 5}
+g = factor(people[, "Sex"], labels = c("Male", "Female"))
+
+par(mfrow = c(1, 2))
+mdaplot(people, type = "p", cgroup = g)
+mdaplot(people, type = "p", cgroup = g, colmap = "gray")
+```
+
+If you use point characters from 21 to 25 (the ones which allow to specify both color of border and
+background of the marker symbol) you can use `pch.colinv` to apply color grouping to background
+instead of border. See an example below
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(people, type = "p", cgroup = people[, "Beer"], pch = 21, bg = "white")
+mdaplot(people, type = "p", cgroup = people[, "Beer"], pch = 21, bg = "white", pch.colinv = TRUE)
+```
+
+Another useful option is adding labels to the data points. By default row names will be taken for the labels but you can specify a parameter `labels`, which can be either a text (`"names"` or `"indices"`) or a vector with values to show as labels. Color and size of the labels can be adjusted.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+mdaplot(people, type = "p", show.labels = TRUE)
+mdaplot(people, type = "p", show.labels = TRUE, labels = "indices")
+mdaplot(people, type = "p", show.labels = TRUE, labels = "names", lab.col = "red", lab.cex = 0.5)
+mdaplot(people, type = "p", show.labels = TRUE, labels = paste0("O", seq_len(nrow(people))))
+```
+
+To avoid any problems with arguments when you make a subset, use `mda.subset()` instead of the traditional ways. As you can see in the example below, if we take first 16 rows, information about excluded objects (as well as all other uder defined arguments, e.g. `"name"`) disappear and they are show in the plot as normal. But if we use `mda.subset()` it will take the subset without excluded rows as it is shown below. The subset can be created using logical expressions as well as indices or names of the rows.
+
+```{r, fig.width = 9, fig.height = 9}
+weight = people[, "Weight"]
+par(mfrow = c(2, 2))
+mdaplot(people[1:16, ], show.labels = TRUE)
+mdaplot(mda.subset(people, subset = 1:16), show.labels = TRUE)
+mdaplot(mda.subset(people, subset = c("Lisa", "Benito", "Federico")), show.labels = TRUE)
+mdaplot(mda.subset(people, subset = weight > 70), show.labels = TRUE)
+```
+
+You can also manually specify axis ticks and tick labels. The labels can be rotated using parameters `xlas` and `ylas`, see the examples below.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+mdaplot(people, xticks = c(165, 175, 185), xticklabels = c("Small", "Medium", "Hight"))
+mdaplot(people, yticks = c(55, 70, 85), yticklabels = c("Light", "Medium", "Heavy"))
+mdaplot(people, xticks = c(165, 175, 185), xticklabels = c("Small", "Medium", "Hight"), xlas = 2)
+mdaplot(people, yticks = c(55, 70, 85), yticklabels = c("Light", "Medium", "Heavy"), ylas = 2)
+```
+
+If both axis labels and rotated axis ticks have to be shown, you can adjust plot margins and position of the label using `par()` function and `mtext()` for positioning axis label manually.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+
+# change margin for bottom part
+par(mar = c(6, 4, 4, 2) + 0.1)
+mdaplot(people, xticks = c(165, 175, 185), xticklabels = c("Small", "Medium", "Hight"),
+        xlas = 2, xlab = "")
+mtext("Height", side = 1, line = 5)
+
+# change margin for left part
+par(mar = c(5, 6, 4, 1) + 0.1)
+mdaplot(people, yticks = c(55, 70, 85), yticklabels = c("Light", "Medium", "Heavy"),
+        ylas = 2, ylab = "")
+mtext("Weight", side = 2, line = 5)
+```
+
+```{r, echo = FALSE}
+par(mar = c(5, 4, 4, 2) + 0.1)
+```
+
+There is also a couple of other parameters, allowing to show/hide grid as well as show horizontal and vertical lines on the plot (axes limits will be adjusted correspondingly).
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(people, show.grid = FALSE, show.lines = c(170, 65))
+mdaplot(people, show.lines = c(220, NA))
+```
+
+From version *0.10.0* function `mdaplot()` returns plot series data, which can be used for
+extra options. For example, in case of scatter plot you can add confidence ellipse or convex
+hull for data points. To do this, points must be color grouped by a factor as shown below. For confidence ellipse you can specify the confidence level (default 0.95).
+
+```{r, fig.width = 9, fig.height = 5}
+g = factor(people[, "Sex"], labels = c("M", "F"))
+
+par(mfrow = c(1, 2))
+p = mdaplot(people, cgroup = g)
+plotConvexHull(p)
+p = mdaplot(people, cgroup = g)
+plotConfidenceEllipse(p, conf.level = 0.90)
+```
+
+In case when number of data points is large (e.g. when dealing with images, where every pixel is a data point), using density plot is a good alternative to conventional scatter plots. The plot does not show all data points but instead split the whole plot space into small hexagonal regions and use color gradient for illustration a density of the points in each region. This approach is known as *hexagonal binning*. To create a density plot simply use `type="d"`. You can also specify color map and number of bins along each axes (`nbins`).
+
+The code below show an example of using density plots for 100000 data points with x and y values taken from normally distributed population.
+
+```{r, fig.width = 9, fig.height = 9}
+x = rnorm(100000)
+y = rnorm(100000)
+d = cbind(x, y)
+
+par(mfrow = c(2, 2))
+mdaplot(d, type = "d")
+mdaplot(d, type = "d", nbins = 80)
+mdaplot(d, type = "d", colmap = "gray")
+mdaplot(d, type = "d", nbins = 80, colmap = c("blue", "red"))
+```
+
+### Line plots {-}
+
+When line plot is created, the `mdatools()` shows a line plot for every row. So if data set has more than one row, the plot will show a banch of lines having same properties (color, type, etc). This is particularly useful when working with signals and spectroscopic data. In this subsection we will use simulated UV/Vis spectra from `simdata`.
+
+```{r}
+data(simdata)
+spectra = simdata$spectra.c
+conc = simdata$conc.c[, 1]
+wavelength = simdata$wavelength
+
+attr(spectra, "name") = "UV/Vis spectra"
+attr(spectra, "xaxis.name") = "Band index"
+```
+
+Here are simple examples of how to make the line plots.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 1))
+mdaplot(spectra, type = "l")
+mdaplot(spectra, type = "l", col = "darkgray", lty = 2)
+```
+
+Most of the parameters described for scatter plots will work for the line plots as well. For example, you can colorise the lines by using a vector with some values (in the example below I use concentration of one of the chemical components).
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 1))
+mdaplot(spectra, type = "l", cgroup = conc)
+```
+
+One of the new features, appeared first in version 0.8.0, is a special attribute, allowing to provide manual x-values — `'xaxis.values'` (similar parameter for y-values is `'yaxis.values'`). In the example below we show the spectra using wavelength in nm and wavenumbers in inverse cm.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 1))
+
+attr(spectra, "xaxis.name") = expression("Wavenumbers, cm"^-1)
+attr(spectra, "xaxis.values") = 10^7/wavelength
+mdaplot(spectra, type = "l")
+
+attr(spectra, "xaxis.name") = "Wavelength, nm"
+attr(spectra, "xaxis.values") = wavelength
+mdaplot(spectra, type = "l")
+```
+
+When you provide such data to any model methods (e.g. PCA, PLS, etc), then all variable related results (loadings, regression coefficients, etc.) will inherit this attribute and use it for making line plots.
+
+### Bar and errorbar plots {-}
+
+Bar plot is perhaps the simplest as it shows values for the first row of the data as bars. Let us get back to the people data, calculate mean for all variables and show the calculated values as a bar plot (excluding column with Income as it has much bigger values comparing to the others) — in the simplest form as well as with some extra parameters.
+
+```{r, fig.width = 9, fig.height = 9}
+m = matrix(apply(people, 2, mean), nrow = 1)
+colnames(m) = colnames(people)
+m = mda.exclcols(m, "Income")
+attr(m, "name") = "People (means)"
+
+par(mfrow = c(2, 1))
+mdaplot(m, type = "h")
+mdaplot(m, type = "h", xticks = 1:12, xticklabels = colnames(people), col = "red",
+   show.labels = TRUE, labels = "values")
+```
+
+Errorbar plot always expect data to have two or three rows. The first row is a origin points of the error bars, secod row is the size of the bottom part and the third row is the size of the top part. If data has only two rows the both parts will be symmetric related to the origin. In the example below we show mean and standard deviation of the people data as an error bar.
+
+```{r, fig.width = 9, fig.height = 9}
+d = rbind(apply(people, 2, mean), apply(people, 2, sd))
+rownames(d) = c("Mean", "Std")
+colnames(d) = colnames(people)
+attr(d, 'name') = "Statistics"
+d = mda.exclcols(d, "Income")
+
+par(mfrow = c(2, 1))
+mdaplot(d, type = "e")
+mdaplot(d, type = "e", xticks = 1:12, xticklabels = colnames(people), col = "red")
+```
+
+All simple plots can be combined together on the same axes. In this case, first plot is created as usual and all other plots have to be created with option `show.axes = FALSE` as it is shown below. It must be noted that in this case axes limits have to be set manually when creating the first plot.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 1))
+
+mdaplot(m, type = "h", col = "lightgray", ylim = c(0, 400))
+mdaplot(d, type = "e", show.axes = FALSE, pch = NA)
+
+mdaplot(m, type = "b", ylim = c(0, 400))
+mdaplot(d, type = "e", show.axes = FALSE)
+```
+
+In the next section we will discuss plots for several groups of objects (rows).
+
+## Plots for groups of objects {-#datasets--group-plots}
+
+The package has another method for creating plots, `mdaplotg()`, which aims at making plots for groups of objects. It can be several groups of points, lines or bars, where every group has its own attributes, such as color, marker, line type and width, etc. There is a simple criterion to distinguish between the simple and group plots: group plots usually need a legend and simple plots — not. The `mdaplotg()` method allows to do a lot of things (e.g. split data into groups, add a legend and labels, etc) much easier and this section will show most of the details.
+
+I will use the *People* dataset for most of the examples, so let us load it first, add some attributes, and exclude column with income.
+
+```{r, echo = FALSE}
+library(mdatools)
+```
+
+```{r}
+data(people)
+attr(people, "name") = "People"
+attr(people, "xaxis.name") = "Parameters"
+
+people = mda.exclcols(people, "Income")
+```
+
+There are three ways to provide data sets for making the group plots. Let's discuss them first and then talk about some extra features.
+
+### One matrix or data frame {-}
+
+If dataset is a matrix or a data frame, `mdaplotg()` will make a line, scatter-line or a bar plot, considering every row as a separate group. This can be useful, when, for example, you want to show how explained variance depends on a number of components for calibration and test set, or how loadings for first two components look like. If you want to change any parameters, like `pch`, `lty`, `lwd`, `col` or similar you need to provide either a vector with value for each group or one value for all groups. Axis limits, ticks, ticklabels, etc. can be defined similarly to the simple plots. Here are some examples.
+
+```{r, fig.width = 9, fig.height = 9}
+# let's create a small subset of the people data
+p = mda.subset(people, subset = c(1, 2, 4), select = c("Height", "Weight", "Shoesize", "Swim"))
+
+par(mfrow = c(2, 2))
+mdaplotg(p, type = "l")
+mdaplotg(p, type = "b")
+mdaplotg(p, type = "h", xticks = 1:4)
+mdaplotg(p, type = "b", lty = c(1, 2, 1), col = c("red", "green", "blue"), pch = 1,
+         xticks = 1:4, xticklabels = colnames(p))
+```
+
+As you can see, `mdaplotg()` automatically created the legend and set colors, line parameters, etc. correctly. You can change position of the legend using same names as for basic `legend()` command from R, or hide it using parameter `show.legend = FALSE`, as it is shown below.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+mdaplotg(p, type = "l", legend.position = "top")
+mdaplotg(p, type = "b", legend.position = "bottomleft")
+mdaplotg(p, type = "h", legend.position = "bottom")
+mdaplotg(p, type = "b", show.legend = FALSE)
+```
+
+Group plot also allow to show labels, in this case they can be either values, names or indices of the columns.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+mdaplotg(p, type = "l", show.labels = TRUE)
+mdaplotg(p, type = "b", show.labels = TRUE, labels = "indices")
+mdaplotg(p, type = "h", show.labels = TRUE, labels = "values")
+mdaplotg(p, type = "b", show.labels = TRUE, labels = "values")
+```
+
+### List with matrices or data frames {-}
+
+In this case every element of the list will be treated as a separate group. This way allow to make scatter plots as well and line plots with several line in a group. Barplot can be also made but in this case first row from each datasets will be used. If you use names when create the list, the names will be taken as legend labels, otherwise method will look at attribute `"name"` for each data set.
+
+In the example below we split *People* data to males and females and show the group plots.
+
+```{r, fig.width = 9, fig.height = 9}
+sex = people[, "Sex"]
+m = mda.subset(people, subset = sex == -1)
+f = mda.subset(people, subset = sex ==  1)
+d = list(male = m, female = f)
+
+par(mfrow = c(2, 2))
+mdaplotg(d, type = "p")
+mdaplotg(d, type = "b")
+mdaplotg(d, type = "h")
+mdaplotg(d, type = "b", lty = c(1, 2), col = c("red", "blue"), pch = 1)
+```
+
+Most of the things described in the previous subsection will work similarly for this case. We will just add a bit more details on how labels and excluded rows are processed for the scatter plots. By default labels are row names or indices. In `mdaplotg()` you can not provide vector with manual values, so the best way to change them is to assign them as the row names. Indices are unique within each group, so if you have, e.g. three groups of points, there will be three points with index "1", three with "2", etc.
+
+### Use factors to split a dataset into groups {-}
+
+One more way to split data set into groups is to provide one or several factor columns using argument `groupby`. In this case `mdaplotg()` will find all combinations of the factor levels and split rows of dataset to the corresponding groups. In the example below we use variables *Region* and *Sex* to make plots for four groups.
+
+```{r, fig.width = 9, fig.height = 9}
+sex = factor(people[, "Sex"], labels = c("M", "F"))
+reg = factor(people[, "Region"], labels = c("S", "M"))
+groups = data.frame(sex, reg)
+
+par(mfrow = c(2, 2))
+mdaplotg(people, type = "p", groupby = groups)
+mdaplotg(people, type = "l", groupby = groups)
+mdaplotg(people, type = "b", groupby = groups)
+mdaplotg(people, type = "h", groupby = groups)
+```
+
+All parameters, described before, will work the same way in this case.
+
+
+## Working with images {-#datasets--images}
+
+From version 0.8.0 the package also supports images, however they have to be transformed into datasets. The idea is very simple, we keep information about image pixels in an unfolded form, as a matrix, and use attributes `width` and `height` to reshape the data when we need to show it as an image.
+
+There are three methods that make this procedure easier: `mda.im2data()`, `mda.data2im()` and `imshow()`. The first convert an image (represented as 3-way array) to a data set, second does the opposite and the third takes dataset and shows it as an image. In the code chunk below you will see several examples how the methods work.
+
+We will use a dataset `image` available in the package. It is a 3-way array of numbers, if you want to work with e.g. JPEG, PNG or other standard image files you can load them using specific packages ([jpeg](https://cran.r-project.org/web/packages/jpeg/index.html),
+[png](https://cran.r-project.org/web/packages/png/index.html)).
+
+```{r, echo = FALSE}
+library(mdatools)
+```
+
+```{r, fig.width = 9, fig.height = 9}
+data(pellets)
+# convert image to a data matrix and add some attributed
+d = mda.im2data(pellets)
+colnames(d) = c("Red", "Green", "Blue")
+attr(d, "name") = "Image"
+
+# show data values
+mda.show(d, 10)
+
+# show separate channels and the whole image in plots
+par(mfrow = c(2, 2))
+imshow(d, 1)
+imshow(d, 2)
+imshow(d, 3)
+imshow(d, 1:3)
+```
+
+By default image for one channels is shown using jet color palette for intensities, but you can also use gray colors, palette from *colorbrewer2* as well as your own.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+imshow(d, 1)
+imshow(d, 1, colmap = "gray")
+imshow(d, 1, colmap = heat.colors(256))
+imshow(d, 1, colmap = colorRampPalette(c("red", "green"))(256))
+```
+
+You can work with the image values as normal dataset and show scatter, line plots, calculate statistics, etc.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(d, type = "p")
+mdaplot(d, type = "l")
+```
+
+However, it will take some time to show these plots as this image has several hundreds of thousands pixels, a faster alternative can be the use density plot based on hexagonal binning. Use `type = "d"` for this as shown below. Number of bins can be adjusted by using parameter `nbins`.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(d, type = "d")
+mdaplot(mda.subset(d, select = c("Red", "Blue")), type = "d", nbins = 40)
+```
+
+Another useful thing is to set some of the pixels as background. The background pixels are removed from the image dataset physically, there is no way to get them back (in cotrast to excluded rows/pixels). It can be particularly useful when working with e.g. geocorrected hyperspectral images, where, often, many pixels have NA values and there is no need to keep them in memory. To set pixels as background you need to use method `mda.setimbg()` with either pixel indices or vector with logical values as it is shown below.
+
+```{r, fig.width = 9, fig.height = 5}
+
+# original size
+show(dim(d))
+
+# set red epixels as background and show new size
+d = mda.setimbg(d, d[, "Red"] > 100)
+show(dim(d))
+
+# show image with background pixels
+par(mfrow = c(1, 2))
+imshow(d, 1)
+imshow(d, 1:3)
+```
+
+All image related attributes are inherited by all object/rows related results, e.g. scores, residuals, predicted values and classes, etc. This means if you provide an image to any modelling method, you can visualise the corresponding results also as an image. Some examples will be shown in
+[chapter about PCA][Principal component analysis].
+
+
+## Preprocessing {-#datasets--preprocessing}
+
+The package has several preprocessing methods implemented, mostly for different kinds of spectral data. All functions for preprocessing starts from prefix `prep.` which makes them easier to find by using code completion. In this chapter a brief description of the methods with several examples will be shown.
+
+### Autoscaling {-}
+
+*Autoscaling* consists of two steps. First step is *centering* (or, more precise, *mean centering*) when center of a data cloud in variable space is moved to an origin. Mathematically it is done by subtracting mean from the data values separately for every column/variable. Second step is *scaling* og *standardization* when data values are divided to standard deviation so the variables have unit variance. This autoscaling procedure (both steps) is known in statistics simply as *standardization'. You can also use arbitrary values to center or/and scale the data, in this case use sequence or vector with these values should be provided as an argument for `center` or `scale`.
+
+R has a built-in function for centering and scaling, `scale()`. The method `prep.autoscale()` is actually a wrapper for this function, which is mostly needed to set all user defined attributes to the result (all preprocessing methods will keep the attributes). Here are some examples how to use it:
+
+```{r, fig.width = 9, fig.height = 9}
+library(mdatools)
+
+# get data and exclude column Income
+data(people)
+
+# centering
+data1 = people
+data1 = prep.autoscale(data1, center = T, scale = F)
+
+# standardization
+data2 = people
+data2 = prep.autoscale(data2, center = F, scale = T)
+
+# autoscaling
+data3 = people
+data3 = prep.autoscale(data3, center = T, scale = T)
+
+# centering with median values and standardization
+data4 = people
+data4 = prep.autoscale(data4, center = apply(data4, 2, median), scale = T)
+
+par(mfrow = c(2, 2))
+boxplot(data1, main = "Mean centered")
+boxplot(data2, main = "Standardized")
+boxplot(data3, main = "Mean centered and standardized")
+boxplot(data4, main = "Median centered and standardized")
+```
+
+Starting form v. 0.9.0, the method has additional parameter `max.cov` which allows to avoid scaling of variables with zero or very low variation. The parameter defines a limit for coefficient of variation in percent `sd(x) / m(x) * 100` and the method will not scale variables with coefficient of variation betlow this limit. Default value for the parameter is 0 which will prevent scaling of constant variables (which is leading to `Inf` values).
+
+### Correction of spectral baseline {-}
+
+Baseline correction methods so far include Standard Normal Variate (SNV) and Multiplicative Scatter
+Correction (MSC). You can find more methods in the package [baseline](https://cran.r-project.org/web/packages/baseline/index.html). SNV is a very simple procedure aiming first of all at remove additive and multiplicative scatter effects from Vis/NIR spectra as well as correct the global intensity effect. It is applied to every individual spectrum by subtracting its average and dividing its standard deviation from all spectral values. Here is an example:
+
+```{r, fig.width = 9, fig.height = 9}
+
+# load UV/Vis spectra from Simdata
+data(simdata)
+ospectra = simdata$spectra.c
+attr(ospectra, "xaxis.values") = simdata$wavelength
+attr(ospectra, "xaxis.name") = "Wavelength, nm"
+
+# apply SNV and show the spectra
+pspectra = prep.snv(ospectra)
+
+par(mfrow = c(2, 1))
+mdaplot(ospectra, type = "l", main = "Original")
+mdaplot(pspectra, type = "l", main = "after SNV")
+```
+
+Multiplicative Scatter Correction does the same as SNV but in a different way. First it calculates a mean spectrum for the whole set (mean spectrum can be also provided as an extra argument). Then, for each individual spectrum, it makes a line fit for the spectral values and the mean spectrum. The coefficients of the line, intercept and slope, are used to correct the additive and multiplicative effects correspondingly.
+
+The `prep.msc()` function adds the mean spectrum calculated for the original spectral data, to the attributes of the results, so it can be reused later.
+
+```{r, fig.width = 9, fig.height = 9}
+# apply MSC and and get the preprocessed spectra
+pspectra = prep.msc(ospectra)
+
+# show the result
+par(mfrow = c(2, 1))
+mdaplot(ospectra, type = "l", main = "Original")
+mdaplot(pspectra, type = "l", main = "after MSC")
+```
+
+### Smoothing and derivatives {-}
+
+Savitzky-Golay filter is used to smooth signals and calculate derivatives. The filter has three arguments: a width of the filter (`width`), a polynomial order (`porder`) and the derivative order (`dorder`). If the derivative order is zero (default value) only smoothing will be performed.
+
+```{r, fig.width = 9, fig.height = 9}
+# add random noise to the spectra
+nspectra = ospectra + 0.025 * matrix(rnorm(length(ospectra)), dim(ospectra))
+
+# apply SG filter for smoothing
+pspectra = prep.savgol(nspectra, width = 15, porder = 1)
+
+# apply SG filter for smoothing and take a first derivative
+dpspectra = prep.savgol(nspectra, width = 15, porder = 1, dorder = 1)
+
+# show results
+par(mfrow = c(2, 2))
+mdaplot(ospectra, type = "l", main = "Original")
+mdaplot(nspectra, type = "l", main = "Noise added")
+mdaplot(pspectra, type = "l", main = "Smoothing")
+mdaplot(dpspectra, type = "l",main = "First derivative")
+```
 
