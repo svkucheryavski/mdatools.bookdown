@@ -1,8 +1,10 @@
 # What is new {-#news}
 
-**10.07.2020**
+**12.07.2020**
 
-* added chapters about MCR methods implemented in v. 0.11.0.
+* added chapters about [MCR methods](#mcr) implemented in v. 0.11.0.
+* added [description](#prep--alsbasecorr) of new preprocessing methods `prep.alsbasecorr()`
+* several small improvements in text
 
 **02.03.2020**
 
