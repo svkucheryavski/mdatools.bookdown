@@ -53,7 +53,6 @@ Preprocessing methods include:
 * Mutliplicative Scatter Correction for the same issue
 * Normalization of spectra to unit area or unit length
 * Baseline correction with asymmetric least squares
-* Peak alignment using ICOSHIFT algorithm
 
 Besides that, some extensions for the basic R plotting functionality have been also implemented and
 allow to do the following:

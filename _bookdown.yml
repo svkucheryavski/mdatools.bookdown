@@ -1,2 +1,5 @@
 #output_dir: "../mdatools/docs"
-output_dir: "../../svkucheryavski.github.io/docs"
+#output_dir: "../../svkucheryavski.github.io/docs"
+
+# this is for develop
+output_dir: "./docs"
