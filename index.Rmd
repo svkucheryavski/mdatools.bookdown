@@ -1,7 +1,7 @@
 ---
 title: "Getting started with mdatools for R"
 author: "Sergey Kucheryavskiy"
-date: "July 12, 2020"
+date: "July 23, 2020"
 knit: bookdown::render_book
 site: bookdown::bookdown_site
 output:
@@ -30,7 +30,7 @@ library(mdatools)
 
 This is a user guide for _mdatools_ — R package for preprocessing, exploring and analysis of multivariate data. The package provides methods mostly common for [Chemometrics](http://en.wikipedia.org/wiki/Chemometrics). The general idea of the package is to collect the popular chemometric methods and give a similar "user interface" for applying the methods to different datasets. So, if a user knows how to make a model and visualize results for one method, he or she can easily do this for the other methods as well. Usually I update the tutorial when a new version of the package is released, you can track main changes [here](#news).
 
-The current version of tutorial is compatible with version 0.11.0 of the package.
+The current version of tutorial is compatible with version 0.11.1 of the package.
 
 All methods implemented in the package were tested using well-known datasets. However, there still could be some bugs, in this case please report to [svkucheryavski@gmail.com](mailto:svkucheryavski@gmail.com) or use [Issues tool](https://github.com/svkucheryavski/mdatools/issues) at GitHub. You are also very welcome to share your comments and suggestions about the package functionality.
 

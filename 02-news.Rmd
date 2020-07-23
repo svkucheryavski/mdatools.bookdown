@@ -1,5 +1,9 @@
 # What is new {-#news}
 
+**23.07.2020**
+
+* section about [MCR Purity method](#mcr--purity) has been re-written to correspond to the algorithm changes in v. 0.11.1.
+
 **12.07.2020**
 
 * added chapters about [MCR methods](#mcr) implemented in v. 0.11.0.
