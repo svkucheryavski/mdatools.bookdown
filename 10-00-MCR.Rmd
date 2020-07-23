@@ -16,7 +16,6 @@ Apparently, if we have more than one mixture and concentrations of the pure comp
 
 $$\mathbf{D} = \mathbf{C} \mathbf{S}^T$$
 
-
 The task of the MCR methods is to get $\mathbf{C}$ and $\mathbf{S}$ by knowing $\mathbf{D}$, so we sort of resolve the mixtures into individual components and their concentrations. This is not a trivial task as the expression above does not have a unique solution. For example, one of the solutions is what PCA gives, but neither scores correspond to the real concentration values nor loadings represent the spectra of the pure components.
 
 In fact, it is impossible to get $\mathbf{C}$ and $\mathbf{S}$ precisely, what we get is a sort of estimate, which can be denoted as $\mathbf{\hat{C}}$ and $\mathbf{\hat{S}}$. In this case we can rewrite the equation as:
@@ -34,25 +33,24 @@ Starting from v. 0.11.0 the *mdatools* package contains additional dataset, `car
 
 ## Purity based {-#mcr--purity}
 
-The purity based approach implemented in *mdatools* was [proposed](https://pubs.acs.org/doi/abs/10.1021/ac00014a016#) by Willem Windig and Jean Guilment in 1991 as a simple alternative to interactive self-modeling multivariate analysis technique. The general idea of the approach is to find variables (wavelength, wavenumbers, etc.) in $\mathbf{D}$, which are influenced mostly by one chemical component. Such variables are called as *pure variables*. If we can identify pure variable for each of the pure components, then we can solve the MCR problem by using ordinary least squares method:
+The purity based approach implemented in *mdatools* was [proposed](https://www.sciencedirect.com/science/article/abs/pii/S0169743904002011) by Willem Windig and co-authors in 2005 as an alternative to classical SIMPLISMA method. The general idea of the approach is to find variables (wavelength, wavenumbers, etc.) in $\mathbf{D}$, which are influenced mostly by one chemical component. Such variables are called as *pure variables*. If we identify pure variable for each of the components, then we can solve the MCR problem by using ordinary least squares method:
 
 $$\mathbf{\hat{S}} = \mathbf{D}^T \mathbf{D}_R (\mathbf{D}^T_R \mathbf{D})^{-1}$$
 $$\mathbf{\hat{C}} = \mathbf{D} \mathbf{\hat{S}} (\mathbf{\hat{S}}^T \mathbf{\hat{S}})^{-1}$$
 
-Here $\mathbf{\hat{S}}$ and $\mathbf{\hat{C}}$ are the spectra and concentrations of the pure components estimated by this method. The matrix $\mathbf{D}_R$ is a reduced version of $\mathbf{D}$ where only pure variables are kept (one for each pure component, so this matrix has a dimension $A \times A$). So the question is how to find the pure variables?
+Here $\mathbf{\hat{S}}$ and $\mathbf{\hat{C}}$ are the spectra and concentrations (contributions) of the pure components estimated by this method. The matrix $\mathbf{D}_R$ is a reduced version of $\mathbf{D}$ where only pure variables are kept (one for each pure component, so this matrix has a dimension $A \times A$). So the question is how to find the pure variables?
 
-Windig and co-authors proposed to do it by computing a *purity* of a variable $j$ as follows:
+Windig and co-authors proposed to do it by computing angles between the spectral variables. For the first component angle between all variables and a vector of ones is computed and first pure variable is selected as the one having the largest angle. Then, angles between the first selected pure variable and the rest are computed and, again, variable with the largest angle is selected as the purest. This continues until pure variables for all components are identified.
 
-$$p_j = \frac{\sigma_j}{\mu_j + \alpha}$$
+To reduce the influence of noisy variables, correction factor, is computed for each variable as follows:
 
-Here $\sigma_j$ and $\mu_j$ are standard deviation and mean values computed for the variable ($j^{th}$ column of the matrix $\mathbf{D}$). Computing the purity for all variables in $\mathbf{D}$ results in a purity spectrum, $\mathbf{p}$.
+$$\mathbf{n} = \frac{\mathbf{m}}{\mathbf{m} + offset \times \mathrm{max}(\mathbf{m})}$$
 
-Parameter $\alpha$ is computed as 1–10% of a maximum of all mean values. More details about the method can be found both in the [original paper](https://pubs.acs.org/doi/abs/10.1021/ac00014a016#) as well as in one of the [recent reviews](https://www.sciencedirect.com/science/article/pii/B9780444636386000036).
-
+Here $\mathbf{m}$ is a mean spectrum computed for the original data, $\mathbf{D}$, and the $offset$ is a tuning parameter defined by a user. Usually a value between 0.001 and 0.05 is a good choice for the offset. More details about the method can be found in the above mentioned paper.
 
 ### An example {-}
 
-Function `mcrpure()` implements the purity based method in *mdatools*. It has two mandatory arguments — matrix with the original spectra and number of pure components — as well as several extra parameters. The most important parameter is the `offset` which defines value $\alpha$ in the purity spectrum. Thus `offset = 0.01` will compute $\alpha$ as 1% of the maximum mean value. The default offset is 0.05.
+Function `mcrpure()` implements the purity based method in *mdatools*. It has two mandatory arguments — matrix with the original spectra and number of pure components — as well as several extra parameters. The most important one is the offset, which by default is 0.05.
 
 The code below shows how to resolve the spectra from the `carbs` dataset and show summary information:
 
@@ -61,9 +59,9 @@ data(carbs)
 m = mcrpure(carbs$D, ncomp = 3)
 summary(m)
 ```
-The summary shows explained variance, cumulative explained variance, index of pure variable and its purity value for each of the three components. For example, in case of the first component, the purest variable is located in column 782 and its purity is equal to 0.639. As one can see, current solution explains 99.6% of the total variance.
+The summary shows explained variance, cumulative explained variance, index of pure variable and its purity value for each of the three components. For example, in case of the first component, the purest variable is located in column 782 and its purity (in this case an angle between this variable and a vector of ones) is equal to 36.038 degrees. As one can see, current solution explains 99.6% of the total variance.
 
-Any MCR method in *mdatools* contains the resolved spectra (as `m$respec`) and contributions (as `m$rescont`) as well as some extra data, e.g. purity spectra for each component, etc. You can see a list of all objects available by simply printing the object with *mcrpure* results:
+Any MCR method in *mdatools* contains the resolved spectra (as `m$resspec`) and contributions (as `m$rescont`) as well as some extra data, e.g. purity spectra for each component, etc. You can see a list of all objects available by simply printing the object with *mcrpure* results:
 
 ```{r}
 show(m)
@@ -107,29 +105,30 @@ plotPuritySpectra(m2)
 plotPuritySpectra(m2, comp = 1)
 ```
 
-The vertical dashed lines on the purity spectra plot show the selected pure variables. As we can see, indeed they correspond to the largest values in the corresponding purity spectrum (so have the highest purity). We can also notice that when offset is small (top plots, 1%) the purity spectra look quite noisy. On the other hand, using too large offset can lead to a selection of less pure variables, so this parameter should be selected with caution. In most cases, having offset around 5% of the largest mean value allows to achieve satisfactory results. But it is always a good idea to vary the parameter and investigate all plots before the final decision.
+The vertical dashed lines on the purity spectra plot show the selected pure variables. As we can see, indeed they correspond to the largest values in the corresponding purity spectrum (so have the highest purity). We can also notice that when offset is small (top plots, 1%) the purity spectra look quite noisy. On the other hand, using too large offset can lead to a selection of less pure variables, so this parameter should be selected with caution. It is always a good idea to vary the parameter and investigate all plots before the final decision.
 
 Since dataset `carbs` contains spectra of pure components as well, we can compare the resolved spectra with the original ones as shown in the example below. To do that we normalize both sets of spectra to a unit length to avoid a scaling problem. The original spectra are shown as red and thick curves while the resolved spectra are black and thin.
 
 ```{r, fig.width = 9, fig.height = 12}
 
+# apply purity method
+m = mcrpure(carbs$D, ncomp = 3, offset = 0.05)
+
 # get spectra, transpose and normalize to unit area
 S      = prep.norm(mda.t(carbs$S), "length")
-S1.hat = prep.norm(mda.t(m1$resspec), "length")
-S2.hat = prep.norm(mda.t(m2$resspec), "length")
+S.hat = prep.norm(mda.t(m1$resspec), "length")
 
 # define color and line width for the spectral curves
 col = c("red", "black")
 lwd = c(3, 1)
 
 # show the plots separately for each component and each result object
-par(mfrow = c(3, 2))
+par(mfrow = c(3, 1))
 for (a in 1:3) {
    s = mda.subset(S, a)
-   s1.hat = mda.subset(S1.hat, a)
-   s2.hat = mda.subset(S2.hat, a)
-   mdaplotg(list(orig = s, resolved = s1.hat), type = "l", col = col, lwd = lwd)
-   mdaplotg(list(orig = s, resolved = s2.hat), type = "l", col = col, lwd = lwd)
+   s.hat = mda.subset(S.hat, a)
+   mdaplotg(list(orig = s, resolved = s.hat), type = "l", col = col, lwd = lwd,
+      main = paste0("Component ", a))
 }
 ```
 
@@ -149,24 +148,16 @@ show(c)
 
 In ideal case we should see an identity matrix. However in this case, we got, for example, $[0.943, 0.024, 0.062]$ for the first component instead of expected $[1, 0, 0]$. The result is a bit worse for the second and the third components.
 
-### Using derivatives {-}
+### Tuning the offset parameter {-}
 
-One of the ways to improve the result of resolution based on the purity approach is to use derivatives of the spectra. This can be especially efficient if spectra show broad overlapping peaks, e.g. in case of NIR or UV/Vis spectra.
-
-The derivatives in `mcrpure()` can be used either only for detection of pure variables or for both  detection of pure variables and the resolving. To use derivatives one has to specify two parameters. First, `use.deriv`, is a number between 0 and 2 (0 — do not use, 1 — use only for detection of pure variables, 2 — use for both the detection and the resolution). Second parameter, `savgol` is a list with Savitzky-Golay settings (see `?prep.savgol` for details).
-
-The code below shows the result of applying `mcrpure()` to the *Simdata*, which consists of 150 UV/Vis spectra with very broad peaks.
+One of the ways to improve the result of resolution based on the purity approach is to tune the offset. The code below shows the result of applying `mcrpure()` to the *Simdata*, which consists of 150 UV/Vis spectra with very broad peaks.
 
 ```{r, fig.width = 9, fig.height = 9}
    data(simdata)
-
-   # define Savitzky-Golay parameters
-   savgol = list(porder = 2, dorder = 2, width = 5)
-
-   # get spectra and resolve them with and without derivatives
    D <- simdata$spectra.c
+
    m1 <- mcrpure(D, ncomp = 3)
-   m2 <- mcrpure(D, ncomp = 3, offset = 0.04, use.deriv = 2, savgol = savgol)
+   m2 <- mcrpure(D, ncomp = 3, offset = 0.001)
 
 
    par(mfrow = c(2, 2))
@@ -177,7 +168,7 @@ The code below shows the result of applying `mcrpure()` to the *Simdata*, which 
    plotSpectra(m2)
 ```
 
-Using the default settings (left plots) does not allow to get any meaningful solutions (you can notice, for example, negative peaks). However, combination of derivatives and adjustment of the offset, results in a very good outcome — the resolved spectra are very similar to the original ones (original spectra are not shown on the plots).
+Using the default settings (left plots) does not allow to get any meaningful solutions (you can notice, for example, negative peaks). However, tuning the offset value results in a very good outcome — the resolved spectra are very similar to the original ones (original spectra are not shown on the plots).
 
 ## Alternating least squares {-#mcr--als}
 
