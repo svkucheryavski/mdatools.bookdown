@@ -1,5 +1,9 @@
 # What is new {-#news}
 
+**22.01.2021**
+
+* added section about [Procrustes cross-validation](#pca--pcv) for PCA, which was recently added to the package (v. 0.11.3).
+
 **23.07.2020**
 
 * section about [MCR Purity method](#mcr--purity) has been re-written to correspond to the algorithm changes in v. 0.11.1.

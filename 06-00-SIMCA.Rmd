@@ -74,6 +74,8 @@ plotPredictions(m, show.labels = TRUE)
 
 ### Cross-validation {-}
 
+From version 0.11.3 *mdatools* has a better way to validate SIMCA models, [Procrustes cross-validation](#pca--pcv), which we recommend to use instead of the conventional cross-validation procedure, described in this section.
+
 SIMCA model can be also cross-validated. Cross-validation settings are provided using parameter `cv` which can be either a number of a list. If it is a number, segmented cross-validation with random split will be used. The number then defines number of segments with one exception — if `cv = 1` then full cross-validation (leave-one-out) will be used.
 
 Alternatively you can specify the cross-validation settings as a list. There are three options: `cv = list("full")` allows to do full cross-validation. If you specify `cv = list("ven", nseg)` then systematic cross-validation with `nseg` segments will be used (venetian blinds). Finally, `cv = list("rand", nseg, nrep)` will run random cross-validation with `nseg` segments  and `nrep` repetitions/iterations.

@@ -44,6 +44,7 @@ The package includes classes and functions for analysis, preprocessing and plott
 * Interval PLS for variable selection
 * Multivariate curve resolution using the purity approach
 * Multivariate curve resolution using the constrained alternating least squares
+* Procrustes cross-validation for PCA
 
 Preprocessing methods include:
 
@@ -53,6 +54,7 @@ Preprocessing methods include:
 * Mutliplicative Scatter Correction for the same issue
 * Normalization of spectra to unit area or unit length
 * Baseline correction with asymmetric least squares
+* Kubelka-Munk transformation
 
 Besides that, some extensions for the basic R plotting functionality have been also implemented and
 allow to do the following:
@@ -68,11 +70,11 @@ See `?mdatools` and next chapters for more details.
 
 ## How to install {-#overview--how-to-install}
 
-The package is available from CRAN by usual installing procedure. However due to restrictions in CRAN politics regarding number of submissions (once in 3-4 month) only major releases will be published there. To get the latest release plase use GitHub sources. You can either [download](https://github.com/svkucheryavski/mdatools/releases) a zip-file with the source package and install it using the `install.packages` command, e.g. if the downloaded file is `mdatools_0.11.0.tar.gz` and it is located in a current working directory,
+The package is available from CRAN by usual installing procedure. However due to restrictions in CRAN politics regarding number of submissions (once in 3-4 month) only major releases will be published there. To get the latest release please use GitHub sources. You can either [download](https://github.com/svkucheryavski/mdatools/releases) a zip-file with the source package and install it using the `install.packages` command, e.g. if the downloaded file is `mdatools_0.11.3.tar.gz` and it is located in a current working directory,
 just run the following:
 
 ```r
-install.packages("mdatools_0.11.0.tar.gz")
+install.packages("mdatools_0.11.3.tar.gz")
 ```
 
 If you have `devtools` package installed, the following command will install the latest release from
