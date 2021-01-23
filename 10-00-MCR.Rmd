@@ -1,0 +1,546 @@
+# Multivariate Curve Resolution  {-#mcr}
+
+Multivariate Curve Resolution (MCR) is a group of methods which can be used to solve the curve resolution problem in spectroscopy, which, in its general form, can be defined as follows. Let's say we have a mixture of $A$ chemical components (e.g. ribose, fructose and lactose). Every individual component is usually called a *pure* component. Every pure component $i$ has a spectrum (IR, NIR, Raman, etc.), which can be represented as a column vector $\mathbf{s}_i$, with size $J \times 1$, where $J$ is a number of values in each spectrum (corresponding to the number of wavelength, wavenumbers, chemical shifts, etc.).
+
+According to the [Beer-Lambert law](https://en.wikipedia.org/wiki/Beer–Lambert_law), if you mix the components into one mixture and take a spectrum of this mixture, the spectrum will be just a linear combination of the spectra of the pure components. This can be written as follows:
+
+$$\mathbf{d} = c_1 \mathbf{s}^T_1 + c_2 \mathbf{s}^T_2 + \dots + c_A \mathbf{s}^T_A $$
+
+In this equation, $\mathbf{d}$ is a vector of spectral values representing the spectrum of the mixture ($1 \times J$), $c_1, c_2, ..., c_A$ are concentrations of the pure components in the mixture and $\mathbf{s}_1, \mathbf{s}_2, ..., \mathbf{s}_A$ are the spectra of the pure components. If we combine the concentration values into a $1 \times A$ row-vector $\mathbf{c} = [c_1, c_2, ..., c_A]$ then the equation can be written in a more compact form:
+
+$$\mathbf{d} = \mathbf{c} \mathbf{S}^T$$
+
+Where $\mathbf{S}$ is a $J \times A$ matrix containing spectra of all pure components as columns.
+
+Apparently, if we have more than one mixture and concentrations of the pure components vary, we can combine all concentration values into a matrix $\mathbf{C}$, where every row will correspond to a particular mixture. In this case we can write the equation as follows:
+
+$$\mathbf{D} = \mathbf{C} \mathbf{S}^T$$
+
+The task of the MCR methods is to get $\mathbf{C}$ and $\mathbf{S}$ by knowing $\mathbf{D}$, so we sort of resolve the mixtures into individual components and their concentrations. This is not a trivial task as the expression above does not have a unique solution. For example, one of the solutions is what PCA gives, but neither scores correspond to the real concentration values nor loadings represent the spectra of the pure components.
+
+In fact, it is impossible to get $\mathbf{C}$ and $\mathbf{S}$ precisely, what we get is a sort of estimate, which can be denoted as $\mathbf{\hat{C}}$ and $\mathbf{\hat{S}}$. In this case we can rewrite the equation as:
+
+$$\mathbf{D} = \mathbf{\hat{C}} \mathbf{\hat{S}}^T + \mathbf{E}$$
+
+Where $\mathbf{E}$ is a matrix with residuals.
+
+So there are many different methods and tricks which help to get a decent solution in this case. In *mdatools*, starting from v. 0.11.0, there are two MCR methods available — based on the purity approach (`mcrpure()`), also known as [SIMPLISMA](https://pubs.acs.org/doi/abs/10.1021/ac00014a016), and, based on the constrained alternating least squares (`mcrals()`). This chapter explains how to use both for practical tasks.
+
+More information about the MCR methods in general can be found in [this book](https://www.elsevier.com/books/resolving-spectral-mixtures/ruckebusch/978-0-444-63638-6).
+
+Starting from v. 0.11.0 the *mdatools* package contains additional dataset, `carbs`, which has three objects: `carbs$S` is a matrix ($1401 \times 3$) of Raman spectra of three carbohydrates: fructose, lactose, and ribose; `carbs$D` contains 21 simulated spectra of their mixtures and `carbs$C` contains concentrations used to create the mixtures. The mixtures spectra also contain some random noise, which is uniformly distributed between 0 and 3% of maximum intensity. The spectra of the pure components were taken from publicly available [SPECARB](http://www.models.life.ku.dk/~specarb/specarb.html) library created by S.B. Engelsen. This dataset will be mainly used in this chapter to show how the implemented MCR methods work.
+
+
+## Purity based {-#mcr--purity}
+
+The purity based approach implemented in *mdatools* was [proposed](https://www.sciencedirect.com/science/article/abs/pii/S0169743904002011) by Willem Windig and co-authors in 2005 as an alternative to classical SIMPLISMA method. The general idea of the approach is to find variables (wavelength, wavenumbers, etc.) in $\mathbf{D}$, which are influenced mostly by one chemical component. Such variables are called as *pure variables*. If we identify pure variable for each of the components, then we can solve the MCR problem by using ordinary least squares method:
+
+$$\mathbf{\hat{S}} = \mathbf{D}^T \mathbf{D}_R (\mathbf{D}^T_R \mathbf{D})^{-1}$$
+$$\mathbf{\hat{C}} = \mathbf{D} \mathbf{\hat{S}} (\mathbf{\hat{S}}^T \mathbf{\hat{S}})^{-1}$$
+
+Here $\mathbf{\hat{S}}$ and $\mathbf{\hat{C}}$ are the spectra and concentrations (contributions) of the pure components estimated by this method. The matrix $\mathbf{D}_R$ is a reduced version of $\mathbf{D}$ where only pure variables are kept (one for each pure component, so this matrix has a dimension $A \times A$). So the question is how to find the pure variables?
+
+Windig and co-authors proposed to do it by computing angles between the spectral variables. For the first component angle between all variables and a vector of ones is computed and first pure variable is selected as the one having the largest angle. Then, angles between the first selected pure variable and the rest are computed and, again, variable with the largest angle is selected as the purest. This continues until pure variables for all components are identified.
+
+To reduce the influence of noisy variables, correction factor, is computed for each variable as follows:
+
+$$\mathbf{n} = \frac{\mathbf{m}}{\mathbf{m} + offset \times \mathrm{max}(\mathbf{m})}$$
+
+Here $\mathbf{m}$ is a mean spectrum computed for the original data, $\mathbf{D}$, and the $offset$ is a tuning parameter defined by a user. Usually a value between 0.001 and 0.05 is a good choice for the offset. More details about the method can be found in the above mentioned paper.
+
+### An example {-}
+
+Function `mcrpure()` implements the purity based method in *mdatools*. It has two mandatory arguments — matrix with the original spectra and number of pure components — as well as several extra parameters. The most important one is the offset, which by default is 0.05.
+
+The code below shows how to resolve the spectra from the `carbs` dataset and show summary information:
+
+```{r}
+data(carbs)
+m = mcrpure(carbs$D, ncomp = 3)
+summary(m)
+```
+The summary shows explained variance, cumulative explained variance, index of pure variable and its purity value for each of the three components. For example, in case of the first component, the purest variable is located in column 782 and its purity (in this case an angle between this variable and a vector of ones) is equal to 36.038 degrees. As one can see, current solution explains 99.6% of the total variance.
+
+Any MCR method in *mdatools* contains the resolved spectra (as `m$resspec`) and contributions (as `m$rescont`) as well as some extra data, e.g. purity spectra for each component, etc. You can see a list of all objects available by simply printing the object with *mcrpure* results:
+
+```{r}
+show(m)
+```
+
+The reason we use word *contributions* instead of *concentrations* is that the method does not give the real concentrations, measured in the units of interest. The resolved values are rather in arbitrary units and can be later scaled/re-scaled accordingly.
+
+The result object also has several graphical methods, which let user to plot the resolved spectra (`plotSpectra()`) and the resolved contributions (`plotContributions()`). The example below demonstrates how to show the plots for all three components as well as for a selected one.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfcol = c(2, 2))
+plotSpectra(m)
+plotContributions(m)
+
+plotSpectra(m, comp = 2)
+plotContributions(m, comp = 2)
+```
+
+As you can see, when you select particular components the plot preserves their color. One can also create the explained variance plot (both individual as well as cumulative) as it is shown below.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfcol = c(1, 2))
+plotVariance(m)
+plotCumVariance(m)
+```
+
+All plot parameters are similar to what you have used for other methods (e.g. PCA, PLS, etc), so you can change type of plot, colors, etc. in a similar way.
+
+### Purity values and spectra {-}
+
+The purity spectra and the purity values for each component are quite important and investigation of the spectra can be very useful. For example, the code below creates two solutions using different offset values and shows purity spectra for each solution. The plots on the left side shows purity spectra for all three components, while the plots on the right side show purity only for the first component.
+
+```{r, fig.width = 9, fig.height = 9}
+m1 = mcrpure(carbs$D, ncomp = 3, offset = 0.01)
+m2 = mcrpure(carbs$D, ncomp = 3, offset = 0.10)
+
+par(mfrow = c(2, 2))
+plotPuritySpectra(m1)
+plotPuritySpectra(m1, comp = 1)
+plotPuritySpectra(m2)
+plotPuritySpectra(m2, comp = 1)
+```
+
+The vertical dashed lines on the purity spectra plot show the selected pure variables. As we can see, indeed they correspond to the largest values in the corresponding purity spectrum (so have the highest purity). We can also notice that when offset is small (top plots, 1%) the purity spectra look quite noisy. On the other hand, using too large offset can lead to a selection of less pure variables, so this parameter should be selected with caution. It is always a good idea to vary the parameter and investigate all plots before the final decision.
+
+Since dataset `carbs` contains spectra of pure components as well, we can compare the resolved spectra with the original ones as shown in the example below. To do that we normalize both sets of spectra to a unit length to avoid a scaling problem. The original spectra are shown as red and thick curves while the resolved spectra are black and thin.
+
+```{r, fig.width = 9, fig.height = 12}
+
+# apply purity method
+m = mcrpure(carbs$D, ncomp = 3, offset = 0.05)
+
+# get spectra, transpose and normalize to unit area
+S      = prep.norm(mda.t(carbs$S), "length")
+S.hat = prep.norm(mda.t(m1$resspec), "length")
+
+# define color and line width for the spectral curves
+col = c("red", "black")
+lwd = c(3, 1)
+
+# show the plots separately for each component and each result object
+par(mfrow = c(3, 1))
+for (a in 1:3) {
+   s = mda.subset(S, a)
+   s.hat = mda.subset(S.hat, a)
+   mdaplotg(list(orig = s, resolved = s.hat), type = "l", col = col, lwd = lwd,
+      main = paste0("Component ", a))
+}
+```
+
+In the code we use `mda.t()` and `mda.subset()` instead of just `t` and `subset()` to preserve values for Raman shift and axis titles which are defined as attributes of the matrices with spectra, you can read more details in section about [Attributes and factors](#datasets--attributes-and-factors).
+
+As one can see, the quality of resolving is quite good in both cases. However, in case with offset = 10% (right plot), one can also notice large artifacts for example for the third component, which looks like a sort of negative peaks. You can try and play with the offset parameter and see how it influences the quality of the resolution.
+
+### Predictions {-}
+
+It is also possible to predict concentration for one or several spectra based on already resolved data. In the code chunk below we predict the concentration values using the matrix with spectra of the pure components. Then we scale the predicted values, so they sum up to one and show the results.
+
+```{r}
+c = predict(m, mda.t(carbs$S))
+c = c / apply(c, 2, sum)
+show(c)
+```
+
+In ideal case we should see an identity matrix. However in this case, we got, for example, $[0.943, 0.024, 0.062]$ for the first component instead of expected $[1, 0, 0]$. The result is a bit worse for the second and the third components.
+
+### Tuning the offset parameter {-}
+
+One of the ways to improve the result of resolution based on the purity approach is to tune the offset. The code below shows the result of applying `mcrpure()` to the *Simdata*, which consists of 150 UV/Vis spectra with very broad peaks.
+
+```{r, fig.width = 9, fig.height = 9}
+   data(simdata)
+   D <- simdata$spectra.c
+
+   m1 <- mcrpure(D, ncomp = 3)
+   m2 <- mcrpure(D, ncomp = 3, offset = 0.001)
+
+
+   par(mfrow = c(2, 2))
+   plotPuritySpectra(m1)
+   plotPuritySpectra(m2)
+
+   plotSpectra(m1)
+   plotSpectra(m2)
+```
+
+Using the default settings (left plots) does not allow to get any meaningful solutions (you can notice, for example, negative peaks). However, tuning the offset value results in a very good outcome — the resolved spectra are very similar to the original ones (original spectra are not shown on the plots).
+
+## Alternating least squares {-#mcr--als}
+
+The alternating least squares allows to get $\mathbf{\hat{C}}$ and $\mathbf{\hat{S}}$ by using iterative algorithm, when the ordinary least squares is applied consequently, first to resolve the concentrations by knowing spectra and then to resolve the spectra by using the resolved concentrations:
+
+$$\mathbf{\hat{C}} = \mathbf{D} \mathbf{\hat{S}} (\mathbf{\hat{S}}^T \mathbf{\hat{S}})^{-1}$$
+$$\mathbf{\hat{S}} = \mathbf{D}^T \mathbf{\hat{C}} (\mathbf{\hat{C}}^T \mathbf{\hat{C}})^{-1}$$
+
+These two steps continue until a convergence criteria is met. Apparently, there are several issues with the algorithm, that have to be clarified. First of all, to run the first iteration we need to have values for the matrix $\mathbf{\hat{S}}$. This is what is called *initial estimates*. In *mdatools* the initial estimates for the pure component spectra generated automatically as a matrix with random values taken from uniform distribution (between 0 and 1). Apparently the matrix $(\mathbf{\hat{S}}^T \mathbf{\hat{S}})$ should not be singular and using random values will ensure this.
+
+On the other hand, using random values does not always provide reproducible results, so some alternatives can be considered. Therefore user can provide any pre-computed values for $\mathbf{\hat{S}}$ using parameter `spec.ini` as it will also shown below.
+
+The second issue is that using ordinary least squares (OLS) method for the iterations will result in a solution with negative values, which is not physically meaningful. To tackle this problem we either need to constrain the solution, for example by setting all negative values to zero, after each iteration, or by using non-negative least squares for solving the equations. In *mdatools* both options are available.
+
+Finally, as we mentioned before, curve resolution problem does not have a unique solution. To narrow the range of feasible solutions down, and also to move them towards the right one, we can apply different constraints. Some of the constraints are implemented and available for user, some will be implemented later. However, user can easily provide a manual constraint function as it will be shown below.
+
+We will take all these issues gradually and let's start with non-negativity and constraints.
+
+### Non-negativity {-}
+
+To tackle the non-negativity problem, in *mdatools* you can chose one of the following options:
+
+1. Use standard OLS solver and apply non-negativity constraint by setting all negative values to zero.
+2. Use non-negative least squares solver (NNLS), e.g. [proposed](https://epubs.siam.org/doi/book/10.1137/1.9781611971217) by Lawsen and Hanson.
+3. Use its faster version — Fast Combinatorial NNLS (FC-NNLS) [proposed](https://onlinelibrary.wiley.com/doi/abs/10.1002/cem.889) by Benthem and Keenan.
+4. Use your own solver
+
+The default option is nr. 3 and this is what we would recommend to use. It gives a solution identical to nr. 2 however is much faster in case of multivariate data. You can also provide a function, which implements your own solver. The solver can be changed both for spectra and for contributions, you can even use different solvers for each. The code below shows how to apply MCR-ALS using OLS and FC-NNLS solvers without any constraints.
+
+```{r, fig.width = 9, fig.height = 9}
+data(carbs)
+
+# apply MCR-ALS with default solver (FC-NNLS)
+m1 = mcrals(carbs$D, ncomp = 3)
+
+# apply MCR-ALS with OLS solver
+m2 = mcrals(carbs$D, ncomp = 3, spec.solver = mcrals.ols, cont.solver = mcrals.ols)
+
+# show the resolved spectra
+par(mfrow = c(2, 1))
+plotSpectra(m1, main = "FC-NNLS solution")
+plotSpectra(m2, main = "OLS solution")
+```
+
+As you can see, the OLS solution without non-negativity constraint contains negative values. Once again, if you do not experiment with negative values, using the default option (FCNNLS) will be the best.
+
+
+### Constraints {-}
+
+Constraints are small functions that can be applied separately to current estimates of spectra or contributions on every step of the algorithm in order to improve the solution. A constraint function takes the matrix with spectra or contributions as an input, does something with the values and returns the matrix of the same size as an output. For example, the simplest constraint is non-negativity, which sets all negative values in the matrix to zeros.
+
+In *mdatools* constraints can be combined together using lists. Spectra and contributions should have separate sets of constrains. In the example below we show how to use some of the built in constraints:
+
+```{r, fig.height = 9, fig.width = 9}
+
+# define constraints for contributions
+cc = list(
+   constraint("norm", params = list(type = "sum"))
+)
+
+# define constraints for spectra
+sc = list(
+   constraint("angle", params = list(weight = 0.05)),
+   constraint("norm", params = list(type = "length"))
+)
+
+# run MCR-ALS with the constraints
+set.seed(6)
+m = mcrals(carbs$D, ncomp = 3, spec.constraints = sc, cont.constraints = cc)
+
+# normalzie the original spectra to unit length
+S = prep.norm(mda.t(carbs$S), "length")
+
+# get resolved spectra and transpose them
+S.hat = mda.t(m$resspec)
+
+# define color and line width for the spectral curves
+col = c("red", "black")
+lwd = c(3, 1)
+
+# show the plots separately for each component and each result object
+par(mfrow = c(3, 1))
+for (a in 1:3) {
+   s = mda.subset(S, a)
+   s.hat = mda.subset(S.hat, a)
+   mdaplotg(list(orig = s, resolved = s.hat), type = "l", col = col, lwd = lwd)
+}
+```
+
+As you can see, we use one constraint to normalize the contributions, so they sum up to one on every step. And we use two constraints for the spectra — first angle constraint, which makes spectra less contrast and increases contrast among the resolved concentration profiles. Then we normalize the spectra to the unit length. The constraints are applied to the spectra or contributions on every iteration and in the same order as they are defined in the list.
+
+You may have noticed the following instruction: `set.seed(6)` in the code block above. This is needed to make results more reproducible. Since the initial estimates for the resolved spectra are obtained using random number generator, the final result can be different from run to run. To avoid this we seed the generator with number 6, so the final result will be the same regardless how many times we run this code.
+
+The list of available constraints and their parameters can be shown by running `constraints.list()`:
+
+```{r}
+constraints.list()
+```
+
+In the next few subsections you will find a short description of the currently implemented constraints with some illustrations, as well as instructions how to make a user defined constraint.
+
+#### Non-negativity constraint {-}
+
+The non-negativity constraint simply takes a signal (spectra or contributions for a particular component) and set all negative values to zeros. A plot below demonstrates how the constraint works, the gray line represents the original signal, the blue — signal after applying the constraint.
+
+```{r, echo = FALSE, fig.width = 9, fig.height = 5}
+x <- 1:100
+y <- matrix(dnorm(x, 50, 10), 1, 100)
+y <- prep.savgol(y, porder = 2, dorder = 1, width = 5)
+y.new = t(constraintNonNegativity(t(y)))
+
+mdaplotg(
+   list(original = y, constrained = y.new),
+   type = "l", col = c("lightgray", mdaplot.getColors(1)), lwd = c(2, 1)
+)
+```
+
+It does not have any parameters, so to add the constraint to the list simply use `constraint("nonneg")`, e.g.:
+
+```{r}
+cc <- list(
+   constraint("nonneg")
+)
+```
+
+#### Unimodality constraint {-}
+
+The unimodality constraint is used to force signals having only one peak (maximum). This can be particularly useful for constraining contribution profiles, e.g. when spectra came from a reaction and it is appriory known that concentration developing of components has one peak.
+
+The constraint works as follows. First it finds a global maximum in the signal. Then it goes along each side from the peak and checks if intensity of next point in the signal does not exceed the value of the previous one. If it does, constraint will replace the current value by the previous one.
+
+It is also possible to define a tolerance — value between 0 and 1, which allows taking into account small fluctuation of the intensity due to e.g. noise. Thus if tolerance is 0.05, then only when intensity of current point exceeds the intensity of the previous point by more than 5% it will trigger the constraint.
+
+The figure below shows how the constraint works using three signals — one with small extra peak on the left, one with small extra peak on the right and one unimodal signal. A small amount of noise was added to all signals. There are one original signal (gray) and two constrained signals on the plot. The red one shows the result for 0% tolerance and the blue one shows the result for 20% tolerance.
+
+```{r, echo = FALSE, fig.width = 9, fig.height = 9}
+x  <- 1:500
+y1 <- dnorm(x, m = 100, s = 20) * 0.8  + dnorm(x, m = 200, s = 10) * 0.2
+y2 <- dnorm(x, m = 100, s = 10) * 0.2  + dnorm(x, m = 200, s = 20) * 0.8
+y3 <- dnorm(x, m = 250, s = 20)
+y <- cbind(y1, y2, y3)
+y <- y + matrix(rnorm(length(y), 0, max(y) * 0.05), nrow(y), ncol(y))
+
+y.new1 <- constraintUnimod(y, NULL, tol = 0.0)
+y.new2 <- constraintUnimod(y, NULL, tol = 0.2)
+
+par(mfrow = c(3, 1))
+main = c("Small second peak on right", "Small second peak on left", "Unimodal")
+for (i in 1:3) {
+   mdaplotg(
+      list(
+         original = t(y[, i, drop = FALSE]),
+         "tol = 20%" = t(y.new2[, i, drop = FALSE]),
+         "tol = 0%" = t(y.new1[, i, drop = FALSE])
+      )
+      , type = "l", col = c("lightgray", mdaplot.getColors(2)), lwd = c(2, 1, 1), main = main[i])
+      abline(h = 0, lty = 3, xlab = "Observations")
+}
+```
+
+As we can see, because of the noise, the constrained profiles have negative values. In this case it makes sense to combine the unimodality and non-negativity constrains. The result of this combination is shown below.
+
+```{r, echo = FALSE, fig.width = 9, fig.height = 9}
+y.new1 <- constraintNonNegativity(constraintUnimod(y, NULL, tol = 0.0))
+y.new2 <- constraintNonNegativity(constraintUnimod(y, NULL, tol = 0.2))
+
+par(mfrow = c(3, 1))
+main = c("Small second peak on right", "Small second peak on left", "Unimodal")
+for (i in 1:3) {
+   mdaplotg(
+      list(
+         original = t(y[, i, drop = FALSE]),
+         "tol = 20%" = t(y.new2[, i, drop = FALSE]),
+         "tol = 0%" = t(y.new1[, i, drop = FALSE])
+      )
+      , type = "l", col = c("lightgray", mdaplot.getColors(2)), lwd = c(2, 1, 1), main = main[i])
+      abline(h = 0, lty = 3, xlab = "Observations")
+}
+```
+In order to add the constraint use `constraint("unimod")` for zero tolerance or `constraint("unimod", params = list(tol = 0.05))` for 5% tolerance. In the code chunck below you see how to create a set of unimodality and non-negativity constrains e.g. for contribution profiles
+
+```{r}
+cc <- list(
+   constraint("unimod", params = list(tol = 0.05)),
+   constraint("nonneg")
+)
+```
+
+#### Closure constraint {-}
+
+Closure constraint, like unimodality, is mostly applicable to the contribution profiles and aims at preserve the mass balance — so sum of the concetrations of pure components is constant. From that point of view the closure constraint can be thought of normalization made along the observations (or wavelength/wavenumbers in case of spectra) instead of along the components.
+
+The figure below shows how it works using contribution profiles of three components. The colored lines show the profiles and the black dashed line shows the sum of contributions for a given measurements.
+
+```{r, echo = FALSE, fig.width = 9, fig.height = 9}
+x  <- 1:50
+y1 <- x/10
+y2 <- 1 / (1 + exp(-(20 - x))) - (x - 20) / 100 + 0.5
+y3 <- max(y2) - y2 - (x - 20) / 100 + 0.5
+y <- cbind(y1, y2, y3)
+y <- y + matrix(rnorm(length(y), 0, max(y) * 0.01), nrow(y), ncol(y))
+
+y.new1 <- constraintClosure(y, NULL)
+y.new2 <- constraintClosure(y, NULL, sum = 10)
+
+col <- c(mdaplot.getColors(3), "black")
+lty = c(1, 1, 1, 2)
+legend = c("C1", "C2", "C3", "Sum")
+par(mfrow = c(3, 1))
+
+#! add title for plots
+mdaplotg(rbind(t(y), rowSums(y)), type = "l", col = col, lty = lty, xlab = "Observations",
+   legend = legend, main = "Original")
+mdaplotg(rbind(t(y.new1), rowSums(y.new1)), type = "l", col = col, lty = lty, xlab = "Observations",
+   legend = legend, main = "Constrained (sum = 1)")
+mdaplotg(rbind(t(y.new2), rowSums(y.new2)), type = "l", col = col, lty = lty, xlab = "Observations",
+   legend = legend, main = "Constrained (sum = 10)")
+```
+
+The top plot shows the original profiles. The middle plot shows the constrained profiles, where the closure constrained which limits sum of the contributions to one was applied. The bottom plot shows results for the constrains limited the sum to 10.
+
+As you can see in the last two plots, the dashed line show the constant desired value for all measurements. In order to add the constraint use `constraint("closure")` for unit sum or `constraint("closure", params = list(sum = 10))` for e.g. 10.
+
+
+#### Normalization constraint  {-}
+
+Normalization costraint aims at making spectra or contribution profiles of invididual components normalized. The normalization can be made by unit length, area or sum. For example, in case of sum normalization, sum of all values of each spectrum or contribution profile will be equal to one.
+
+An example below shows two original signals and the result of normalization of the signals to the unit area (so area under each curve is equal to one).
+
+```{r, echo = FALSE, fig.width = 9, fig.height = 7}
+x <- 1:100
+C1 <- dnorm(x, 50, 10) * 10
+C2 <- dnorm(x, 50, 20) * 20
+y <- cbind(C1, C2)
+y.new <- constraintNorm(y, NULL, type = "area")
+
+par(mfrow = c(2, 1))
+mdaplotg(t(y), type = "l", main = "Original")
+mdaplotg(t(y.new), type = "l", main = "Constrained to unit area")
+```
+
+The constrain can be added using `constraint("closure", params = list(type = "area"))`. The value for parameter `type` can be `"area"`, `"length"`, or `"sum"`
+
+#### Angle constraint  {-}
+
+Angle constraint allows to change a contrast among the contribution profiles or resolved spectra. The idea was proposed by Windig *at al* and all details can be found in [this paper](https://www.sciencedirect.com/science/article/pii/S0169743912000378).
+
+The constraint works as follows. First, mean spectrum or mean contribution profile are computed using the original data, $\mathbf{D}$. Then, on every iteration, a portion of the mean signal (e.g. 5%) is added, for example, to the resolved contributions. This will lead to smaller contrast among the contribution profiles but, at the same time, will increase the contrast for the resolved spectra. And vice versa, to increase the contrast among the resolved contribution profiles, the constraint should be applied to the spectra.
+
+The constraint can be added using `constraint("angle")`. By default the portion of mean to be added to the signals is 5% (0.05). To change this value to, e.g. 10%, use `constraint("angle", params = list(weight = 0.10))`.
+
+
+#### User defined constraints {-}
+
+We plan to implement more constraints gradually. However you do not need to wait and can use your own constraints, if necessary. This section shows how to do it step by step and how to combine user defined constraint with the implemented ones.
+
+Let's say, we want to add a random noise to our resolved spectra on each iteration (sounds very stupid, but let's use it just for fun in this example). So, first we need to create the constraint function. It should have two mandatory arguments: `x` which will take a current estimates of spectra or contributions and `d` which is original data used for resolving. There can be any number of  optional arguments, in our case we will use argument `noise.level` which will define a level of noise in percent of maximum value in `x`:
+
+Here is the function:
+
+```{r}
+# constraint function which adds random noise from normal distribution
+myConstraintFunction <- function(x, d, noise.level = 0.01) {
+   nr <- nrow(x)
+   nc <- ncol(x)
+   noise <- rnorm(nr * nc, mean = 0, sd = max(x) * noise.level)
+
+   return(x + matrix(noise, nr, nc))
+}
+```
+
+As you can see we use normal distribution for generating the noise, with zero mean and standard deviation equal to the 1% of maximum value by default. Load this function to the global environment by running this code.
+
+Next we need to create a constraint object, which will use this function, and set the required level of noise, like it is shown here (we take 2% instead of the default value of 1%):
+
+```{r}
+# create a constraint with noise level of 2%
+myConstraint = list(method = myConstraintFunction, params = list(noise.level = 0.02))
+class(myConstraint) = "constraint"
+```
+
+Next we need to define sets of constraints for contributions and for spectra by using lists, like we did for built in constraints, and add our manual constraint object to the list:
+
+```{r}
+# constraints for contributions
+cc = list(
+   constraint("norm", params = list(type = "sum"))
+)
+
+# constraints for spectra
+sc = list(
+   myConstraint,
+   constraint("norm", params = list(type = "length"))
+)
+```
+
+Finally, we just run the MCR-ALS algorithm and check the results. I will again seed the random number generator to make results reproducible.
+
+```{r, fig.width = 9, fig.height = 9}
+# run mcrals
+set.seed(6)
+m <- mcrals(carbs$D, ncomp = 3, cont.constraints = cc, spec.constraints = sc)
+
+# normalize the original spectra to unit length
+S = prep.norm(mda.t(carbs$S), "length")
+
+# get the resolved spectra and transpose them
+S.hat = mda.t(m$resspec)
+
+# define color and line width for the spectral curves
+col = c("red", "black")
+lwd = c(3, 1)
+
+# show the plots separately for each component and each result object
+par(mfrow = c(3, 1))
+for (a in 1:3) {
+   s = mda.subset(S, a)
+   s.hat = mda.subset(S.hat, a)
+   mdaplotg(list(orig = s, resolved = s.hat), type = "l", col = col, lwd = lwd)
+}
+```
+
+As you can see, even with this rather strange constraint the method works, although the resolved spectra are quite noisy. The presence of negative values in the resolved spectra is because we use normal distribution and the constraint is applied after the solver, which provides non-negative solution.
+
+### Initial estimates {-}
+
+As it was mentioned above, one can provide any initial estimates for the spectra as a matrix with size $J \times A$, where $A$ is the number of components and $J$ is number of variables (columns) in the original data. However, the matrix with provided values should not be singular, otherwise the algorithm will fail.
+
+In the example below we provide absolute values of PCA loadings as the initial estimates. No constraints are provided in this case for the sake of simplicity.
+
+```{r, fig.width = 9, fig.height = 4}
+m.pca = pca(carbs$D, ncomp = 3, center = FALSE)
+m = mcrals(carbs$D, ncomp = 3, spec.ini = abs(m.pca$loadings))
+
+plotSpectra(m)
+```
+
+### Overview of resolving process and results {-}
+
+The `mcrals()` also computes the explained variance, which can be shown using `plotVariance()` and `plotCumVariance()` functions. It also has `predict()` method which works similar to `mcrpure`. Some examples are shown below:
+
+```{r, fig.width = 9, fig.height = 5}
+
+# define constraints for contributions
+cc = list(
+   constraint("norm", params = list(type = "sum"))
+)
+
+# define constraints for spectra
+sc = list(
+   constraint("angle", params = list(weight = 0.05)),
+   constraint("norm", params = list(type = "length"))
+)
+
+# run MCR-ALS with the constraints
+set.seed(6)
+m = mcrals(carbs$D, ncomp = 3, spec.constraints = sc, cont.constraints = cc)
+
+# show summary
+summary(m)
+
+# make variance plots
+par(mfrow = c(1, 2))
+plotVariance(m)
+plotCumVariance(m)
+```
+
+Since MCR-ALS is iterative algorithm, it should stop when convergence criteria is met. There are two ways to stop MCR-ALS iterations in *mdatools*. First is a tolerance (`tol`) parameter, which tells a minimum difference in explained variance to make the algorithm continue. For example, if explained variance on previous step is 0.95467 and on the current step it is 0.95468, the difference is 0.00001 and the algorithm will continue if the tolerance is smaller than this value.
+
+Another way to limit the iterations is to define the maximum number by using parameter `max.iter`. By default is is set to 100. The `mcrals()` has a verbose mode which shows improvements in each iteration as it is demonstrated in the example below (we use the same constraint as in the previous chunk of code)
+
+```{r, echo = TRUE}
+m = mcrals(carbs$D, ncomp = 3, spec.constraints = sc, cont.constraints = cc, verbose = TRUE)
+```
