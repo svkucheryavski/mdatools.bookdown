@@ -1,5 +1,9 @@
 # Multivariate Curve Resolution  {-#mcr}
 
+```{r, echo = FALSE}
+library(mdatools)
+```
+
 Multivariate Curve Resolution (MCR) is a group of methods which can be used to solve the curve resolution problem in spectroscopy, which, in its general form, can be defined as follows. Let's say we have a mixture of $A$ chemical components (e.g. ribose, fructose and lactose). Every individual component is usually called a *pure* component. Every pure component $i$ has a spectrum (IR, NIR, Raman, etc.), which can be represented as a column vector $\mathbf{s}_i$, with size $J \times 1$, where $J$ is a number of values in each spectrum (corresponding to the number of wavelength, wavenumbers, chemical shifts, etc.).
 
 According to the [Beer-Lambert law](https://en.wikipedia.org/wiki/Beer–Lambert_law), if you mix the components into one mixture and take a spectrum of this mixture, the spectrum will be just a linear combination of the spectra of the pure components. This can be written as follows:
@@ -169,6 +173,26 @@ One of the ways to improve the result of resolution based on the purity approach
 ```
 
 Using the default settings (left plots) does not allow to get any meaningful solutions (you can notice, for example, negative peaks). However, tuning the offset value results in a very good outcome — the resolved spectra are very similar to the original ones (original spectra are not shown on the plots).
+
+### Providing indices of pure variables {-}
+
+Finally you can provide the indices of pure variables if you know them a priory. In this case the method will skip the first step and try to resolve the spectra based on the provided values, as shown in the example below.
+
+```{r, fig.width = 9, fig.height = 9}
+   data(simdata)
+   D <- simdata$spectra.c
+
+   m1 <- mcrpure(D, ncomp = 3)
+   m2 <- mcrpure(D, ncomp = 3, purevars = c(30, 130, 140))
+
+
+   par(mfrow = c(2, 1))
+   plotSpectra(m1)
+   plotSpectra(m2)
+
+   summary(m1)
+   summary(m2)
+```
 
 ## Alternating least squares {-#mcr--als}
 
@@ -506,6 +530,44 @@ m = mcrals(carbs$D, ncomp = 3, spec.ini = abs(m.pca$loadings))
 
 plotSpectra(m)
 ```
+
+### Forcing contribution and spectral values {-}
+
+Sometimes we know the exact concentration of components or their absence for given measurements. For example we may know the concentration of ingredients at the beginning of a reaction or measure concentration of reaction products at the end. Same for the spectra, e.g. we know wavenumbers or wavelength where no peaks are expected for a particular component. In order to provide this information we can let `mcrals()` force these values to be equal to zero. Actually it can be any number, but since the resolved contributions and spectral intensities are relative, you need to be careful with providing the non-zero values.
+
+In order to use this possibility you need to provide values for two parameters: `cont.forced` for the contributions and `spec.forced` for the spectra. For example if we resolve spectra and contributions for three component system and we do not expect presence of third component at the beginning of a reaction, we can set the values as follows:
+
+```{r, run = FALSE}
+cont.forced = matrix(NA, nrow(D), ncomp)
+cont.forced[1, 3] = 0
+```
+
+The first line in this chunk creates a matrix and fill it with missing (`NA`) values. The matrix has the same dimension as future matrix with resolved contributions — same number of rows as the matrix with mixtures, `D`, and same number of columns as the expected number of pure components.
+
+After that, we set a value at the first row and the third column to zero. Which means "force concentration of the third component for the first observation to zero". Inside the ALS loop, on every iteration  the `mcrals()` method will replace the resolved concentration with the provided value.
+
+Here is an example, based on the carbs data we used before. In this case I add the pure spectra on top of the matrix with mixtures. And since these are spectra of pure components, I know that the spectrum for the first observation does not contain any of C2 and C3, the second observation does not contain C1 and C3 and, finally, the third observation does not contain C1 and C2. Here is how to do this:
+
+```{r}
+ncomp <- 3
+Dplus <- mda.rbind(mda.t(carbs$S), carbs$D)
+
+cont.forced = matrix(NA, nrow(Dplus), ncomp)
+cont.forced[1, ] = c(NA, 0, 0)
+cont.forced[2, ] = c(0, NA, 0)
+cont.forced[3, ] = c(0, 0, NA)
+
+m <- mcrals(Dplus, ncomp = ncomp, cont.forced = cont.forced)
+```
+
+Here are the resolved contributions:
+
+```{r}
+show(head(m$rescont))
+```
+
+As one can see, the ones we forced to be zero, are either zeros or just very small numbers. Forcing the spectral values works in a similar way.
+
 
 ### Overview of resolving process and results {-}
 

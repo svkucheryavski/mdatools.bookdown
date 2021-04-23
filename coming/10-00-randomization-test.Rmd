@@ -1,2 +1,0 @@
-# Randomization test for PLS {-}
-

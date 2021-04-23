@@ -1,6 +1,10 @@
 # Interval PLS  {-#ipls}
 
-Interval PLS (iPLS) is a variable selection method used mostly for spectroscopic data [proposed](https://doi.org/10.1366/0003702001949500) by Lars Noergaard *at al* in 2000. The main idea is try different parts (or intervals — hence the name) of spectra and their combinations to find the most relevant for prediction of a response variable. There are two algorithms — forward and backward.
+```{r, echo = FALSE}
+library(mdatools)
+```
+
+Interval PLS (iPLS) is a variable selection method used mostly for spectroscopic data [proposed](https://doi.org/10.1366/0003702001949500) by Lars Noergaard *at al* in 2000. The main idea is try different parts (or intervals — hence the name) of spectra and their combinations to find the most relevant for prediction of a response variable. There are two algorithms — forward and backward.
 
 ### Forward iPLS {-}
 
@@ -64,6 +68,25 @@ Also the model object contains the initial global model for full data (`m$gm`) a
 par(mfrow = c(1, 2))
 plotRMSE(m$gm)
 plotRMSE(m$om)
+```
+
+### Using test set for validation {-}
+
+Although iPLS was developed for using with cross-validation, sometimes, especially if dataset is large, it can give very large computational time. In this case you can provide test set for validation instead. The syntax and the parameter names are similar to test validation in `pls()`. Here is an example:
+
+```{r}
+data(simdata)
+X = simdata$spectra.c
+y = simdata$conc.c[, 2, drop = FALSE]
+
+X.t = simdata$spectra.t
+y.t = simdata$conc.t[, 2, drop = FALSE]
+m = ipls(X, y, glob.ncomp = 4, int.num = 15, x.test = X.t, y.test = y.t)
+
+```
+
+```{r, fig.width = 9, fig.height = 5}
+plot(m)
 ```
 
 ### Backward iPLS {-}

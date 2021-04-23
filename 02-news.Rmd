@@ -1,5 +1,14 @@
 # What is new {-#news}
 
+**23.04.2021**
+
+Added description of new features added in v. 0.11.4:
+
+* using test set validation in [iPLS](#ipls).
+* possibility to force selected contribution and spectral values in [MCR-ALS](#mcr--als).
+* added information about how to provide user defined indices for pure variables in [Purity method](#mcr--purity)
+* added link to relevant paper in the [PCA model complexity](#pca--model-complexity) section
+
 **22.01.2021**
 
 * added section about [Procrustes cross-validation](#pca--pcv) for PCA, which was recently added to the package (v. 0.11.3).

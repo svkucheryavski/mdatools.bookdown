@@ -448,7 +448,7 @@ This option will work only if plot is made for one result object.
 
 ## Model complexity {-#pca--model-complexity}
 
-Complexity of PCA model is first of all associated with selection of proper (optimal) number of components. The optimal number should explain the systematic variation of the data points and keep the random variation uncaptured. Traditionally, number of components is selected by investigation of eigenvalues or looking at plot with residual or explained variance. However, this is quite complicated issue and result of selection depends very much on quality of data and purpose PCA model is built for. More details can be found in [this paper](https://chemrxiv.org/articles/preprint/Efficient_PCA-Exploration_of_High-Dimensional_Datasets/13340711).
+Complexity of PCA model is first of all associated with selection of proper (optimal) number of components. The optimal number should explain the systematic variation of the data points and keep the random variation uncaptured. Traditionally, number of components is selected by investigation of eigenvalues or looking at plot with residual or explained variance. However, this is quite complicated issue and result of selection depends very much on quality of data and purpose PCA model is built for. More details can be found in [this paper](https://doi.org/10.1016/j.chemolab.2021.104304).
 
 In *mdatools* there are several additional instruments both to select proper number of components as well as to see if, for example, new data (test set or new set of measurements) are well fitted by the model.
 
