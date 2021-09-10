@@ -341,15 +341,16 @@ y.new2 <- constraintUnimod(y, NULL, tol = 0.2)
 
 par(mfrow = c(3, 1))
 main = c("Small second peak on right", "Small second peak on left", "Unimodal")
-for (i in 1:3) {
+for (i in 1:3) {
    mdaplotg(
       list(
          original = t(y[, i, drop = FALSE]),
          "tol = 20%" = t(y.new2[, i, drop = FALSE]),
          "tol = 0%" = t(y.new1[, i, drop = FALSE])
       )
-      , type = "l", col = c("lightgray", mdaplot.getColors(2)), lwd = c(2, 1, 1), main = main[i])
-      abline(h = 0, lty = 3, xlab = "Observations")
+      , type = "l", col = c("lightgray", mdaplot.getColors(2)), lwd = c(2, 1, 1), main = main[i]
+   )
+   abline(h = 0, lty = 3, xlab = "Observations")
 }
 ```
 
@@ -361,7 +362,7 @@ y.new2 <- constraintNonNegativity(constraintUnimod(y, NULL, tol = 0.2))
 
 par(mfrow = c(3, 1))
 main = c("Small second peak on right", "Small second peak on left", "Unimodal")
-for (i in 1:3) {
+for (i in 1:3) {
    mdaplotg(
       list(
          original = t(y[, i, drop = FALSE]),

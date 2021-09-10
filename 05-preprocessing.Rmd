@@ -1,0 +1,318 @@
+# Preprocessing {-#preprocessing}
+
+The package has several preprocessing methods implemented, mostly for different kinds of spectral data. All functions for preprocessing starts from prefix `prep.` which makes them easier to find by using code completion. In this chapter a brief description of the methods with several examples will be shown.
+
+## Autoscaling {--#preprocessing--autoscaling}
+
+*Autoscaling* consists of two steps. First step is *centering* (or, more precise, *mean centering*) when center of a data cloud in variable space is moved to an origin. Mathematically it is done by subtracting mean from the data values separately for every column/variable. Second step is *scaling* og *standardization* when data values are divided to standard deviation so the variables have unit variance. This autoscaling procedure (both steps) is known in statistics simply as *standardization*. You can also use arbitrary values to center or/and scale the data, in this case use sequence or vector with these values should be provided as an argument for `center` or `scale`.
+
+R has a built-in function for centering and scaling, `scale()`. The method `prep.autoscale()` is actually a wrapper for this function, which is mostly needed to set all user defined attributes to the result (all preprocessing methods will keep the attributes). Here are some examples how to use it:
+
+```{r, fig.width = 9, fig.height = 9}
+library(mdatools)
+
+# load People data
+data(people)
+
+# mean centering only
+data1 = prep.autoscale(people, center = TRUE, scale = FALSE)
+
+# scaling/standardization only
+data2 = prep.autoscale(people, center = FALSE, scale = TRUE)
+
+# autoscaling (mean centering and standardization)
+data3 = prep.autoscale(people, center = TRUE, scale = TRUE)
+
+# centering with median values and standardization
+data4 = prep.autoscale(people, center = apply(people, 2, median), scale = TRUE)
+
+par(mfrow = c(2, 2))
+boxplot(data1, main = "Mean centered")
+boxplot(data2, main = "Standardized")
+boxplot(data3, main = "Mean centered and standardized")
+boxplot(data4, main = "Median centered and standardized")
+```
+
+The method has also an additional parameter `max.cov` which allows to avoid scaling of variables with zero or very low variation. The parameter defines a limit for coefficient of variation in percent `sd(x) / m(x) * 100` and the method will not scale variables with coefficient of variation below this limit. Default value for the parameter is 0 which will prevent scaling of constant variables (which is leading to `Inf` values).
+
+## Correction of spectral baseline {-#preprocessing--baseline}
+
+[Baseline correction methods](https://www.youtube.com/watch?v=U5aNxOd3GV8&list=PLvj_I3WjHa3PHNUWrqZRmu4futCMEGGqi&index=3) include Standard Normal Variate (SNV), Multiplicative Scatter
+Correction (MSC) and correction of baseline with Asymmetric Least Squares (ALS). SNV is a very simple procedure aiming first of all at remove additive and multiplicative scatter effects from Vis/NIR spectra as well as correct the global intensity effect. It is applied to every individual spectrum by subtracting its average and dividing its standard deviation from all spectral values. Here is an example:
+
+```{r, fig.width = 9, fig.height = 9}
+
+# load UV/Vis spectra from Simdata
+data(simdata)
+ospectra = simdata$spectra.c
+attr(ospectra, "xaxis.values") = simdata$wavelength
+attr(ospectra, "xaxis.name") = "Wavelength, nm"
+
+# apply SNV and show the spectra
+pspectra = prep.snv(ospectra)
+
+par(mfrow = c(2, 1))
+mdaplot(ospectra, type = "l", main = "Original")
+mdaplot(pspectra, type = "l", main = "after SNV")
+```
+
+Multiplicative Scatter Correction does similar job but in a different way. First it calculates a mean spectrum for the whole set (mean spectrum can be also provided as an extra argument). Then, for each individual spectrum, it makes a line fit for the spectral values and the mean spectrum. The coefficients of the line, intercept and slope, are used to correct the additive and multiplicative effects correspondingly.
+
+The `prep.msc()` function adds the mean spectrum calculated for the original spectral data, to the attributes of the results, so it can be reused later.
+
+```{r, fig.width = 9, fig.height = 9}
+# apply MSC and and get the preprocessed spectra
+pspectra = prep.msc(ospectra)
+
+# show the result
+par(mfrow = c(2, 1))
+mdaplot(ospectra, type = "l", main = "Original")
+mdaplot(pspectra, type = "l", main = "after MSC")
+```
+
+### Baseline correction with asymmetric least squares {-}
+
+Asymmetric least squares (ALS) baseline correction allows you to correct baseline issues, which have wider shape comparing to the characteristic peaks. It can be used for example to correct the fluorescence effect in Raman spectra.
+
+The method is based on Whittaker smoother and was proposed in [this paper](https://www.researchgate.net/publication/228961729_Baseline_Correction_with_Asymmetric_Least_Squares_Smoothing). It is implemented as a function `prep.alsbasecorr()`, which has two main parameters  — power of a penalty parameter
+(`plambda`, usually varies betwen 2 and 9) and the ratio of asymmetry (`p`, usually between 0.1 and 0.001). For example, if `plambda = 5`, the penalty parameter $\lambda$, described in the paper will be equal to $10^5$.
+
+The choice of the parameters depends on how broad the disturbances of the baseline are and how narrow the original spectral peaks are. In the example below we took original spectra from the `carbs` dataset, add baseline disturbance using broad Gaussian peaks and then tried to remove the disturbance by applying the `prep.alsbasecorr()`. The result is shown in form of plots.
+
+```{r, fig.width = 9, fig.height = 12}
+library(mdatools)
+data(carbs)
+
+# take original spectra from carbs dataset
+x <- t(carbs$S)
+
+# add disturbance to the baseline by using broad Gaussian peaks
+y <- x + rbind(
+   dnorm(1:ncol(x), 750, 200) * 10000,
+   dnorm(1:ncol(x), 750, 100) * 10000,
+   dnorm(1:ncol(x), 500, 100) * 10000
+)
+
+# preprocess the disturbed spectra using ALS baseline correction
+y.new <- prep.alsbasecorr(y, plambda = 5, p = 0.01)
+
+# show the original, disturbed and the preprocessed spectra separately for each component
+par(mfrow = c(3, 1))
+for (i in 1:3) {
+   mdaplotg(list(
+      original = x[i, , drop = FALSE],
+      disturbed = y[i, , drop = FALSE],
+      preprocessed = y.new[i, , drop = FALSE]
+      ), type = "l", lty = c(2, 1, 1), col = c("black", "red", "blue"),
+      main = paste("Pure component #", i)
+   )
+}
+```
+
+As one can notice, the blue curves with corrected spectra are pretty similar to the original spectra shown as dashed black curves.
+
+## Smoothing and derivatives {-#preprocessing--savgol}
+
+Savitzky-Golay filter is used to smooth signals and calculate derivatives. The filter has three arguments: a width of the filter (`width`), a polynomial order (`porder`) and the derivative order (`dorder`). If the derivative order is zero (default value) only smoothing will be performed.
+
+The next chunk of code takes the spectra from *Simdata*, adds additional random noise using random numbers generator for normal distribution and then applies the SG filter with different settings. The results are shown as plots under the chunk.
+
+```{r, fig.width = 9, fig.height = 9}
+
+# load UV/Vis spectra from Simdata
+data(simdata)
+ospectra = simdata$spectra.c
+attr(ospectra, "xaxis.values") = simdata$wavelength
+attr(ospectra, "xaxis.name") = "Wavelength, nm"
+
+# add random noise to the spectra
+nspectra = ospectra + 0.025 * matrix(rnorm(length(ospectra)), dim(ospectra))
+
+# apply SG filter for smoothing
+pspectra = prep.savgol(nspectra, width = 15, porder = 1)
+
+# apply SG filter for smoothing and take a first derivative
+dpspectra = prep.savgol(nspectra, width = 15, porder = 1, dorder = 1)
+
+# show results
+par(mfrow = c(2, 2))
+mdaplot(ospectra, type = "l", main = "Original")
+mdaplot(nspectra, type = "l", main = "Noise added")
+mdaplot(pspectra, type = "l", main = "Smoothing")
+mdaplot(dpspectra, type = "l",main = "First derivative")
+```
+
+Starting from *v.0.12.0* the algorithm has been modified in order to treat the end points better (for example, when a derivative is taken the end points may look a bit weird and have to be truncated). The implemented algorithm is based on the method described in [this article](https://pubs.acs.org/doi/abs/10.1021/ac00205a007).
+
+
+## Element wise transformations {-#preprocessing--eltransform}
+
+Function `prep.transform()` allows you to apply element wise transformation --- when the same transformation function is being applied to each element (each value) of the data matrix. This can be used, for example, in case of regression, when it is necessary to apply transformations which remove a non-linear relationship between predictors and responses.
+
+Often such transformation is either a logarithmic or a power. We can of course just apply a built-in R function e.g. `log()` or `sqrt()`, however in this case all additional attributes will be dropped in the preprocessed data. In order to tackle this and, also, to give a possibility for combining different preprocessing methods together, you can use a function `prep.transform()` for this purpose.
+
+The syntax of the function is following: `prep.transform(data, fun, ...)`, where `data` is a matrix with the original data values, you want to preprocess (transform), `fun` is a reference to transformation function and `...` are optional additional arguments for the function. You can provide either one of the R functions, which are element wise (meaning the function is being applied to each element of a matrix), such as `log`, `exp`, `sqrt`, etc. or define your own function.
+
+Here is an example:
+
+```{r}
+# create a matrix with 3 variables (skewed random values)
+X <- cbind(
+   exp(rnorm(100, 5, 1)),
+   exp(rnorm(100, 5, 1)) + 100 ,
+   exp(rnorm(100, 5, 1)) + 200
+)
+
+# apply log transformation using built in "log" function
+Y1 <- prep.transform(X, log)
+
+# apply power transformation using manual function with additional argument
+Y2 <- prep.transform(X, function(x, p) x^p, p = 0.2)
+
+# show boxplots for the original and the transformed data
+par(mfrow = c(1,3))
+boxplot(X, main = "Original values")
+boxplot(Y1, main = "Preprocessed (log)")
+boxplot(Y2, main = "Preprocessed (power)")
+```
+
+As already mentioned, the `prep.transform()` preserves all additional attributes, e.g. names and values for axes, excluded columns or rows, etc. Here is another example demonstrating this:
+
+```{r, fig.width=9, fig.height=9}
+
+# generate two curves using sin() and cos() and add some attributes
+t <- (-31:31)/10
+X <- rbind(sin(t), cos(t))
+rownames(X) <- c("s1", "s2")
+
+# we make x-axis values as time, which span a range from 0 to 620 seconds
+attr(X, "xaxis.name") <- "Time, s"
+attr(X, "xaxis.values") <- (t * 10 + 31) * 10
+attr(X, "name") <- "Time series"
+
+# transform the dataset using squared transformation
+Y <- prep.transform(X, function(x) x^2)
+
+# show plots for the original and the transformed data
+par(mfrow = c(2, 1))
+mdaplotg(X, type = "l")
+mdaplotg(Y, type = "l")
+```
+
+Notice, that the x-axis values for the original and the transformed data (which we defined using corresponding attribute) are the same.
+
+## Variable selection as preprocessing method {-#preprocessing--varsel}
+
+Variable selection can be done by using `mda.exclcols()`, which simply hides variables/columns, which must not be taken into account in calculations, or by `mda.subset()` which selects only desired columns and remove the rest. Both methods preserve all additional attributes assigned to the data.
+
+The method `prep.varsel()` is simply a wrapper, which allows selection of only desired variables (similar to `mda.subset()`) but can be also incorporated into preprocessing workflow (see next section for details). In the example below it is used to select only even columns from the data matrix.
+
+```{r, fig.width=9, fig.height=9}
+
+# load spectra from the Simdata and add some attributed
+data(simdata)
+X <- simdata$spectra.c
+attr(X, "xaxis.values") <- simdata$wavelength
+attr(X, "xaxis.name") <- "Wavelength, nm"
+attr(X, "name") <- "Simdata"
+
+# apply variable selection as preprocessing
+Y <- prep.varsel(X, seq(2, ncol(X), by = 2))
+
+# show both original and preprocessed spectra
+par(mfrow = c(2, 1))
+mdaplot(X, type = "l")
+mdaplot(Y, type = "l")
+```
+
+You can notice that on the second plot the lines are not smooth anymore as the number of points is twice smaller.
+
+
+## Combining methods together {-#preprocessing-combine}
+
+From *v.0.12.0* it is possible to combine several preprocessing methods and their parameters into one R object (list) and then apply them all at once in a correct order. This is particularly useful when you create a model based on a preprocessed calibration set and then want to apply the model to a new data. Which means the new data must be preprocessed in the same way as the data you used to create the model. The new functionality makes this easier.
+
+First of all, you can see the list of preprocessing methods available for this feature as well as all necessary information about them if you run `prep.list()` as shown below:
+
+```{r}
+prep.list()
+```
+
+What you need to know is the name of the method and which parameters you can or want to provide (if you do not specify any parameters, default values will be used instead).
+
+Let's start with a simple example, where we want to take spectra from *Simdata*, and, first of all, apply Savitzky-Golay with filter width = 5, polynomial degree = 2 and derivative order = 1. Then we want to normalize them using SNV and get rid of all spectral values from 300 nm and above. Here is how to make a preprocessing object for this sequence:
+
+```{r}
+data(simdata)
+w <- simdata$wavelength
+
+myprep <- list(
+   prep("savgol", list(width = 5, porder = 2, dorder = 1)),
+   prep("snv"),
+   prep("varsel", list(var.ind = w < 300))
+)
+```
+
+
+Now you can apply the whole sequence to any spectral data by using function `employ.prep()`:
+
+```{r, fig.width=9, fig.height=9}
+Xc <- simdata$spectra.c
+attr(Xc, "xaxis.values") <- w
+attr(Xc, "xaxis.name") <- "Wavelength, nm"
+
+Xcp <- employ.prep(myprep, Xc)
+
+par(mfrow = c(2, 1))
+mdaplot(Xc, type = "l", xlim = c(200, 350))
+mdaplot(Xcp, type = "l", xlim = c(200, 350))
+```
+
+Now let's consider another example, where we have a calibration set and a test set. We need to create preprocessing sequence for the calibration set and, let's say, we ended up with the following sequence:
+
+* Reflectance to absorbance transformation
+* MSC correction
+* Normalization to unit area
+* Removing the part with wavelength > 300 nm
+
+We have two issues here. First of all, there is no implemented method which allows you to convert reflectance spectra to absorbance (log(1/R)). Second is that MSC relies on a mean spectrum, it must be computed for the calibration set and then be re-used when apply the correction to a new data. Here is how to solve both:
+
+```{r, fig.width=9, fig.height=9}
+# define calibration and test sets
+Xc <- simdata$spectra.c
+Xt <- simdata$spectra.t
+w <- simdata$wavelength
+attr(Xt, "xaxis.values") <- attr(Xc, "xaxis.values") <- w
+attr(Xt, "xaxis.name") <- attr(Xc, "xaxis.name") <- "Wavelength, nm"
+
+
+# create a function for converting R to A
+r2a <- function(data) return(log(1/abs(data)))
+
+# compute mean spectrum for calibration set
+ms <- apply(Xc, 2, mean)
+
+# create a sequence of preprocessing methods
+myprep <- list(
+   prep("r2a", method = r2a),
+   prep("msc", list(mspectrum = ms)),
+   prep("norm", list(type = "area")),
+   prep("varsel", list(var.ind = w < 300))
+)
+
+Xcp <- employ.prep(myprep, Xc)
+Xtp <- employ.prep(myprep, Xt)
+
+par(mfrow = c(2, 2))
+mdaplot(Xc, type = "l", main = "Calibration set, raw")
+mdaplot(Xt, type = "l", main = "Test set, raw")
+mdaplot(Xcp, type = "l", main = "Calibration set, preprocessed")
+mdaplot(Xtp, type = "l", main = "Test set, preprocessed")
+```
+
+In this example I use `abs()` inside the function `r2a` to get rid of occasional negative values in the spectra caused by some noise.
+
+As one can see, you can always define your own method by creating a function, whose first argument should always be `data` — like I did it with `r2a`. This function should treat the data as a matrix and return a matrix of the same dimension as the original data. Other parameters are optional.  In my example `r2a` does not have any additional parameters therefore I skipped this argument when calling the `prep()` function.
+
+And, as you probably notices, I just provided preliminary computed mean spectrum for the `"msc"` method. Now the object `myprep` can be saved together with a model to `RData` file and be reused when is needed.
+

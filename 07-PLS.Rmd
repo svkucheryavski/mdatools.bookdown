@@ -458,11 +458,11 @@ outliers = which(categorize(m, m$res$cal) == "outlier")
 
 # keep data for outliers in separate matrices
 Xo = X[outliers, , drop = FALSE]
-yo = y[outliers, drop = FALSE]
+yo = y[outliers, , drop = FALSE]
 
 # remove the rows with outliers from the data
 X = X[-outliers, , drop = FALSE]
-y = y[-outliers, drop = FALSE]
+y = y[-outliers, , drop = FALSE]
 
 # make a new model for oulier free data
 m = pls(X, y, 10, scale = TRUE, cv = 1, lim.type = "ddrobust")
@@ -482,7 +482,7 @@ plotXYResiduals(m, res = list("cal" = m$res$cal, "out" = res))
 The two objects seem now even more extreme for the model built using the outliers free data, no need to have them back. So we just need to make a final model and look at it:
 
 ```{r, fig.width = 9, fig.height = 9}
-# make a new model for oulier free data and explore it
+# make a new model for outlier free data and explore it
 m = pls(X, y, 10, scale = TRUE, cv = 1, lim.type = "ddmoments")
 summary(m)
 
@@ -498,7 +498,7 @@ plotPredictions(m)
 
 Another additional option for PLS regression implemented in *mdatools* is randomization test for estimation of optimal number of components. The description of the method can be found in [this paper](https://onlinelibrary.wiley.com/doi/10.1002/cem.1086). The basic idea is that for each component from 1 to `ncomp` we compute a statistic $T$, which is a covariance between X-scores and the reference Y values. After that, this procedure is repeated for randomly permuted Y-values and distribution of the statistic is obtained. A parameter `alpha` is computed to show how often the statistic $T$, calculated for permuted Y-values, is the same or higher than the same statistic, calculated for original response values without permutations.
 
-If a component is important, then the covariance for unpermuted data should be larger than the covariance for permuted data and therefore the value for `alpha` will be quite small (there is still a small chance to get similar covariance). This makes `alpha` very similar to p-value in a statistical test.
+If a component is important, then the covariance for non-permuted data should be larger than the covariance for permuted data and therefore the value for `alpha` will be quite small (there is still a small chance to get similar covariance). This makes `alpha` very similar to p-value in a statistical test.
 
 The function `randtest()` calculates alpha for each component, the values can be observed using `summary()` or `plot()` functions. There are also several functions, allowing e.g. to show distribution of statistics and the critical value for each component.
 

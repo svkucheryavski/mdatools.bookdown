@@ -4,7 +4,7 @@ In this chapter we will discuss how to use PCA method implemented in the *mdatoo
 
 Principal component analysis is one of the methods that decompose a data matrix $\mathbf{X}$ into a combination of three matrices: $\mathbf{X} = \mathbf{TP}^\mathrm{T} + \mathbf{E}$. Here $\mathbf{P}$ is a matrix with unit vectors, defined in the original variables space. The unit vectors, also known as *loadings*, form a new basis — *principal components*. The components are mutually orthogonal and oriented in variable space to capture direction of maximum variation of data points.
 
-The data points are being projected to the principal components. Coordinates of these projections in principal component space, known as *scores*, forming matrix  $\mathbf{T} = \mathbf{XP}$. Product of scores and loadings, $\mathbf{TP}^\mathrm{T}$ gives coordinates of the projections in the original variable space. Matrix $\mathbf{E}$ contains residuals — difference between position of projected data points and their original locations. This diffence is a part of data variation, which PCA model does not capture, hence the name.
+The data points are being projected to the principal components. Coordinates of these projections in principal component space, known as *scores*, forming matrix  $\mathbf{T} = \mathbf{XP}$. Product of scores and loadings, $\mathbf{TP}^\mathrm{T}$ gives coordinates of the projections in the original variable space. Matrix $\mathbf{E}$ contains residuals — difference between position of projected data points and their original locations. This difference is a part of data variation, which PCA model does not capture, hence the name.
 
 If original data matrix has $I$ rows (observations, objects) and $J$ variables and PCA decomposition is made with $A$ components, then matrix $\mathbf{P}$ will have dimension $J\times A$, matrix $\mathbf{T}$ — $I\times A$, and $\mathbf{TP}^\mathrm{T}$ and $\mathbf{E}$ will have the same dimension as the original data matrix, $\mathbf{X}$.
 
@@ -148,7 +148,7 @@ mdaplot(m$res$cal$scores, type = "p", show.labels = TRUE, show.lines = c(0, 0))
 mdaplot(m$loadings, type = "p", show.labels = TRUE, show.lines = c(0, 0))
 ```
 
-To simplify this routine, every model and result class also has a number of functions for visualization. Thus for PCA the function list includes scores and loadings plots, explained variance and cumulative explained variance plots, distance/reduals plots, and many others.
+To simplify this routine, every model and result class also has a number of functions for visualization. Thus for PCA the function list includes scores and loadings plots, explained variance and cumulative explained variance plots, distance/residuals plots, and many others.
 
 A function that does the same for different models and results has always the same name. For example, `plotPredictions` will show predicted vs. measured plot for PLS model and PLS result, MLR model and MLR result, SIMCA model and SIMCA result, and so on, although the plot itself will be quite different. The first argument must always be either a model or a result object.
 
@@ -254,7 +254,7 @@ imshow(m$res$cal$Q, 2)
 
 As it was discussed in the previous chapter, you can specify a special attribute, `"xaxis.values"` to a dataset, which will be used as manual x-values in bar and line plots. When we create any model and/or results the most important attributes, including this one, are inherited. For example when you make a loading line plot it will be shown using the attribute values.
 
-Here is an example that demonstrate this feature using PCA decomposition of the Simdata (UV/Vis spectra).
+Here is an example that demonstrate this feature using PCA decomposition of the *Simdata* (UV/Vis spectra).
 
 ```{r, fig.width = 9, fig.height = 5}
 data(simdata)
@@ -473,7 +473,7 @@ As you can see from the plots, second component explains less than 1% of varianc
 
 In case if outliers present it can be useful to investigate the plot for $N_q$ using classical and robust methods for estimation as shown in example below.
 
-```{r}
+```{r, fig.width = 9, fig.height = 5}
 m = pca(Xc, 6)
 
 par(mfrow = c(1, 2))
@@ -590,7 +590,7 @@ pvset <- pcv(X, ncomp, nseg, scale)
 
 Here `X` is your calibration set (as a numerical matrix), `ncomp` is a number of principal components for PCA decomposition (use at lease enough to explain 95-99% of variation of the data values), `nseg` is the number of segments for cross-validation procedure. So far only systematic cross-validation (venetian blinds) is supported, so make sure that rows of `X` are sorted correctly or shuffled. Parameter `scale` allows to standardize your data prior to the generation, which is useful if your variables have different nature and/or units. The generated data will be unscaled though.
 
-The code below show an example, where we generate pseudo-validation set for spectra from the Simdata. The plots show spectra from both sets.
+The code below show an example, where we generate pseudo-validation set for spectra from the *Simdata*. The plots show spectra from both sets.
 
 ```{r, fig.width = 9, fig.height = 9}
 data(simdata)
@@ -605,7 +605,7 @@ mdaplot(spectra, type = "l", main = "Original")
 mdaplot(spectra_pv, type = "l", main = "Pseudo-validation")
 ```
 
-On one hand, the plots seem very similar, almost identical. However this is not true. Let's use the generated pseudo-validation set as a test set. For example, we can make an Extreme plot and find out that fourth component leads to overfited model. Note, that if we make this plot for the calibration set (left), we do not see any signs of overfitting.
+On one hand, the plots seem very similar, almost identical. However this is not true. Let's use the generated pseudo-validation set as a test set. For example, we can make an Extreme plot and find out that fourth component leads to overfitted model. Note, that if we make this plot for the calibration set (left), we do not see any signs of overfitting.
 
 ```{r, fig.width = 9, fig.height = 5}
 # make PCA model for calibration set
