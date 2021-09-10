@@ -37,7 +37,7 @@ any model can be cross-validated or validated with a test set. The model object 
 The package includes classes and functions for analysis, preprocessing and plotting data and results. So far the following methods for analysis are implemented:
 
 * Principal Component Analysis (PCA)
-* Soft Independent Modelling of Class Analogy (SIMCA), including data driven approach (DD-DIMCA)
+* Soft Independent Modelling of Class Analogy (SIMCA), including data driven approach (DD-SIMCA)
 * Partial Least Squares regression (PLS) with calculation of VIP scores and Selectivity ratio
 * Partial Least Squares Discriminant Analysis (PLS-DA)
 * Randomization test for PLS regression models
@@ -52,9 +52,10 @@ Preprocessing methods include:
 * Savitzky-Golay filter for smoothing and derivatives
 * Standard Normal Variate for removing scatter and global intensity effect from spectral data
 * Mutliplicative Scatter Correction for the same issue
-* Normalization of spectra to unit area or unit length
+* Normalization of spectra to unit area, unit length, unit sum, unit area under given range.
 * Baseline correction with asymmetric least squares
 * Kubelka-Munk transformation
+* Element wise transformations (`log`, `sqrt`, power, etc.)
 
 Besides that, some extensions for the basic R plotting functionality have been also implemented and
 allow to do the following:
@@ -70,11 +71,11 @@ See `?mdatools` and next chapters for more details.
 
 ## How to install {-#overview--how-to-install}
 
-The package is available from CRAN by usual installing procedure. However due to restrictions in CRAN politics regarding number of submissions (once in 3-4 month) not all releases will be published there. To get the latest release please use GitHub sources. You can either [download](https://github.com/svkucheryavski/mdatools/releases) a zip-file with the source package and install it using the `install.packages` command, e.g. if the downloaded file is `mdatools_0.11.4.tar.gz` and it is located in a current working directory,
+The package is available from CRAN by usual installing procedure. However due to restrictions in CRAN politics regarding number of submissions (once in 3-4 month) not all releases will be published there. To get the latest release please use GitHub sources. You can either [download](https://github.com/svkucheryavski/mdatools/releases) a zip-file with the source package and install it using the `install.packages` command, e.g. if the downloaded file is `mdatools_0.12.0.tar.gz` and it is located in a current working directory,
 just run the following:
 
 ```r
-install.packages("mdatools_0.11.4.tar.gz")
+install.packages("mdatools_0.12.0.tar.gz")
 ```
 
 If you have `devtools` package installed, the following command will install the latest release from

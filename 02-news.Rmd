@@ -1,5 +1,16 @@
 # What is new {-#news}
 
+**12.09.2021**
+
+Added description of new features appeared in v. 0.12.0 of the package, including:
+
+* new preprocessing methods `prep.transform()`, `prep.varsel()`.
+* improvements to `prep.savgol()` and `prep.norm()`.
+* a possibility to combine several preprocessing method together and apply at once.
+
+In addition to that, text for [Datasets](#datasets) chapter has been revised to provide more clear guides while the part about preprocessing was detached and now is available as [separate chapter](#preprocessing) where
+you can find all details. Description of ALS baseline correction was moved to the section [Correction of baseline](#preprocessing--baseline).
+
 **23.04.2021**
 
 Added description of new features added in v. 0.11.4:
@@ -20,7 +31,7 @@ Added description of new features added in v. 0.11.4:
 **12.07.2020**
 
 * added chapters about [MCR methods](#mcr) implemented in v. 0.11.0.
-* added [description](#prep--alsbasecorr) of new preprocessing methods `prep.alsbasecorr()`
+* added [description](#preprocessing--baseline) of new preprocessing methods `prep.alsbasecorr()`
 * several small improvements in text
 
 **02.03.2020**
