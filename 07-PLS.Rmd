@@ -252,7 +252,7 @@ The excluded columns are not used for any calculations either, the corresponding
 
 ## Variable selection {-#pls--variable-selection}
 
-PLS allows to calculate several statistics, which can be used to select most important (or remove least important) variables in order to improve performance and make model simpler. The first two are VIP-scores (variables important for projection) and Selectivity ratio. All details and theory can be found e.g. [here](http://onlinelibrary.wiley.com/store/10.1002/cem.1360/).
+PLS allows to calculate several statistics, which can be used to select most important (or remove least important) variables in order to improve performance and make model simpler. The first two are VIP-scores (variables important for projection) and Selectivity ratio. All details and theory can be found e.g. [here](https://doi.org/10.1002/cem.1360).
 
 Both parameters can be shown as plots and as vector of values for a selected y-variable. Take into account that when you make a plot for VIP scores or Selectivity ratio, the corresponding values should be computed first, which can take some time for large datasets.
 
