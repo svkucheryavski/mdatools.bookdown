@@ -1,5 +1,9 @@
 # What is new {-#news}
 
+**09.11.2022**
+
+Improved description of [iPLS](#ipls) section, including new features appeared in v. 0.13.1.
+
 **14.07.2022**
 
 Added description of new features appeared in v. 0.13.0 of the package, including new plotting method `plotRMSERatio()` for PLS models and new cross-validation possibilities. Validation of PLS model text has been extended and made as separate section.

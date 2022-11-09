@@ -31,9 +31,11 @@ y = simdata$conc.c[, 2, drop = FALSE]
 m = ipls(X, y, glob.ncomp = 4, int.num = 15)
 ```
 
-As you can see, by default method shows information for every step in the console. Use parameter `silent = TRUE` to change this behaviour. From the example above we can see that the global model had RMSECV = 0.027572 with 3 components. Creating local models with individual intervals gave the best performance with RMSECV = 0.030405 (interval #6). Combination of the interval #6 with interval #11 (next step) gave RMSECV = 0.0027882. The small improvement was obtained for adding 4 more intervals giving final result with RMSECV = 0.027201.
+As you can see, by default method shows information for every step in the console. Use parameter `silent = TRUE` to change this behaviour.
 
-There are several ways to explore the iPLS results both graphically and numerically. First of all, summary will show full information about the selected interval, including number of variables on both ends:
+From the example above we can see that the global model had RMSECV = 0.027625 with 3 components (by default the method uses systematic corss-validation, "Venetian blinds", with 10 segments). Creating local models with individual intervals gave the best performance with RMSECV = 0.029830 (interval #6). Combination of the interval #6 with interval #1 (next step) gave RMSECV = 0.0027809. The small improvement was obtained for adding 3 more intervals giving final result with RMSECV = 0.027246 with 5 selected intervals in total (6, 1, 11, 3, 12).
+
+There are several ways to explore the iPLS results both graphically and numerically. First of all, summary will show full information about the selected intervals, including index of variables on both ends:
 
 ```{r}
 summary(m)
@@ -45,9 +47,9 @@ Also you can see the first step (performance of individual models) and the selec
 plot(m)
 ```
 
-The red curve here is an average spectrum. Bars are intervals, height of each bar corresponds to RMSECV value for local model made using variables from this interval as predictors (first iteration). Number inside each bar is number of PLS components used in the local model. Green color shows intervals which have been selected at the end and dashed line shows error for the global model
+The red curve here is the average spectrum. Bars are intervals, height of each bar corresponds to the RMSECV value obtained for local model made using variables from this interval as predictors (first iteration). Number inside each bar is number of PLS components used in the local model. Green color shows intervals which have been selected at the end of the procedure and dashed line shows error for the global model
 
-You can also see the improvements of RMSECV graphically:
+You can also see the improvements of RMSECV with iPLS iterations graphically:
 
 ```{r, fig.width = 9, fig.height = 5}
 plotRMSE(m)
@@ -55,20 +57,67 @@ plotRMSE(m)
 
 Dashed line in this case shows RMSECV value for the global model with all intervals included.
 
-Fnally, you can get both seleced intervals and corresponding indices of variables (all of them not just interval limits) as follows:
+Finally, you can get both selected intervals and corresponding indices of variables (all of them not just interval limits) as follows:
 
 ```{r}
 show(m$int.selected)
 show(m$var.selected)
 ```
 
-Also the model object contains the initial global model for full data (`m$gm`) and final PLS model made for the all selected data, `m$om`. In the following example I compare RMSE plots for both:
+Also the model object contains the initial global model for full data (`m$gm`) and final optimized PLS model made using only variables from the selected intervals, `m$om`. In the following example I compare RMSE plots for both:
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
 plotRMSE(m$gm)
 plotRMSE(m$om)
 ```
+
+### Running full procedure {-}
+
+By default the iPLS procedure will stop when no improvement is observed. This means if RMSECV value for the next iteration is not smaller than the RMSECV value for the current iteration. However, you can change this behavior if you set a logical parameter `full = TRUE`. In this case the procedure will continue until the maximum number of iterations is reached.
+
+Here are some examples. First of all let's run the same example as in the prevous section with 15 intervals:
+
+```{r}
+data(simdata)
+X = simdata$spectra.c
+y = simdata$conc.c[, 2, drop = FALSE]
+
+m = ipls(X, y, glob.ncomp = 4, int.num = 15)
+```
+
+As you can see, the procedure stops at iteration #6 because no improvement is observed. And if you look at statistics, indeed only 5 intervals are selected:
+
+```{r}
+summary(m)
+show(m$int.selected)
+```
+
+Now let's do the same but with parameter `full = TRUE`.
+
+```{r}
+m = ipls(X, y, glob.ncomp = 4, int.num = 15, full = TRUE)
+```
+Now it runs 15 iterations, because by default this is the largest number of iterations in this case (all possible intervals).
+
+In case of full procedure, the selection of intervals and corresponding variables is done by finding a global minimum of RMSECV. As you can see from the output above, the first local minimum (RMSECV = 0.027246) was indeed at the 5th iteration, after which the procedure stopped in our previous example. However, when we use `full = TRUE` it continues and the global minimum is observed at iteration #8 (RMSECV = 0.027216).
+
+Therefore the number of selected intervals will be 8:
+
+```{r}
+summary(m)
+show(m$int.selected)
+```
+
+You can also see this on RMSECV vs iterations plot:
+
+```{r}
+plotRMSE(m, ylim = c(0.027, 0.030))
+```
+
+The first minimum is clearly observed at 5th iteration and the global minimum at 8th. Of course in this particular case this effect is most probably random, however there are cases where running full iPLS procedure is useful.
+
+If the number of intervals is large, by default, the maximum number of iterations `ipls()` will try, is limited by 30. You can change this by specifying an additional parameter, `iter.niter`, for example `iter.niter = 100`.
 
 ### Using test set for validation {-}
 
