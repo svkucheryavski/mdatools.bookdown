@@ -72,41 +72,42 @@ plotMisclassified(m, show.labels = TRUE)
 plotPredictions(m, show.labels = TRUE)
 ```
 
-### Cross-validation {-}
+### Validation {-}
 
-From version 0.11.3 *mdatools* has a better way to validate SIMCA models, [Procrustes cross-validation](#pca--pcv), which we recommend to use instead of the conventional cross-validation procedure, described in this section.
+Because SIMCA is based on PCA, you can use any validation method described in PCA section. Just keep in mind that when cross-validation is used, only performance statistics will be computed (in this case classification performance). Therefore cross-validated result object will not contain scores, distances, explained variance etc. and corresponding plots will not be available.
 
-SIMCA model can be also cross-validated. Cross-validation settings are provided using parameter `cv` which can be either a number of a list. If it is a number, segmented cross-validation with random split will be used. The number then defines number of segments with one exception — if `cv = 1` then full cross-validation (leave-one-out) will be used.
-
-Alternatively you can specify the cross-validation settings as a list. There are three options: `cv = list("full")` allows to do full cross-validation. If you specify `cv = list("ven", nseg)` then systematic cross-validation with `nseg` segments will be used (venetian blinds). Finally, `cv = list("rand", nseg, nrep)` will run random cross-validation with `nseg` segments  and `nrep` repetitions/iterations.
-
-```{block, type='caution'}
-When cross-validation is used, only performance statistics will be computed (in this case classification performance). Therefore cross-validated result object will not contain scores, distances, explained variance etc. and corresponding plots will not be available.
-```
-
-All performance plots are also available for cross-validation results as shown below.
-
-```{r, fig.width = 9, fig.height = 8}
-m = simca(X.ver, "versicolor", ncomp = 3, cv = 1)
-
-par(mfrow = c(2, 2))
-plotSensitivity(m)
-plotMisclassified(m)
-plotPredictions(m$res$cal, main = "Predictions (cal)")
-plotPredictions(m$res$cv, main = "Predictions (cv)")
-```
-
-Although predictions plot available also for classification model it always shows results only for one result object, otherwise it would be overloaded with information. As you can see from the predictions plots above, cross-validation results have 3 false negatives comparing to 2 for calibration results. You can also see this in summary text, where cross-validation results are shown in the second row:
+Here I will show briefly an example based on Procrustes cross-validation. First we load the `pcv` package and create a PV-set for the target class (versicolor):
 
 ```{r}
+library(pcv)
+Xpv = pcvpca(as.matrix(X.ver), 4, center = TRUE, scale = TRUE, cv = list("ven", 4))
+```
+
+Then we create a SIMCA model with PV-set as test set:
+
+```{r}
+m = simca(X.ver, "versicolor", ncomp = 3, x.test = Xpv)
+```
+
+Let's look at the sensitivity and explained variance plots:
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+plotSensitivity(m, show.line = c(NA, 0.95))
+plotVariance(m, type = "h", show.labels = TRUE)
+```
+
+Based on the plot we can select 2 PCs as optimal number. We set this value and show the summary:
+
+```{r}
+m = selectCompNum(m, 2)
 summary(m)
 ```
 
-Note, that columns with variance are not available for cross-validation (have `NA` values).
 
-### Predictions and validation with a test set {-}
+### Predictions and testing the model {-}
 
-When model is calibrated and optimized, one can test it using a new test set with know classes. In this case we will use objects from all three species and be able to see how good the model performs on strangers (and calculate the specificity). In order to do that we will provide both matrix with predictors, `Xt`, and a vector with names of the classes for corresponding objects/rows (`ct`). The values with known classes in this case can be:
+When model is calibrated and optimized, one can test it using a test set with know classes. In this case we will use objects from all three species and be able to see how good the model performs on strangers (and calculate the specificity). In order to do that we will provide both matrix with predictors, `Xt`, and a vector with names of the classes for corresponding objects/rows (`ct`). The values with known classes in this case can be:
 
 * a vector with text values (names)
 * a factor using the names as labels (also as a vector)

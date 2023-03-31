@@ -36,21 +36,17 @@ Each object includes a list with object's properties (e.g. loadings for model, s
 
 ### Model calibration {-}
 
-Let's see how this works using a simple example — *People* data. We already used this data when was playing with plots, it consists of 32 objects (persons from Scandinavian and Mediterranean countries, 16 male and 16 female) and 12 variables (height, weight, shoesize, annual income, beer and wine consumption and so on.). More information about the data can be found using `?people`. We will first load the data matrix and split it into two subsets as following:
+Let's see how this works using a simple example — *People* data. We already used this data when was playing with plots, it consists of 32 objects (persons from Scandinavian and Mediterranean countries, 16 male and 16 female) and 12 variables (height, weight, shoesize, annual income, beer and wine consumption and so on.). More information about the data can be found using `?people`. We will first load the data matrix:
 
 ```{r}
 library(mdatools)
 data(people)
-
-idx = seq(4, 32, 4)
-Xc = people[-idx, ]
-Xt = people[idx, ]
 ```
 
-So `Xc` is our calibration subset we are going to use for creating a PCA model and `Xt` is a subset we will apply the calibrated model to. Now let's calibrate the model:
+Now let's calibrate the model:
 
 ```{r}
-m = pca(Xc, 7, scale = TRUE, info = "People PCA model")
+m = pca(people, 7, scale = TRUE, info = "People PCA model")
 m = selectCompNum(m, 5)
 ```
 
@@ -73,8 +69,7 @@ Here is an example how to get values from loading matrix having the model object
 m$loadings[1:4, 1:4]
 ```
 
-One can also notice that the model object has a particular field — `res`, which is in fact a
-list of PCA *result objects* containing results of applying the model to the calibration set (`cal`) and (if available) test set (`test`). In case of regression and classification `res` also contains object with cross-validation results (`cv`). For example here is the description of object with calibration results:
+One can also notice that the model object has a particular field — `res`, which is in fact a list of PCA *result objects* containing results of applying the model to the calibration set (`cal`) and (if available) validation/test set (`test`). In case of regression and classification `res` can also contain object with cross-validation results (`cv`). For example here is the description of object with calibration results:
 
 ```{r}
 print(m$res$cal)
@@ -91,56 +86,22 @@ Both model and result objects also have related functions (methods), first of al
 The *result object* is also created every time you apply a model to a new data. Like in many built-in R methods, method `predict()` is used in this case. The first argument of the method is always a model object. Here is a PCA example (assuming we have already built the model):
 
 ```{r}
+# create data matrix with three new measurements
+Xt = rbind(
+   c(180, 80, -1, 44, 35, 35000, 200, 100, -1, 96, -1, 105),
+   c(170, 67,  1, 40, 41, 29500, 100, 200,  1, 94,  1, 105),
+   c(175, 70,  1, 41, 28, 21500, 110, 120,  1, 97,  1, 115)
+)
+
+# project the new data to the previous PCA model and show the result object
 res = predict(m, Xt)
 print(res)
 ```
 
 
-### Model validation {-}
-
-PCA model can be validated using only test set validation, while for supervised model, e.g. PLS or SIMCA, you can use cross-validation as well. The validation results are, of course, represented by *result objects*, which are fields of a *model object* similar to `cal`, but with names `test`.
-
-Here is how to build a PCA model with test set validation (we will use `Xt` as test data):
-
-```{r}
-m = pca(Xc, 7, scale = TRUE, x.test = Xt, info = "PCA model")
-m = selectCompNum(m, 5)
-```
-
-And here is the info for both result objects:
-
-```{r}
-print(m$res$cal)
-print(m$res$test)
-```
-
-Let us compare, for example, the explained variance values for the results:
-
-```{r}
-var = data.frame(
-   cal = m$res$cal$expvar,
-   test = m$res$test$expvar
-)
-show(round(var, 1))
-```
-
-Every model and every result object has a method `summary()`, which shows some statistics for evaluation of a model performance. Here are some examples.
-
-```{r}
-# summary for whole model
-summary(m)
-```
-
-```{r}
-# summary for calibration results
-summary(m$res$cal)
-```
-
-The same methodology is used for any other method, e.g. PLS or SIMCA. In the next section we will look at how to use plotting functions for models and results.
-
 ## Plotting methods {-#pca--plots}
 
-First of all you can use the methods `mdaplot()` and `mdaplotg()` (or any others, e.g. `ggplot2`) for easy visualisation of the results as they are all available as matrices with proper names, attributes, etc. In the example below I create scores and loadings plots for PC1 vs PC2. Here I assume that the last model you have created was the one with test set validation, however scores are shown only for calibration set.
+First of all you can use the methods `mdaplot()` and `mdaplotg()` (or any others, e.g. `ggplot2`) for easy visualisation of the results as they are all available as matrices with proper names, attributes, etc. In the example below I create scores and loadings plots for PC1 vs PC2. Here I assume that the model from previous section is already created and available in your Global Environment. As you can see I take matrix with scores from the objects with calibration results (`m$res$cal`).
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
@@ -152,7 +113,7 @@ To simplify this routine, every model and result class also has a number of func
 
 A function that does the same for different models and results has always the same name. For example, `plotPredictions` will show predicted vs. measured plot for PLS model and PLS result, MLR model and MLR result, SIMCA model and SIMCA result, and so on, although the plot itself will be quite different. The first argument must always be either a model or a result object.
 
-The major difference between plots for model and plots for result is following. A plot for  result always shows one set of data objects — one set of points, lines or bars. For example, predicted vs. measured values for calibration set or scores values for test set and so on. For such plots method `mdaplot()` is used and you can provide any arguments, available for this method (e.g. color group scores for calibration results, add confidence ellipses for scores, etc.).
+The major difference between plots for model and plots for result is following. A plot for result always shows one set of data objects — one set of points, lines or bars. For example, predicted vs. measured values for calibration set or scores values for test set and so on. For such plots method `mdaplot()` is used and you can provide any arguments, available for this method (e.g. color group scores for calibration results, add confidence ellipses for scores, etc.).
 
 And a plot for a model in most cases shows several sets of data objects, e.g. predicted values for calibration and validation. In this case, a corresponding method uses `mdaplotg()` and, therefore, you can adjust the plot using arguments described for this method.
 
@@ -160,13 +121,13 @@ Here are some examples for results:
 
 ```{r, fig.width = 9, fig.height = 9}
 # create a factor for combination of Sex and Region values
-g1 <- factor(Xc[, "Sex"], labels = c("M", "F"))
-g2 <- factor(Xc[, "Region"], labels = c("S", "M"))
+g1 <- factor(people[, "Sex"], labels = c("M", "F"))
+g2 <- factor(people[, "Region"], labels = c("S", "M"))
 g <- interaction(g1, g2)
 
 # scores plot for calibration results colored by Height
 par(mfrow = c(2, 2))
-plotScores(m$res$cal, show.labels = TRUE, cgroup = Xc[, "Height"])
+plotScores(m$res$cal, show.labels = TRUE, cgroup = people[, "Height"])
 
 # scores plot colored by the factor created above and confidence ellipses
 p = plotScores(m$res$cal, c(1, 2), cgroup = g)
@@ -181,8 +142,8 @@ plotVariance(m$res$cal, type = "h", show.labels = TRUE, labels = "values")
 
 Scores plot can be also used together with `plotHotellingEllipse()` function. It works similar to `plotConfidenceEllipse()` or `plotConvexHull()` however does not require grouping of the values. You can add the ellipse both to score plot for results and score plot for model. In case of model, if you have e.g. both calibration and test set results you need to specify which one you want to use for the creating the ellipse. Code below shows several examples.
 
-```{r, fig.width = 9, fig.height = 9}
-par(mfrow = c(2, 2))
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
 
 # default options for calibration results
 p = plotScores(m$res$cal, xlim = c(-8, 8), ylim = c(-8, 8))
@@ -191,17 +152,6 @@ plotHotellingEllipse(p)
 # also for calibration results but with specific significance limit and color
 p = plotScores(m$res$cal, xlim = c(-8, 8), ylim = c(-8, 8))
 plotHotellingEllipse(p, conf.lim = 0.9, col = "red")
-
-# in case if several results objects are available, specify which plot series to use
-# for creating the ellipse, in the example below we take the first plot series which
-# corresponds to calibration set
-p = plotScores(m, xlim = c(-8, 8), ylim = c(-8, 8))
-plotHotellingEllipse(p[[1]])
-
-# same but with specific settings for color and line
-p = plotScores(m, xlim = c(-8, 8), ylim = c(-8, 8))
-plotHotellingEllipse(p[[1]], col = "red", lty = 1, lwd = 0.5)
-
 ```
 
 The color grouping option is not available for the group (model) plots as colors are used there to underline the groups.
@@ -212,43 +162,27 @@ Now let's look at similar plots (plus loadings) for a model.
 par(mfrow = c(2, 2))
 plotScores(m, c(1, 3), show.labels = TRUE)
 plotLoadings(m, c(1, 3), show.labels = TRUE)
-plotResiduals(m, show.labels = TRUE, col = c("green", "red"))
+plotResiduals(m, show.labels = TRUE)
 plotVariance(m, type = "h", show.labels = TRUE, labels = "values")
 ```
 
 As you can see, for in case of model, the distance plot also shows some lines. These are critical limits, all details about them as well as how to use the distance/residuals plot will be given in the next section.
 
-If model plot show values from calibration and validation objects (e.g. scores, distances, etc), you can specify which result to show. In the example below left plot is made using default settings, for the right plot we specified list with results explicitly. Note, that the results should be specified as a named list.
+If model plot shows values from calibration and validation objects (e.g. scores, distances, etc), you can specify which result to show. In the example below left plot is made using default settings, for the right plot we specified list with results explicitly (we show calibration results with label "train" and results for new measurements with label "new"). Note, that the results should be specified as a named list (we also assume here that you ran code from the previous part of this section and have object `res` in your environment).
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
 plotResiduals(m)
-plotResiduals(m, res = list("train" = m$res$cal))
+plotResiduals(m, res = list("train" = m$res$cal, "new" = res))
 ```
 
-Finally, method `plot()` shows the main four PCA plots as a model (or results) overview.
+Finally, method `plot()` shows the four main PCA plots as a model (or results) overview.
 
 ```{r, fig.width = 9, fig.height = 9}
 plot(m, show.labels = TRUE)
 ```
 
 You do not have to care about labels, names, legend and so on, however if necessary you can always change almost anything. See full list of methods available for PCA by `?pca` and `?pcares`.
-
-### Support for images {-}
-
-As it was described before, images can be used as a source of data for any methods. In this case the results, related to objects/pixels will inherit all necessary attributes and can be show as images as well. In the example below we make a PCA model for the image data from the package and show scores and distances.
-
-```{r, fig.width = 9, fig.height = 9}
-data(pellets)
-X = mda.im2data(pellets)
-m = pca(X)
-
-par(mfrow = c(2, 2))
-imshow(m$res$cal$scores)
-imshow(m$res$cal$Q)
-imshow(m$res$cal$scores, 2)
-imshow(m$res$cal$Q, 2)
-```
 
 ### Manual x-values for loading line plot {-}
 
@@ -278,7 +212,7 @@ The excluded columns are not used for any calculations either, the corresponding
 ```{r, fig.width = 9, fig.height = 9}
 data(people)
 
-m = pca(people, 5, scale = T, exclrows = c("Lars", "Federico"), exclcols = "Income")
+m = pca(people, 5, scale = TRUE, exclrows = c("Lars", "Federico"), exclcols = "Income")
 
 par(mfrow = c(2, 2))
 plotScores(m, show.labels = TRUE)
@@ -297,6 +231,120 @@ show(m$loadings)
 ```
 
 Such behavior will help to exclude and include rows and columns interactively, some examples will be shown later.
+
+### Support for images {-}
+
+As it was described before, images can be used as a source of data for any methods. In this case the results, related to objects/pixels will inherit all necessary attributes and can be show as images as well. In the example below we make a PCA model for the image data from the package and show scores and distances.
+
+```{r, fig.width = 9, fig.height = 9}
+data(pellets)
+X = mda.im2data(pellets)
+m = pca(X)
+
+par(mfrow = c(2, 2))
+imshow(m$res$cal$scores)
+imshow(m$res$cal$Q)
+imshow(m$res$cal$scores, 2)
+imshow(m$res$cal$Q, 2)
+```
+
+## Model validation {-}
+
+PCA model can be validated using a separate validation set (in some literature *validation set* is also called *a test set*, although usually test set is used only for estimation of performance of the final, optimized model) — measurements for objects taken from the same population as the calibration set but which were not utilized for the model calibration. If you do not have a separate validation set you can generate one using [Procrustes cross-validation](http://dx.doi.org/10.1016/j.aca.2023.341096). This section will show both approaches.
+
+### Using validation set {-}
+
+If validation set is available it can be provided to `pca()` function as a value for named parameter `x.test`. In the example above we get UV/Vis spectra from `simdata` datasets. This dataset has spectra for bot calibration and validation/test set. So we use the first set to calbirate a PCA model and then use the second set as validation/test set. After that we created plot overview for the model which has results from both sets.
+
+```{r}
+data(simdata)
+Xc = simdata$spectra.c
+Xt = simdata$spectra.t
+m = pca(Xc, 7, x.test = Xt)
+```
+
+```{r, fig.width = 9, fig.height = 9}
+plot(m, ncomp = 3)
+```
+
+The validation results are, of course, represented by *result objects*, which are fields of a *model object* similar to `cal`, but with names `test`. And here is the info for both result objects:
+
+```{r}
+print(m$res$cal)
+print(m$res$test)
+```
+
+Let us compare, for example, the explained variance values for the results:
+
+```{r}
+var = data.frame(
+   cal = m$res$cal$expvar,
+   test = m$res$test$expvar
+)
+show(round(var, 1))
+```
+
+Every model and every result object has a method `summary()`, which shows some statistics for evaluation of a model performance. Here are some examples.
+
+```{r}
+# summary for whole model
+summary(m)
+```
+
+```{r}
+# summary for calibration results
+summary(m$res$cal)
+# summary for validation/test results
+summary(m$res$test)
+```
+
+The same methodology is used for any other method, e.g. PLS or SIMCA. In the next section we will look at how to use plotting functions for models and results.
+
+### Procrustes cross-validation {-}
+
+If you do not have a dedicated validation/test set you can generate one using Procrustes cross-validation. The theory behid the method is available in [this paper](http://dx.doi.org/10.1016/j.aca.2023.341096) (it is Open Access), and all additional information can be found in [GitHub repository](https://github.com/svkucheryavski/pcv) of the project.
+
+In order to use PCV you need to install a dedicated package, `pcv`, first. Here is a code which loads the `pcv` package (here I assume that you have already installed it) and create a PV-set (analogue of validation set generated by PCV) using PCA model.
+
+```{r}
+library(pcv)
+Xpv = pcvpca(Xc, ncomp = 20, cv = list("ven", 4))
+```
+
+The idea behind PCV is as follows. PCV first splits rows of calibration set into several segments. Number of segments and the way to make the split (systematic or random) is defined by a value of parameter `cv`. As you can see in the code above, I used `cv = list("ven", 4)`. This means that I want to create 4 segments (subsets) using systematic split "Venetian blinds". So in the first segment I will have rows number 1, 11, 21, ... and in the second segment I will have rows: 2, 12, 22, etc.
+
+The idea of splits is similar to cross-validation, and PCV is based on cross-validation resampling. You can also use random splits or leave-one-out splits. But in general Venetial blinds with relatively few segemnts (from 3 to 8) will work best. You also need to speciy number of components in the model, just use any number much larger than the expected optimal number. PCV is not sensitive to overfitting.
+
+After the split is done it creates local PCA models different subsets of your calibration set, measured uncertainties among the local models and then introduces this uncertainty to the calibration set hence creating a new set of measurements.
+
+The plot below compares spectra from the original calbiration set (left) and the generated PV set (right). As you can see, although the shape of individual spectra look similar the spectra are not identical.
+
+```{r, fig.width = 9, fig.height = 5}
+par(mfrow = c(1, 2))
+mdaplot(Xc, type = "l")
+mdaplot(Xpv, type = "l")
+```
+
+Now we can create a PCA model and validate using the created PV-set similar to what we have done in case of dedicated validation set:
+
+```{r}
+m2 = pca(Xc, 7, x.test = Xpv)
+```
+
+```{r, fig.width = 9, fig.height = 9}
+plot(m2, ncomp = 3)
+```
+
+The four plots below show distance plots for model validated using separate validation set (top) and the PV-set (bottom). The left plots a made for 2 principal components and the right plots are made for 7 components. As you can see both separate validation set and the one generated using PCV show similar patterns.
+
+```{r, fig.width = 9, fig.height = 9}
+par(mfrow = c(2, 2))
+plotResiduals(m, ncomp = 2, main = "Validation set (2 PCs)")
+plotResiduals(m, ncomp = 7, main = "Validation set (7 PCs)")
+plotResiduals(m2, ncomp = 2, main = "PV set (2 PCs)")
+plotResiduals(m2, ncomp = 7, main = "PV set (7 PCs)")
+```
+
 
 ## Distances and critical limits {-#pca--distances-and-limits}
 
@@ -565,57 +613,3 @@ show(m2$loadings[1:10, ])
 ```
 
 As you can see the loadings are still the same but the probabilistic algorithm is about 10 times faster. The exact difference depends on computer of course so if you run these examples on your compute you will get a bit different results, however the randomized algorithm will always be a clear winner.
-
-## Procrustes cross-validation {-#pca--pcv}
-
-Procrustes cross-validation (PCV) is a new approach for validation of PCA and SIMCA models. You can find detailed description of the method with numerous examples in [this paper](https://doi.org/10.1021/acs.analchem.0c02175).
-
-PCV makes possible to generate a new dataset, named *pseudo-validation set* and use it for validation of models in the same way as with an independent test set. The generation is done using following algorithm:
-
-1. A global PCA model is created using calibration set **X** and *A* components
-2. The rows of matrix **X** are split into *K* segments using venetian blinds splitting
-3. For each segment *k* from *{1, 2, ..., K}*:
-    * a local PCA model is created using the rows from the segment
-    * an angle between the local and the global model is estimated
-    * rows from the current segment are rotated in original variable space by the angle
-4. All rotated measurements are then combined into a matrix with pseudo-validation set
-
-So, pseudo-validation set is built on top of the calibration set but has its own sampling error. Since it is not independent from the calibration set we recommend to limit its use by model optimization and do not use it for assessment of performance of the final model.
-
-The syntax is quite simple:
-
-```{r, eval = FALSE}
-pvset <- pcv(X, ncomp, nseg, scale)
-```
-
-Here `X` is your calibration set (as a numerical matrix), `ncomp` is a number of principal components for PCA decomposition (use at lease enough to explain 95-99% of variation of the data values), `nseg` is the number of segments for cross-validation procedure. So far only systematic cross-validation (venetian blinds) is supported, so make sure that rows of `X` are sorted correctly or shuffled. Parameter `scale` allows to standardize your data prior to the generation, which is useful if your variables have different nature and/or units. The generated data will be unscaled though.
-
-The code below show an example, where we generate pseudo-validation set for spectra from the *Simdata*. The plots show spectra from both sets.
-
-```{r, fig.width = 9, fig.height = 9}
-data(simdata)
-spectra = simdata$spectra.c
-
-# create pseudo-validation set
-spectra_pv = pcv(spectra, ncomp = 6, nseg = 4)
-
-# show plot with original and generated spectra
-par(mfrow = c(2, 1))
-mdaplot(spectra, type = "l", main = "Original")
-mdaplot(spectra_pv, type = "l", main = "Pseudo-validation")
-```
-
-On one hand, the plots seem very similar, almost identical. However this is not true. Let's use the generated pseudo-validation set as a test set. For example, we can make an Extreme plot and find out that fourth component leads to overfitted model. Note, that if we make this plot for the calibration set (left), we do not see any signs of overfitting.
-
-```{r, fig.width = 9, fig.height = 5}
-# make PCA model for calibration set
-m = pca(spectra, 6)
-
-# project pseudo-validation set to the model
-res_pv = predict(m, spectra_pv)
-
-# show extreme plot for A = 4
-par(mfrow = c(1, 2))
-plotExtreme(m, res = m$res$cal, comp = 4, main = "Extreme (cal)")
-plotExtreme(m, res = res_pv, comp = 4, main = "Extreme (pv)")
-```

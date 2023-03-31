@@ -1,8 +1,21 @@
 # What is new {-#news}
 
+**31.03.2023**
+
+* Added section about [normalization](#preprocessing--norm) to Preprocessing chapter.
+* Added section about [missing values replacement](#preprocessing--mvreplace) to Preprocessing chapter.
+* Improved description of validation procedure in PCA, PLS and other methods, including the use of Procrustes cross-validation.
+* Small improvements in selected parts of text.
+
 **09.11.2022**
 
 Improved description of [iPLS](#ipls) section, including new features appeared in v. 0.13.1.
+
+**03.03.2022**
+
+* Added section explaining how to use `pcv.nareplace()` method
+
+* Added separate section for Procrustes cross-validation.
 
 **14.07.2022**
 
@@ -42,21 +55,4 @@ Added description of new features added in v. 0.11.4:
 * added chapters about [MCR methods](#mcr) implemented in v. 0.11.0.
 * added [description](#preprocessing--baseline) of new preprocessing methods `prep.alsbasecorr()`
 * several small improvements in text
-
-**02.03.2020**
-
-* fixed a code typo in chapter about outlier detection in PLS.
-
-**01.03.2020**
-
-Small changes related to v. 0.10.1:
-
-* added description of density plots
-* added description of `plotHotellingEllipse()` method to PCA chapter
-
-
-**29.01.2020**
-
-The new version of the package (0.10.0) has a lot of changes and improvements, so it was decided
-to update the book to a large degree. In addition to that, chapters about [iPLS](#ipls) and [randomization tests](#pls--randomization-test) have been added as well as information on new tools. See [list of changes](https://github.com/svkucheryavski/mdatools/blob/master/NEWS.md) in the package for more details.
 

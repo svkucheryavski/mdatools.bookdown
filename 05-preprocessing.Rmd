@@ -1,6 +1,6 @@
 # Preprocessing {-#preprocessing}
 
-The package has several preprocessing methods implemented, mostly for different kinds of spectral data. All functions for preprocessing starts from prefix `prep.` which makes them easier to find by using code completion. In this chapter a brief description of the methods with several examples will be shown.
+The package has several preprocessing methods implemented, mostly for different kinds of spectral data (but many of the methods will work with other datasets as well). All functions for preprocessing starts from prefix `prep.` which makes them easier to find by using code completion. In this chapter a brief description of the methods with several examples is shown.
 
 ## Autoscaling {--#preprocessing--autoscaling}
 
@@ -33,7 +33,7 @@ boxplot(data3, main = "Mean centered and standardized")
 boxplot(data4, main = "Median centered and standardized")
 ```
 
-The method has also an additional parameter `max.cov` which allows to avoid scaling of variables with zero or very low variation. The parameter defines a limit for coefficient of variation in percent `sd(x) / m(x) * 100` and the method will not scale variables with coefficient of variation below this limit. Default value for the parameter is 0 which will prevent scaling of constant variables (which is leading to `Inf` values).
+The method has also an additional parameter `max.cov` which helps to avoid scaling of variables with zero or very low variation. The parameter defines a limit for coefficient of variation in percent `sd(x) / m(x) * 100` and the method will not scale variables with coefficient of variation below this limit. Default value for the parameter is 0 which will prevent scaling of constant variables (which is leading to `Inf` values).
 
 ## Correction of spectral baseline {-#preprocessing--baseline}
 
@@ -110,6 +110,50 @@ for (i in 1:3) {
 ```
 
 As one can notice, the blue curves with corrected spectra are pretty similar to the original spectra shown as dashed black curves.
+
+## Normalization {-#preprocessing--norm}
+
+Normalization is a preprocessing which is applied to rows of the dataset (e.g. individual spectra or abundance values for individual measurements) in order to make all rows meet the same requirement. Depending on the requirement different normalization types exist. In *mdatools* the following methods are implemented:
+
+* `"area"` — normalize every row to unit area under measurement points. The area is computed as a sum of absolute values from each row.
+* `"sum"` — makes all values of each row sum up to one (similar to `"area"` but it takes sum of the original values, not the absolute ones).
+* `"length"` — normalize every row, so if row is represented as a vector in variable space, this vector will have a unit Eucledian length.
+* `"snv"` — Standard Normal Variate, makes all values from the same row to have zero mean and unit standard deviation (is described also in previous chapter as this normalization is often used for correction of baseline in spectral data).
+* `"is"` — Internal standard normalization. This is common for spectroscopic data, the values from each row will be normalized so value for a given variable (or sum of values for several variables) are equal to one. Usually the variable corresponds to characteristic peak of an internal standard.
+* `"pqn"` — Probabilistic Quotient Normalization, a method described in [this paper](https://doi.org/10.1021/ac051632c).
+
+All methods are implemented in function `prep.norm` you just need to provide the name of the method as a second argument (or named argument `type`). Internal standard normalization also requires an additional argument, which specifies index of column (or several columns), corresponding to the internal standard. The Probabilistic Quotient Normalization requires reference spectrum as an additional argument.
+
+An example below shows how to make normalization for several selected types using the Simdata:
+
+```{r, fig.width = 9, fig.height = 9}
+# get spectral data and wavelength
+data(simdata)
+w = simdata$wavelength
+
+X1 = simdata$spectra.c
+attr(X1, "xaxis.values") = w
+attr(X1, "xaxis.name") = "Wavelength, nm"
+
+# unit area normalization
+X2 = prep.norm(X1, "area")
+# unit length normalization
+X3 = prep.norm(X1, "length")
+# internal standard normalization for variable (column) with wavelength 291 nm
+X4 = prep.norm(X1, "is", col.ind = match(291, w))
+
+# show the original and preprocessed spectra
+par(mfrow = c(2, 2))
+
+mdaplot(X1, type = "l", main = "Original")
+abline(v = 291, lty = 2, col = "#00000080")
+
+mdaplot(X2, type = "l", main = "Normalized to unit area")
+mdaplot(X3, type = "l", main = "Normalized to unit length")
+mdaplot(X4, type = "l", main = "Normalized to IS (291 nm)")
+```
+
+The vertical dashed line on the first plot shows position of the peak, which we use as internal standard for preprocessing shown on the last plot.
 
 ## Smoothing and derivatives {-#preprocessing--savgol}
 
@@ -316,3 +360,44 @@ As one can see, you can always define your own method by creating a function, wh
 
 And, as you probably notices, I just provided preliminary computed mean spectrum for the `"msc"` method. Now the object `myprep` can be saved together with a model to `RData` file and be reused when is needed.
 
+
+## Replacing missing values {-#preprocessing--mvreplace}
+
+Finally, there is one more useful method, which is not directly a preprocessing method, but can be considers as such one. This method allows to replace missing values in your dataset with the approximated ones.
+
+The method uses PCA based approach described in [this paper](https://doi.org/10.1016/S0169-7439(96)00007-X). The main idea is that we fit the dataset with a PCA model (e.g. PCA NIPALS algorithm can work even if data contains missing values) and then approximate the missing values as if they were lyining in the PC space.
+
+The method has the same parameters as any PCA model. However, instead of specifying number of components you must specify another parameter, `expvarlim`, which tells how big the portion of variance the model must explain. The default value is `0.95` which corresponds to 95% of the explained variance. You can also specify if data must be centered (default `TRUE`) and scaled/standardized (default `FALSE`). See more details by running `?pca.mvreplace`.
+
+The example below shows a trivial case. First we generate a simple dataset. Then we replace some of the numbers with missing values (`NA`) and then apply the method to approximate them.
+
+```{r}
+library(mdatools)
+
+# generate a matrix with correlated variables
+s = 1:6
+odata = cbind(s, 2*s, 4*s)
+
+# add some noise and labels for columns and rows
+set.seed(42)
+odata = odata + matrix(rnorm(length(odata), 0, 0.1), dim(odata))
+colnames(odata) = paste0("X", 1:3)
+rownames(odata) = paste0("O", 1:6)
+
+# make a matrix with missing values
+mdata = odata
+mdata[5, 2] = mdata[2, 3] = NA
+
+# replace missing values with approximated
+rdata = pca.mvreplace(mdata, scale = TRUE)
+
+# show all matrices together
+show(round(cbind(odata, mdata, round(rdata, 2)), 3))
+
+# show the difference between original and approximated values
+show(round(odata - rdata, 3))
+```
+
+As you can see the method guess that the two missing values must be 7.51 and 10.21, while the original values were 7.97 and 10.13.
+
+The method works if total number of missing values does not exceed 20% (10% if the dataset is small).

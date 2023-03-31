@@ -28,14 +28,7 @@ So `Xc` and `yc` are predictors and response values for calibration subset. Now 
 ```{r}
 m = pls(Xc, yc, 7, scale = TRUE, info = "Shoesize prediction model")
 ```
-You can notice that the calibration succeeded but there is also a warning about lack of validation. For supervised models, which have complexity parameter (in this case — number of components), doing proper validation is important as it helps to find the optimal complexity. When you calibrate PLS model the calibration also tries to find the optimal number (details will be discussed later in this chapter) and this needs some validation. The easiest thing to do is to use cross-validation, we start with its simplest form — the full cross-validation (`cv = 1`):
-
-```{r}
-m = pls(Xc, yc, 7, scale = TRUE, cv = 1, info = "Shoesize prediction model")
-m = selectCompNum(m, 3)
-```
-
-Besides that, the procedure is very similar to PCA, here we use 7 latent variables and select 3 first as an optimal number using the same method, `selectCompNum()`.
+You can notice that the calibration succeeded but there is also a warning about lack of validation results. For supervised models, which have complexity parameter (in this case — number of components), doing proper validation is important as it helps to find the optimal complexity. When you calibrate PLS model the calibration also tries to find the optimal number (details will be discussed later in this chapter) and this needs some validation. How to do proper validation of PLS models is discussed in the next section.
 
 Here is an info for the model object:
 
@@ -44,39 +37,6 @@ print(m)
 ```
 
 As expected, we see loadings for predictors and responses, matrix with weights, and a special object (`regcoeffs`) for regression coefficients.
-
-#### Regression coefficients {-}
-
-The values for regression coefficients are available in `m$coeffs$values`, it is an array with dimension *nVariables x nComponents x nPredictors*. The reason to use the object instead of just an array is mainly for being able to get and plot regression coefficients for different methods. Besides that, it is possible to calculate confidence intervals and other statistics for the coefficients using Jack-Knife method (will be shown later), which produces extra entities.
-
-The regression coefficients can be shown as plot using either function `plotRegcoeffs()` for the PLS model object or function `plot()` for the object with regression coefficients. You need to specify for which predictor (if you have more than one y-variable) and which number of components you want to see the coefficients for. By default it shows values for the optimal number of components and first y-variable as it is shown on example below.
-
-```{r, fig.width = 9, fig.height = 9}
-
-par(mfrow = c(2, 2))
-plotRegcoeffs(m)
-plotRegcoeffs(m, ncomp = 2)
-plot(m$coeffs, ncomp = 3, type = "b", show.labels = TRUE)
-plot(m$coeffs, ncomp = 2)
-```
-
-The model keeps regression coefficients, calculated for centered and standardized data, without intercept, etc. Here are the values for three PLS components.
-
-```{r}
-show(m$coeffs$values[, 3, 1])
-```
-
-You can see a summary for the regression coefficients object by calling function `summary()` for the object `m$coeffs` like it is show below. By default it shows only estimated regression coefficients for the selected y-variable and number of components. However, if you use cross-validation, [Jack-Knifing](https://en.wikipedia.org/wiki/Jackknife_resampling) method will be used to compute some statistics, including standard error, p-value (for test if the coefficient is equal to zero in population) and confidence interval. All statistics in this case will be shown automatically with `summary()` as you can see below.
-
-```{r}
-summary(m$coeffs)
-```
-
-You can also get the corrected coefficients, which can be applied directly to the raw data (without centering and standardization), by using method `getRegcoeffs()`:
-
-```{r}
-show(getRegcoeffs(m, ncomp = 3))
-```
 
 #### Result object {-}
 
@@ -105,31 +65,121 @@ If reference y-values are not provided to `predict()` function, then all predict
 
 ## Validation {-}
 
-Validation of PLS (and PLS-DA) models can be done either using a test set or by cross-validation. In case of test set, similar to calibration, you need to provide it as two separate matrices — one for predictors (parameter `x.test`) and one for response (`y.test`) values. The rest will be done automatically and you will see the results for test set in all plots and summary tables.
+Validation of PLS (and PLS-DA) models can be done by one of the following methods:
 
-Alternatively you can use cross-validation to optimize the parameters of your model (number of components, preprocessing, variable selection) and then apply the final optimized model to the test set. In this case you need to set cross-validation parameter `cv` as described below.
+1. Using separate validation/test set
+2. Uisng Procrustes cross-validation
+3. Using conventional cross-validation
 
-You probably have noticed a small warning we got when created the first PLS model in this chapter:
+Below we will show each of the method in detail. For all examples we will use *Simdata* with UV/VIS spectra of mixtures of three carbonhydrates, this dataset has been already used for examples in Preprocessing and PCA chapters. It contains spectra and reference concentrations for two sets of measurements.
+
+### Using validation/test set {-}
+
+In case if you have a dedicated validation/test set, you need to provide it as two separate matrices — one for predictors (parameter `x.test`) and one for response (`y.test`) values. The rest will be done automatically and you will see the results for test set in all plots and summary tables.
+
+The example below shows how to create such model for *Simdata* (here we will make PLS1 model for prediction of concentration of the first mixture component — first column of the concentration matrix):
 
 ```{r}
-m = pls(Xc, yc, 7, scale = TRUE, info = "Shoesize prediction model")
+data(simdata)
+Xc = simdata$spectra.c
+yc = simdata$conc.c[, 1]
+Xt = simdata$spectra.t
+yt = simdata$conc.t[, 1]
+
+m = pls(Xc, yc, 10, x.test = Xt, y.test = yt)
+summary(m)
 ```
 
-When you create a model, it tries to select optimal number of components automatically (which, of course, you can always change later). To do that, the method uses RMSE values, calculated for different number of components and cross-validation predictions. So, if we do not use cross-validation, it warns us about this.
+As you can see, in this case we do not have a warning about absence of validation results as we have seen in the example above. Summary information is avaiable for optimal number of components for both calibration and test set. Model was able to detect that 3 components is optimal despite the provided number of 10 components. How this selection is done is described later in this chapter, meanwhile let's look at the plot overview:
 
-There are two different ways/criteria for automatic selection. One is using first local minimum on the RMSE plot and second is so called Wold criterion, based on a ratio between PRESS values for current and next component. You can select which criterion to use by specifying parameter `ncomp.selcrit` (either `'min'` or `'wold'`) as it is shown below.
+```{r, fig.width = 9, fig.height = 9}
+plot(m)
+```
+
+Distance plot, RMSE and plot with predicted and measured y-values have points for both calibration and test set. The RMSE plot shows clearly that after third component the model becomes overfitted as error for the test set is increasing.
+
+As mentioned, method `summary()` for validated model shows performance statistics calculated using optimal number of components for each of the results (calibration and test set validation in our case).
+
+If you want more details run `summary()` for one of the result objects.
 
 ```{r}
-m1 = pls(Xc, yc, 7, scale = TRUE, cv = 1, ncomp.selcrit = "min")
+summary(m$res$test)
+```
+
+In this case, the statistics are shown for all available components and explained variance for individual components is added.
+
+### Using Procrustes cross-validation {-}
+
+As in case of PCA, you can also generate the validation set using Procrustes cross-validation. Here I assume that you already have package `pcv` instealled and read about the method (or at least tried it with PCA examples).
+
+Let's create the PV-set first:
+
+```{r}
+library(pcv)
+Xpv = pcvpls(Xc, yc, 20, cv = list("ven", 4))
+```
+
+In this case we generate only predictors, the response values will be the same as for the calibration set. Now we can create a model similar to what we did for dedicated validation set (note that we provide `yc` as values for the `y.test` argument in this case):
+
+```{r}
+m2 = pls(Xc, yc, 10, x.test = Xpv, y.test = yc)
+summary(m2)
+```
+
+As you can see in this case PLS also selected 3 components as optimal. Here is the overview of the model.
+
+```{r, fig.width = 9, fig.height = 9}
+plot(m2)
+```
+
+The behaviour of RMSE values is quite similar to the one we got for the test set.
+
+### Using conventional cross-validation {-}
+
+Alternatively you can use conventional cross-validation as well. But in this case only figures of merit (e.g. RMSE and R2 values) will be computed, as computing variances and distances can not be done correctly. This is enough though to optimize the parameters of your model (number of components, preprocessing, variable selection) and then apply the final optimized model to the test set.
+
+In this case you do not need to provide any extra data, but just set cross-validation parameter `cv` similar to what you do when generate PV-set:
+
+```{r}
+m3 = pls(Xc, yc, 10, cv = list("ven", 4))
+summary(m3)
+```
+
+
+```{r, fig.width = 9, fig.height = 9}
+plot(m3)
+```
+
+As you can see, all results are very similar to what you got with PV-set, however some of the outcomes (e.g. distances, explained variance, etc) are not available.
+
+In the examples above we set arameter `cv` to `list("ven", 4)`. But in fact it can be a number, a list or a vector with segment values manually assigned for each measurement.
+
+If it is a number, it will be used as number of segments for random cross-validation, e.g. if `cv = 2` cross-validation with two segments will be carried out with measurements being randomly split into the segments. For full cross-validation use `cv = 1` like in the example above. This option is a bit confusing, logically we have to set `cv` equal to number of measurements in the calibration set. But this option was used many years ago when the package was created and it is kept for backward compatibility.
+
+For more advanced selection you can provide a list with name of cross-validation method, number of segments and number of iterations, e.g. `cv = list("rand", 4, 4)` for running random cross-validation with four segments and four repetitions or `cv = list("ven", 8)` for systematic split into eight segments (*venetian blinds*). In case of venetian splits, the measurements will be automatically ordered from smallest to largest response (y) values.
+
+Finally, from version *0.13.0*, you can also provide a vector with manual slits. For example, if you create a model with the following value for `cv` parameter: `cv = rep(1:4, length.out = nrow(Xc))` the vector of values you provide will look as `1 2 3 4 1 2 3 4 1 2 ...`, which corresponds to systematic splits but without ordering y-values, so it will use the current order of measurements (rows) in the data. Use this option if you have specific requirements for cross-validation and the implemented methods do not meet them.
+
+
+### Selection of optimal number of components {-}
+
+When you create a PLS model, it tries to select optimal number of components automatically (which, of course, you can always change later). To do that, the method uses RMSE values, calculated for different number of components and validation predictions. So, if we do not use any validation, it warns us about this as it was mentioned in the beginning of this chapter.
+
+If validation (any of the three methods described above) was used, there are two different ways/criteria for automatic selection of the components best on validation results. One is using first local minimum on the RMSE plot and second is so called Wold criterion, based on a ratio between PRESS values for current and next component.
+
+You can select which criterion to use by specifying parameter `ncomp.selcrit` (either `'min'` or `'wold'`) as it is shown below (here we use cross-validation).
+
+```{r}
+m1 = pls(Xc, yc, 7, cv = list("ven", 4), ncomp.selcrit = "min")
 show(m1$ncomp.selected)
 
-m2 = pls(Xc, yc, 7, scale = TRUE, cv = 1, ncomp.selcrit = "wold")
+m2 = pls(Xc, yc, 7, cv = list("ven", 4), ncomp.selcrit = "wold")
 show(m2$ncomp.selected)
 ```
 
-Well, in this case both pointed on the same number, 5, but sometimes they give different solutions.
+Well, in this case both pointed on the same number, 3, but sometimes they give different solutions.
 
-And here are the RMSE plots (they are identical of course), where you can see how error depends on number of components for both calibration set and cross-validated predictions. Apparently the minimum for cross-validation error (RMSECV) is indeed at 5:
+And here are the RMSE plots (they are identical of course), where you can see how error depends on number of components for both calibration set and cross-validated predictions. Apparently the minimum for cross-validation error (RMSECV) is indeed at 3:
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
@@ -146,29 +196,61 @@ plotRMSERatio(m1)
 plotRMSERatio(m2, pch = 1, col = "red")
 ```
 
-In the previous examples we set arameter `cv` to a number 1. But in fact it can be a number, a list or a vector with segment values manually assigned for each measurement.
+## Regression coefficients {-}
 
-If it is a number, it will be used as number of segments for random cross-validation, e.g. if `cv = 2` cross-validation with two segments will be carried out with measurements being randomly split into the segments. For full cross-validation use `cv = 1` like in the example above. This option is a bit confusing, logically we have to set `cv` equal to number of measurements in the calibration set, but it is kept for backward compatibility.
+First of all let us re-create the PLS model for prediction of Showsize from People data we used at the beginning of this chapter:
 
-For more advanced selection you can provide a list with name of cross-validation method, number of segments and number of iterations, e.g. `cv = list("rand", 4, 4)` for running random cross-validation with four segments and four repetitions or `cv = list("ven", 8)` for systematic split into eight segments (*venetian blinds*). In case of venetian splits, the measurements will be automatically ordered from smallest to largest response (y) values.
-
-Finally, from version *0.13.0*, you can also provide a vector with manual slits. For example, if you create a model with the following value for `cv` parameter: `cv = rep(1:4, length.out = nrow(Xc))` the vector of values you provide will look as `1 2 3 4 1 2 3 4 1 2 ...`, which corresponds to systematic splits but without ordering y-values, so it will use the current order of measurements (rows) in the data. Use this option if you have specific requirements for cross-validation and the implemented methods do not meet them.
-
-Method `summary()` for validated model shows performance statistics calculated using optimal number of components for each of the results (calibration, cross-validation, test set — if the last two are used of course).
 
 ```{r}
-summary(m1)
+library(mdatools)
+data(people)
+
+idx = seq(4, 32, 4)
+Xc = people[-idx, -4]
+yc = people[-idx, 4, drop = FALSE]
+Xt = people[idx, -4]
+yt = people[idx, 4, drop = FALSE]
 ```
 
-As you can see, there are no values for cumulative explained variance for cross-validation result, because in case of cross-validation it is not possible to compute the variance correctly. But the other figures of merit are shown.
-
-If you want more details run `summary()` for one of the result objects.
+But this time I will create the model using full cross-validation:
 
 ```{r}
-summary(m1$res$cal)
+m = pls(Xc, yc, 7, scale = TRUE, cv = 1, info = "Shoesize prediction model")
 ```
 
-In this case, the statistics are shown for all available components and explained variance for individual components is added.
+The values for regression coefficients are available in `m$coeffs$values`, it is an array with dimension *nVariables x nComponents x nPredictors*. The reason to use the object instead of just an array is mainly for being able to get and plot regression coefficients for different methods. Besides that, it is possible to calculate confidence intervals and other statistics for the coefficients using Jack-Knife method (will be shown later), which produces extra entities.
+
+The regression coefficients can be shown as plot using either function `plotRegcoeffs()` for the PLS model object or function `plot()` for the object with regression coefficients. You need to specify for which predictor (if you have more than one y-variable) and which number of components you want to see the coefficients for. By default it shows values for the optimal number of components and first y-variable as it is shown on example below.
+
+```{r, fig.width = 9, fig.height = 9}
+
+par(mfrow = c(2, 2))
+plotRegcoeffs(m)
+plotRegcoeffs(m, ncomp = 2)
+plot(m$coeffs, ncomp = 3, type = "b", show.labels = TRUE)
+plot(m$coeffs, ncomp = 2)
+```
+
+The model keeps regression coefficients, calculated for centered and standardized data, without intercept, etc. Here are the values for three PLS components.
+
+```{r}
+show(m$coeffs$values[, 3, 1])
+```
+
+You can see a summary for the regression coefficients object by calling function `summary()` for the object `m$coeffs` like it is show below. By default it shows only estimated regression coefficients for the selected y-variable and number of components.
+
+However, if you use cross-validation, [Jack-Knifing](https://en.wikipedia.org/wiki/Jackknife_resampling) method will be used to compute some statistics, including standard error, p-value (for test if the coefficient is equal to zero in population) and confidence interval. All statistics in this case will be shown automatically with `summary()` as you can see below.
+
+```{r}
+summary(m$coeffs)
+```
+
+You can also get the corrected coefficients, which can be applied directly to the raw data (without centering and standardization), by using method `getRegcoeffs()`:
+
+```{r}
+show(getRegcoeffs(m, ncomp = 3))
+```
+
 
 ## Plotting methods {-#pls--plotting-methods}
 
@@ -220,22 +302,22 @@ Parameter `obj` is either a model or a result object and it is the only mandator
 Parameter `comp` allows to provide a number of selected components (one or several) to show the plot
 for, while parameter `ncomp` assumes that only one number is expected (number of components in a model or particular individual component). So if e.g. you create model for five components and selected three as optimal, you can also see, for example, prediction plot for having only one or for components in your model.
 
-Here is an example for creating prediction plot for `m1` model (left for automatically selected number of components, right for user specified value):
+Here is an example for creating prediction plot for `m` model (left for automatically selected number of components, right for user specified value):
 
 ```{r, fig.width = 9, fig.height = 5}
 par(mfrow = c(1, 2))
-plotPredictions(m1)
-plotPredictions(m1, ncomp = 1)
+plotPredictions(m)
+plotPredictions(m, ncomp = 1)
 ```
 
 By the way, when `plotPredictions()` is made for results object, you can show performance statistics on the plot:
 
 ```{r, fig.width = 9, fig.height = 9}
 par(mfrow = c(2, 2))
-plotPredictions(m1$res$cal)
-plotPredictions(m1$res$cal, ncomp = 2)
-plotPredictions(m1$res$cal, show.stat = TRUE)
-plotPredictions(m1$res$cal, ncomp = 2, show.stat = TRUE)
+plotPredictions(m$res$cal)
+plotPredictions(m$res$cal, ncomp = 2)
+plotPredictions(m$res$cal, show.stat = TRUE)
+plotPredictions(m$res$cal, ncomp = 2, show.stat = TRUE)
 ```
 
 The plots for variables are available only for a model object and include:
@@ -260,7 +342,7 @@ Methods                                            Description
 And, of course, both model and result objects have method `plot()` for giving an overview.
 
 ```{r, fig.width = 9, fig.height = 8}
-plot(m1)
+plot(m)
 ```
 
 ### Excluding rows and columns {-}
@@ -281,22 +363,22 @@ Here is an example of corresponding plots.
 
 ```{r, fig.width = 9, fig.height = 9}
 par(mfrow = c(2, 2))
-plotVIPScores(m1)
-plotVIPScores(m1, ncomp = 2, type = "h", show.labels = TRUE)
-plotSelectivityRatio(m1)
-plotSelectivityRatio(m1, ncomp = 2, type = "h", show.labels = TRUE)
+plotVIPScores(m)
+plotVIPScores(m, ncomp = 2, type = "h", show.labels = TRUE)
+plotSelectivityRatio(m)
+plotSelectivityRatio(m, ncomp = 2, type = "h", show.labels = TRUE)
 ```
 
-To compute the values without plotting use `vipscores()` and `selratio()` functions.  In the example below, I create two other PLS models by excluding variables with VIP score or selectivity ratio below a threshold (I use 1 and 3 correspondingly) and show the performance for both.
+To compute the values without plotting use `vipscores()` and `selratio()` functions.  In the example below, I create two other PLS models by excluding variables with VIP score or selectivity ratio below a threshold (I use 0.5 and 2 correspondingly) and show the performance for both.
 
 ```{r}
-vip = vipscores(m1, ncomp = 2)
-m3 = pls(Xc, yc, 4, scale = T, cv = 1, exclcols = (vip < 0.5))
-summary(m3)
+vip = vipscores(m, ncomp = 2)
+m2 = pls(Xc, yc, 4, scale = T, cv = 1, exclcols = (vip < 0.5))
+summary(m2)
 
-sr = selratio(m1, ncomp = 2)
-m4 = pls(Xc, yc, 4, scale = T, cv = 1, exclcols = (sr < 2))
-summary(m4)
+sr = selratio(m, ncomp = 2)
+m2 = pls(Xc, yc, 4, scale = T, cv = 1, exclcols = (sr < 2))
+summary(m2)
 ```
 
 Another way is to make an inference about regression coefficients and calculate confidence intervals and p-values for each variable. This can be done using Jack-Knife approach, when model is cross-validated using efficient number of segments (at least ten) and statistics are calculated using the distribution of regression coefficient values obtained for each step. The statistics are automatically computed when you use full cross-validation.
