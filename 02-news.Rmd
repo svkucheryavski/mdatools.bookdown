@@ -1,5 +1,10 @@
 # What is new {-#news}
 
+**21.07.2023**
+
+* Added information about new feature in 0.14.1 — `cv.scope` parameter. See [Model and results](#pls--models-and-results) part of PLS chapter, just scroll down to cross-validation section.
+* Small improvements to various parts of this tutorial.
+
 **31.03.2023**
 
 * Added section about [normalization](#preprocessing--norm) to Preprocessing chapter.
@@ -32,27 +37,4 @@ Added description of new features appeared in v. 0.12.0 of the package, includin
 
 In addition to that, text for [Datasets](#datasets) chapter has been revised to provide more clear guides while the part about preprocessing was detached and now is available as [separate chapter](#preprocessing) where
 you can find all details. Description of ALS baseline correction was moved to the section [Correction of baseline](#preprocessing--baseline).
-
-**23.04.2021**
-
-Added description of new features added in v. 0.11.4:
-
-* using test set validation in [iPLS](#ipls).
-* possibility to force selected contribution and spectral values in [MCR-ALS](#mcr--als).
-* added information about how to provide user defined indices for pure variables in [Purity method](#mcr--purity)
-* added link to relevant paper in the [PCA model complexity](#pca--model-complexity) section
-
-**22.01.2021**
-
-* added section about [Procrustes cross-validation](#pca--pcv) for PCA, which was recently added to the package (v. 0.11.3).
-
-**23.07.2020**
-
-* section about [MCR Purity method](#mcr--purity) has been re-written to correspond to the algorithm changes in v. 0.11.1.
-
-**12.07.2020**
-
-* added chapters about [MCR methods](#mcr) implemented in v. 0.11.0.
-* added [description](#preprocessing--baseline) of new preprocessing methods `prep.alsbasecorr()`
-* several small improvements in text
 

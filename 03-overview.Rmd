@@ -68,19 +68,23 @@ allow to do the following:
 
 See `?mdatools` and next chapters for more details.
 
-## How to install {-#overview--how-to-install}
+## How to install and update {-#overview--how-to-install}
 
-The package is available from CRAN by usual installing procedure. However due to restrictions in CRAN politics regarding number of submissions (once in 3-4 month) not all releases will be published there. To get the latest release please use GitHub sources. You can either [download](https://github.com/svkucheryavski/mdatools/releases) a zip-file with the source package and install it using the `install.packages` command, e.g. if the downloaded file is `mdatools_0.14.0.tar.gz` and it is located in a current working directory,
-just run the following:
+The package is available on CRAN, to install it just use:
 
 ```r
-install.packages("mdatools_0.14.0.tar.gz")
+install.packages("mdatools")
 ```
 
-If you have `devtools` package installed, the following command will install the latest release from
-the GitHub (do not forget to load the `devtools` package first):
+This is the recommended way to install the package. If you have installed it already and just want to update to the newest version, use:
 
 ```r
-install_github("svkucheryavski/mdatools")
+update.packages("mdatools")
+```
+
+If you want to install it directly from GitHub, the easiest way is to install the `devtools` package first and then run the following command in R:
+
+```r
+devtools::install_github("svkucheryavski/mdatools")
 ```
 

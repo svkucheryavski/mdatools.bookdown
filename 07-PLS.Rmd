@@ -158,8 +158,30 @@ If it is a number, it will be used as number of segments for random cross-valida
 
 For more advanced selection you can provide a list with name of cross-validation method, number of segments and number of iterations, e.g. `cv = list("rand", 4, 4)` for running random cross-validation with four segments and four repetitions or `cv = list("ven", 8)` for systematic split into eight segments (*venetian blinds*). In case of venetian splits, the measurements will be automatically ordered from smallest to largest response (y) values.
 
-Finally, from version *0.13.0*, you can also provide a vector with manual slits. For example, if you create a model with the following value for `cv` parameter: `cv = rep(1:4, length.out = nrow(Xc))` the vector of values you provide will look as `1 2 3 4 1 2 3 4 1 2 ...`, which corresponds to systematic splits but without ordering y-values, so it will use the current order of measurements (rows) in the data. Use this option if you have specific requirements for cross-validation and the implemented methods do not meet them.
+Finally, you can also provide a vector with manual slits. For example, if you create a model with the following value for `cv` parameter: `cv = rep(1:4, length.out = nrow(Xc))` the vector of values you provide will look as `1 2 3 4 1 2 3 4 1 2 ...`, which corresponds to systematic splits but without ordering y-values, so it will use the current order of measurements (rows) in the data. Use this option if you have specific requirements for cross-validation and the implemented methods do not meet them.
 
+#### Local and global CV scope {-}
+
+From *0.14.1* it is possible to set how cross-validation subsets are centred and scaled inside the cross-validation loop. This is regulated by a new parameter `cv.scope` in methods `pls()`, `plsda()`and `ipls()`.
+
+Cross-validation splits the original training set into local calibration and validation sets inside the loop. For example, if you have dataset with 100 objects/observations and use cross-validation with four segments (with random or systematic splits), in each iteration 25 objects will be taken as local validation set and remaining 75 objects will for a local calibration set.
+
+If `cv.scope` parameter is set to `"local"`, then mean values for centreing and standard deviation values for scaling (if this option is selected) will be computed based on the local set with 75 objects in the example below. So, every local model will have its own center in the variable space.
+
+If `cv.scope` parameter is set to `"global"`, then the mean values and standard deviation values will be computed for the original (global) training set hence all local models will have the same center as the global model.
+
+The default value is `"local"` and this was also the way `mdatools` worked before this option was introduced in *0.14.1*. The small example below shows how both options work (it is assumed that you already have `Xc` and `yc` variables from the previos examples):
+
+```{r, fig.width = 9, fig.height = 5}
+
+m1 = pls(Xc, yc, 7, cv = list("ven", 4), cv.scope = "local")
+m2 = pls(Xc, yc, 7, cv = list("ven", 4), cv.scope = "global")
+
+par(mfrow = c(1, 2))
+plotRMSE(m1$res$cv, type = "h", show.labels = TRUE, main = "Local cv-scope")
+plotRMSE(m2$res$cv, type = "h", show.labels = TRUE, main = "Global cv-scope")
+```
+As you can see the cross-validation results are very similar, however RMSE values for locally autoscaled models tend to be a bit higher as expected.
 
 ### Selection of optimal number of components {-}
 
