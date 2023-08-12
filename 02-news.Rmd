@@ -1,6 +1,6 @@
 # What is new {-#news}
 
-**21.07.2023**
+**12.08.2023**
 
 * Added information about new feature in 0.14.1 — `cv.scope` parameter. See [Model and results](#pls--models-and-results) part of PLS chapter, just scroll down to cross-validation section.
 * Small improvements to various parts of this tutorial.
